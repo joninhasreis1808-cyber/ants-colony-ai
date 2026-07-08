@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8765:8765"
+    volumes:
+      - ../data:/app/data
+    environment:
+      - ANTS_REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

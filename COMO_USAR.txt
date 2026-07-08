@@ -1,0 +1,57 @@
+COMO USAR O ANT'S 🐜
+════════════════════════════════════════
+
+O Ant's é uma colônia de bots com "mente colmeia": eles trabalham
+juntos, lembram do que aprenderam e até criam aplicativos para você.
+
+
+🌐 PELO NAVEGADOR (jeito mais fácil)
+────────────────────────────────────────
+1. Acesse o link do site (ou http://localhost:8765 se estiver rodando
+   no seu computador).
+2. O site carrega sozinho — não precisa instalar nada.
+3. Na aba "Chat", digite uma tarefa e veja os bots trabalharem.
+
+
+📱 COMO APLICATIVO (instalável no celular)
+────────────────────────────────────────
+1. Abra o site no Chrome (Android) ou Safari (iPhone).
+2. Toque em "Instalar app" ou "Adicionar à tela de início".
+3. O ícone do Ant's aparece na tela do seu celular, como um app.
+
+
+💻 NO SEU COMPUTADOR
+────────────────────────────────────────
+1. Abra o terminal na pasta do projeto.
+2. Execute:  bash scripts/start.sh
+3. Abra no navegador:  http://localhost:8765
+
+
+🧩 AS 5 ABAS
+────────────────────────────────────────
+💬 Chat     — converse e envie tarefas para a colmeia
+🤖 Bots     — veja os bots trabalhando em tempo real
+🧠 Memória  — o que a colmeia lembrou; rode o "ciclo de sono"
+🏭 Factory  — descreva um app e a colmeia o cria para você
+⚙️ Ajustes  — tema claro/escuro e informações do sistema
+
+
+❓ DÚVIDAS COMUNS
+────────────────────────────────────────
+• Os bots funcionam offline?
+  Sim, em modo limitado — o site abre e mostra o que já foi carregado.
+• Preciso de internet?
+  Para pesquisa na web, sim. O resto funciona local.
+• Meus dados estão seguros?
+  Sim: tudo fica no seu computador ou no servidor que você controlar.
+• Como instalo no celular?
+  Abra o site e toque em "Adicionar à tela de início".
+
+
+☁️ COLOCAR NA NUVEM (grátis)
+────────────────────────────────────────
+Execute:  bash scripts/deploy_cloud.sh
+E escolha Railway, Render ou Fly.io. Todos têm plano gratuito.
+
+════════════════════════════════════════
+Feito com 🐜 pela colônia Ant's.

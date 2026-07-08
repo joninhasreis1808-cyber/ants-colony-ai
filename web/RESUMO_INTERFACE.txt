@@ -1,0 +1,83 @@
+RESUMO — Integração da interface Loveable + melhorias da colônia
+═══════════════════════════════════════════════════════════════
+
+CONTEXTO
+────────
+A interface do Loveable veio como app React/TanStack Router + Tailwind v4.
+O Ant's, porém, usa HTML+JS vanilla servido estaticamente pelo backend,
+com IDs específicos que os arquivos .js originais procuram. Trocar a stack
+quebraria os .js intocáveis e o backend. Então a decisão correta foi
+PORTAR o design (não o código) do Loveable para o HTML/CSS vanilla.
+
+
+O QUE FOI ALTERADO (apenas web/ + app.js visual)
+────────────────────────────────────────────────
+1. web/index.html — REESCRITO
+   - Adotou a linguagem visual do Loveable: sidebar rail (desktop),
+     marca com gradiente, grid de fundo, tipografia Space Grotesk/Inter.
+   - MANTEVE EXATAMENTE os IDs que os .js esperam:
+     #messages, #chat-input, #chat-send            (chat.js)
+     #bot-grid, #bot-log, #task-input, #task-send  (bots.js)
+     #mem-list, #mem-query, #mem-search, #mem-sleep, #mem-stats (memory.js)
+     #fac-desc, #fac-template, #fac-create, #fac-result (factory.js)
+     #conn, #theme-toggle, #toast, #health-info    (app.js)
+     .nav-btn[data-tab], #tab-{chat,bots,memory,factory,settings}
+   - Mantém as 5 tags <script> originais (app/chat/bots/memory/factory).
+
+2. web/css/style.css — REESCRITO
+   - Tema escuro mantido (#1a1a2e base, #0f3460 primária, #e94560 accent).
+   - Glass, bg-grid, animações (fade-in, slide-up, ping) portados.
+   - Mobile-first; sidebar rail vira bottom-nav no celular.
+   - Todos os botões/campos com alvo de toque >= 48px.
+   - prefers-reduced-motion respeitado.
+
+3. web/js/app.js — SÓ REALCE VISUAL (lógica intocada)
+   - Acrescentado um bloco ADITIVO: um MutationObserver reexecuta a
+     animação de entrada ao trocar de aba. Nenhuma linha da lógica
+     original (navegação, WebSocket, health, tema, PWA) foi alterada.
+
+4. web/sw.js — cache bump v1 -> v2 (para clientes pegarem a nova UI).
+
+
+O QUE NÃO FOI TOCADO (garantido por MD5)
+────────────────────────────────────────
+web/js/chat.js    e1cc6df5be37d6e0502b1063767601bd  (idêntico)
+web/js/bots.js    ed95b37ebbf0b926daa685dfe09419c1  (idêntico)
+web/js/memory.js  de5d8499d12efd869baa138497996e10  (idêntico)
+web/js/factory.js 18b0d5a834fda16f613633a250db053d  (idêntico)
+backend/          nenhum arquivo de lógica de negócio foi alterado pela UI.
+
+
+VERIFICAÇÃO DE COMPATIBILIDADE (etapa 6 do pedido)
+──────────────────────────────────────────────────
+✅ Clicar em "Bots"  -> bots.js encontra #bot-grid
+✅ Digitar no chat   -> chat.js encontra #chat-input
+✅ WebSocket conecta -> app.js atualiza #conn (online/offline)
+Todos os 20 IDs necessários foram verificados automaticamente.
+
+
+MELHORIAS DA MENTE COLMEIA (compromisso de evolução)
+─────────────────────────────────────────────────────
+Estas são adições no BACKEND, sem quebrar nada (172 testes verdes):
+
+• Estigmergia (backend/hivemind/stigmergy.py)
+  Raciocínio de formigas/abelhas: os bots deixam "feromônios" nas
+  trilhas (intenção × bot) a cada sucesso; trilhas evaporam com o tempo.
+  A colônia aprende sozinha quais caminhos valem a pena — coordenação
+  emergente, sem regras fixas.
+
+• Energia da colônia (backend/hivemind/lifecycle.py)
+  Bots vivem em estados ativo/ocioso/hibernando, com limite de
+  concorrência (max_active) para NÃO sobrecarregar o dispositivo nem a
+  IA. Ociosos hibernam; ao serem recrutados, despertam. Após cada
+  tarefa a colônia volta ao repouso (0 ativos).
+
+• App Factory aprimorada (backend/app_factory/quality_analyzer.py)
+  Todo app gerado recebe um score de qualidade (A–F): docstrings,
+  cobertura de testes, legibilidade e uma varredura de segurança
+  (eval/exec/segredos embutidos). Mais maturidade e liberdade segura.
+
+• Telemetria: novo endpoint GET /hive/swarm expõe as trilhas de
+  feromônio e a energia de cada bot — a "sabedoria coletiva" visível.
+
+Tudo determinístico e offline; +20 testes novos protegem o comportamento.

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <title>Ant's — Colônia de Bots</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="mark" aria-hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5.5" r="2.2" />
+            <ellipse cx="12" cy="11.5" rx="2.4" ry="2.6" />
+            <ellipse cx="12" cy="18" rx="2.8" ry="3" />
+            <path d="M10 4 8 2M14 4l2-2M9.5 11H6M14.5 11H18M9 18H5.5M15 18H18.5" />
+          </svg>
+        </span>
+        <span class="brand-text">ANT'S</span>
+      </div>
+      <nav class="rail">
+        <button class="nav-btn active" data-tab="chat" aria-label="Chat"><span class="ico">💬</span><span class="lbl">Chat</span></button>
+        <button class="nav-btn" data-tab="bots" aria-label="Bots"><span class="ico">🤖</span><span class="lbl">Bots</span></button>
+        <button class="nav-btn" data-tab="memory" aria-label="Memória"><span class="ico">🧠</span><span class="lbl">Memória</span></button>
+        <button class="nav-btn" data-tab="factory" aria-label="Factory"><span class="ico">🏭</span><span class="lbl">Factory</span></button>
+        <button class="nav-btn" data-tab="settings" aria-label="Ajustes"><span class="ico">⚙️</span><span class="lbl">Ajustes</span></button>
+      </nav>
+    </aside>
+
+    <div class="main-col">
+      <header class="topbar">
+        <span class="brand-mobile">🐜 Ant's</span>
+        <div id="conn" class="conn offline" title="conexão">offline</div>
+      </header>
+
+      <main class="content bg-grid">
+        <section class="tab active" id="tab-chat">
+          <div class="messages" id="messages">
+            <div class="msg bot">Olá! Sou a colmeia Ant's — uma colônia de agentes coordenados. Peça algo e eu distribuo entre os bots certos. 🐜</div>
+          </div>
+          <div class="composer">
+            <input id="chat-input" type="text" placeholder="Peça algo à colônia…" autocomplete="off" />
+            <button id="chat-send" aria-label="Enviar">➤</button>
+          </div>
+        </section>
+
+        <section class="tab" id="tab-bots">
+          <h2 class="section-title">Mente Colmeia</h2>
+          <div class="new-task">
+            <input id="task-input" type="text" placeholder="Nova tarefa para o enxame…" />
+            <button id="task-send">Enviar</button>
+          </div>
+          <div id="bot-grid" class="bot-grid"></div>
+          <div class="log" id="bot-log"></div>
+        </section>
+
+        <section class="tab" id="tab-memory">
+          <h2 class="section-title">Memória da Colmeia</h2>
+          <div class="row">
+            <input id="mem-query" type="text" placeholder="Buscar na memória…" />
+            <button id="mem-search" aria-label="Buscar">🔍</button>
+            <button id="mem-sleep" class="secondary" aria-label="Ciclo de sono">😴</button>
+          </div>
+          <div id="mem-stats" class="stats"></div>
+          <div id="mem-list" class="mem-list"></div>
+        </section>
+
+        <section class="tab" id="tab-factory">
+          <h2 class="section-title">App Factory</h2>
+          <textarea id="fac-desc" placeholder="Descreva o app que deseja criar…"></textarea>
+          <select id="fac-template">
+            <option value="">Detectar automaticamente</option>
+            <option value="api_rest">API REST</option>
+            <option value="web_app">Web App</option>
+            <option value="cli_tool">CLI</option>
+            <option value="saas_dashboard">Dashboard</option>
+            <option value="data_pipeline">Data Pipeline</option>
+            <option value="mobile_app">Mobile</option>
+          </select>
+          <button id="fac-create">🏭 Criar App</button>
+          <div id="fac-result" class="fac-result"></div>
+        </section>
+
+        <section class="tab" id="tab-settings">
+          <h2 class="section-title">Ajustes</h2>
+          <label class="switch-row">
+            <span>Tema claro</span>
+            <input type="checkbox" id="theme-toggle" />
+          </label>
+          <div id="health-info" class="stats"></div>
+          <p class="muted">Ant's — colônia de bots com mente colmeia.</p>
+        </section>
+      </main>
+
+      <nav class="bottomnav">
+        <button class="nav-btn active" data-tab="chat" aria-label="Chat">💬</button>
+        <button class="nav-btn" data-tab="bots" aria-label="Bots">🤖</button>
+        <button class="nav-btn" data-tab="memory" aria-label="Memória">🧠</button>
+        <button class="nav-btn" data-tab="factory" aria-label="Factory">🏭</button>
+        <button class="nav-btn" data-tab="settings" aria-label="Ajustes">⚙️</button>
+      </nav>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Lógica original do Ant's — NÃO ALTERADA -->
+  <script src="/js/app.js"></script>
+  <script src="/js/chat.js"></script>
+  <script src="/js/bots.js"></script>
+  <script src="/js/memory.js"></script>
+  <script src="/js/factory.js"></script>
+</body>
+</html>

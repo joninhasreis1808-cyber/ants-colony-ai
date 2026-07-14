@@ -1,0 +1,19 @@
+{
+  "name": "ants-app",
+  "version": "6.0.0",
+  "description": "Ant's — Superorganismo Digital (app nativo)",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icon": "tauri icon ../web/assets/icons/icon-512.png",
+    "android:init": "tauri android init",
+    "android:build": "tauri android build",
+    "ios:init": "tauri ios init",
+    "ios:build": "tauri ios build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

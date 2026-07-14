@@ -97,8 +97,37 @@ async def health() -> dict[str, Any]:
 
 
 # Serve a interface web (PWA) na raiz, se a pasta existir.
-_WEB_DIR = Path(__file__).resolve().parents[2] / "web"
+# Quando empacotado (PyInstaller), a pasta web/ é embutida via sys._MEIPASS;
+# fora do pacote, mantém o caminho original do repositório.
+def _resolve_web_dir() -> Path:
+    import sys
+
+    if getattr(sys, "frozen", False):  # binário PyInstaller
+        return Path(getattr(sys, "_MEIPASS", ".")) / "web"
+    return Path(__file__).resolve().parents[2] / "web"
+
+
+_WEB_DIR = _resolve_web_dir()
 if _WEB_DIR.is_dir():
     app.mount(
         "/", StaticFiles(directory=str(_WEB_DIR), html=True), name="web"
     )
+
+
+def _run() -> None:
+    """Entrada standalone para o binário nativo (sidecar do app Tauri).
+
+    Uso: `python -m backend.api.main` ou o binário PyInstaller `ants_backend`.
+    Porta configurável por ANTS_PORT (padrão 8765).
+    """
+    import os
+
+    import uvicorn
+
+    port = int(os.environ.get("ANTS_PORT", "8765"))
+    host = os.environ.get("ANTS_HOST", "127.0.0.1")
+    uvicorn.run(app, host=host, port=port)
+
+
+if __name__ == "__main__":
+    _run()

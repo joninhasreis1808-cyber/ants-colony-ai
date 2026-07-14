@@ -4,3 +4,8 @@ server.log
 __pycache__/
 *.pyc
 .pytest_cache/
+dist/
+dist_web/
+build/
+*.spec.bak
+node_modules/

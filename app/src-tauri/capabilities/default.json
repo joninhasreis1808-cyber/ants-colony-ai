@@ -1,0 +1,23 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Permissões do Ant's: criar janela, subir o sidecar do backend e emitir notificações do SO.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-create",
+    "core:window:allow-close",
+    "core:webview:allow-create-webview-window",
+    "notification:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/ants_backend",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
+  ]
+}

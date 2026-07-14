@@ -78,6 +78,40 @@ bash scripts/start.sh        # instala, testa e sobe tudo
 
 Ou na nuvem (grátis): `bash scripts/deploy_cloud.sh` (Railway / Render / Fly.io).
 
+## 📦 App nativo (desktop + mobile)
+
+Além do site/PWA, o Ant's tem um app nativo em **Tauri 2** (`app/`) que sobe o
+backend Python automaticamente e abre a interface em `http://localhost:8765`.
+
+```bash
+bash scripts/build_app.sh     # gera o app da plataforma atual
+# ou o pipeline completo (testes + site + app):
+bash scripts/build_all.sh
+```
+
+O que cada script faz:
+
+| Script | Resultado |
+|--------|-----------|
+| `scripts/build_website.sh` | site estático (PWA) em `dist_web/` |
+| `scripts/build_backend_binary.sh` | binário `ants_backend` (PyInstaller) → sidecar |
+| `scripts/build_app.sh` | app nativo em `app/src-tauri/target/release/bundle/` |
+| `scripts/build_all.sh` | testes → site → app |
+
+**Desktop (Linux / Windows / macOS):** o app empacota o sidecar `ants_backend`
+(binário do backend com a interface embutida), sobe-o ao abrir e o encerra ao
+fechar. No Linux gera `.deb`, `.rpm` e `.AppImage`; no Windows `.msi`/`.exe`
+(NSIS); no macOS `.app`/`.dmg`.
+Pré-requisitos: Rust (`cargo`), Node (`npm`) e, no Linux,
+`webkit2gtk-4.1`, `libsoup-3.0`, `librsvg2`, `patchelf`.
+
+**Celular (Android / iOS):** o projeto já está pronto para mobile
+(`npm run android:init` / `npm run ios:init` em `app/`). Como o celular não roda
+o sidecar Python, o app mobile aponta para um backend hospedado — ajuste
+`REMOTE_URL` em `app/src-tauri/src/lib.rs` para o endereço da sua colônia
+(ex.: o deploy grátis de `scripts/deploy_cloud.sh`) e rode
+`npm run android:build` / `npm run ios:build`.
+
 ## 🧩 As 5 capacidades
 
 | Fase | Capacidade | Onde |

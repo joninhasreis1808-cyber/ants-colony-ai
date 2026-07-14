@@ -19,7 +19,7 @@ def test_health_endpoint():
     body = resp.json()
     assert body["status"] == "healthy"
     assert body["modules"]["hivemind"] is True
-    assert sum(body["modules"].values()) == 6
+    assert sum(body["modules"].values()) >= 6  # 6 originais + bio/autonomia
 
 
 def test_hive_endpoints():

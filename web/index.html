@@ -1,121 +1,281 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#1a1a2e" />
-  <title>Ant's — Colônia de Bots</title>
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0d1117" />
+<title>Ant's — Superorganismo</title>
+<link rel="manifest" href="/manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/design_system.css" />
+<link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <div id="app">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <span class="mark" aria-hidden>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="5.5" r="2.2" />
-            <ellipse cx="12" cy="11.5" rx="2.4" ry="2.6" />
-            <ellipse cx="12" cy="18" rx="2.8" ry="3" />
-            <path d="M10 4 8 2M14 4l2-2M9.5 11H6M14.5 11H18M9 18H5.5M15 18H18.5" />
-          </svg>
-        </span>
-        <span class="brand-text">ANT'S</span>
-      </div>
-      <nav class="rail">
-        <button class="nav-btn active" data-tab="chat" aria-label="Chat"><span class="ico">💬</span><span class="lbl">Chat</span></button>
-        <button class="nav-btn" data-tab="bots" aria-label="Bots"><span class="ico">🤖</span><span class="lbl">Bots</span></button>
-        <button class="nav-btn" data-tab="memory" aria-label="Memória"><span class="ico">🧠</span><span class="lbl">Memória</span></button>
-        <button class="nav-btn" data-tab="factory" aria-label="Factory"><span class="ico">🏭</span><span class="lbl">Factory</span></button>
-        <button class="nav-btn" data-tab="settings" aria-label="Ajustes"><span class="ico">⚙️</span><span class="lbl">Ajustes</span></button>
-      </nav>
-    </aside>
+<!-- SVG sprite: ícones profissionais (sem emojis) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-ant" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.3"/><ellipse cx="12" cy="11.5" rx="2.5" ry="2.8"/><ellipse cx="12" cy="18.5" rx="3" ry="3.3"/><path d="M10 3.5 8 1.8M14 3.5l2-1.7M9.5 11H5.5M14.5 11h4M9 18H5M15 18h4"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></symbol>
+    <symbol id="i-bots" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/><path d="M8 17h8"/></symbol>
+    <symbol id="i-mem" viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5c0 1-1 1.5-1 3a4 4 0 0 0 2 3.5V17a3 3 0 0 0 6 0M12 2a5 5 0 0 1 5 5c0 1 1 1.5 1 3a4 4 0 0 1-2 3.5V17a3 3 0 0 1-6 0"/></symbol>
+    <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 21h18M4 21V9l6 4V9l6 4V5l4 2v14"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15H4.5a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 6 9.4l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 12 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 2.82 1.17l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.9 9h.1a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 2z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><path d="m2 18 3-11 5 6 2-8 2 8 5-6 3 11z"/><path d="M2 18h20"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 4 13c0-6 8-11 16-11 0 8-5 16-9 18z"/><path d="M4 20c4-4 6-6 8-8"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5z"/></symbol>
+    <symbol id="i-worker" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-nurse" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-loader" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4M4.9 19.1l2.9-2.9M16.2 7.8l2.9-2.9"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5 12 20a5 5 0 0 1-7-7l9-8.5a3.5 3.5 0 0 1 5 5l-9 8.5a1.5 1.5 0 0 1-2-2l8-7.5"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></symbol>
+  </defs>
+</svg>
 
-    <div class="main-col">
-      <header class="topbar">
-        <span class="brand-mobile">🐜 Ant's</span>
-        <div id="conn" class="conn offline" title="conexão">offline</div>
-      </header>
+<div id="app">
+  <!-- Sidebar (tablet rail / desktop full) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-wrap">
+      <svg class="ico ico-lg logo"><use href="#i-ant"/></svg>
+      <div><div style="font-weight:600">ANT'S</div><div class="v">v3.0.0</div></div>
+    </div>
+    <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
+    <button class="nav-item" data-tab="bots"><svg class="ico"><use href="#i-bots"/></svg><span>Bots</span><span class="nav-badge" id="nav-bot-count">7</span></button>
+    <button class="nav-item" data-tab="memory"><svg class="ico"><use href="#i-mem"/></svg><span>Memória</span></button>
+    <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
+    <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-crown"/></svg><span>Colônia</span></button>
+    <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
+    <div class="side-foot">
+      <span class="chip"><svg class="ico ico-sm" style="color:var(--ok)"><use href="#i-zap"/></svg>213 testes</span>
+    </div>
+  </aside>
 
-      <main class="content bg-grid">
-        <section class="tab active" id="tab-chat">
-          <div class="messages" id="messages">
-            <div class="msg bot">Olá! Sou a colmeia Ant's — uma colônia de agentes coordenados. Peça algo e eu distribuo entre os bots certos. 🐜</div>
-          </div>
-          <div class="composer">
-            <input id="chat-input" type="text" placeholder="Peça algo à colônia…" autocomplete="off" />
-            <button id="chat-send" aria-label="Enviar">➤</button>
-          </div>
-        </section>
+  <div class="main-col">
+    <header class="topbar">
+      <span class="brand-mini"><svg class="ico logo"><use href="#i-ant"/></svg>Ant's</span>
+      <span class="topbar-title" id="topbar-title" style="display:none"><svg class="ico"><use href="#i-chat"/></svg>Chat</span>
+      <div id="conn" class="conn online" title="conexão">Conectado</div>
+    </header>
 
-        <section class="tab" id="tab-bots">
-          <h2 class="section-title">Mente Colmeia</h2>
-          <div class="new-task">
-            <input id="task-input" type="text" placeholder="Nova tarefa para o enxame…" />
-            <button id="task-send">Enviar</button>
+    <main class="content">
+      <!-- CHAT -->
+      <section class="tab active" id="tab-chat">
+        <div class="messages" id="chat-messages">
+          <div id="messages" style="display:contents">
+            <div class="msg bot">Olá. Sou a colônia Ant's — um superorganismo de castas coordenadas. Descreva um objetivo e eu recruto os operários certos.</div>
           </div>
+        </div>
+        <!-- Painel de progresso (estilo Manus) — populado dinamicamente -->
+        <div class="progress-panel" id="progress-panel" style="display:none">
+          <div class="pp-head">
+            <span class="ttl"><svg class="ico ico-sm"><use href="#i-ant"/></svg> Colônia trabalhando<span class="pp-pct" id="progress-pct">0%</span></span>
+            <button class="pp-close" id="progress-minimize" title="Minimizar"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="pp-body">
+            <div id="progress-steps"></div>
+            <div class="pp-track"><div class="pp-fill" id="progress-bar"></div></div>
+            <div class="pp-info">
+              <span><svg class="ico ico-sm"><use href="#i-worker"/></svg> <span id="progress-active-bot">—</span></span>
+              <span><svg class="ico ico-sm"><use href="#i-clock"/></svg> <span id="progress-elapsed">0.0s</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="composer-tools">
+            <button class="icon-btn" title="Anexar"><svg class="ico"><use href="#i-clip"/></svg></button>
+            <button class="icon-btn" title="Voz"><svg class="ico"><use href="#i-mic"/></svg></button>
+          </div>
+          <div class="composer-field">
+            <input id="chat-input" type="text" placeholder="Descreva um objetivo para a colônia..." autocomplete="off" />
+          </div>
+          <button id="chat-send" title="Enviar"><svg class="ico"><use href="#i-send"/></svg></button>
+        </div>
+      </section>
+
+      <!-- BOTS -->
+      <section class="tab" id="tab-bots">
+        <div class="section-head">
+          <h2><svg class="ico"><use href="#i-bots"/></svg> Superorganismo</h2>
+          <span class="badge" id="bots-count">7 castas ativas</span>
+        </div>
+        <div class="new-task">
+          <div class="field"><input id="task-input" type="text" placeholder="Nova tarefa para a colônia..." /></div>
+          <button class="btn" id="task-send"><svg class="ico ico-sm"><use href="#i-send"/></svg> Enviar</button>
+        </div>
+        <div id="bots-grid">
           <div id="bot-grid" class="bot-grid"></div>
-          <div class="log" id="bot-log"></div>
-        </section>
+        </div>
+        <div class="log" id="bot-log"></div>
+      </section>
 
-        <section class="tab" id="tab-memory">
-          <h2 class="section-title">Memória da Colmeia</h2>
-          <div class="row">
-            <input id="mem-query" type="text" placeholder="Buscar na memória…" />
-            <button id="mem-search" aria-label="Buscar">🔍</button>
-            <button id="mem-sleep" class="secondary" aria-label="Ciclo de sono">😴</button>
-          </div>
-          <div id="mem-stats" class="stats"></div>
-          <div id="mem-list" class="mem-list"></div>
-        </section>
+      <!-- MEMÓRIA -->
+      <section class="tab" id="tab-memory">
+        <div class="section-head"><h2><svg class="ico"><use href="#i-mem"/></svg> Memória da Colônia</h2></div>
+        <div class="row">
+          <div class="field"><svg class="ico ico-sm" style="color:var(--muted)"><use href="#i-search"/></svg><input id="mem-query" type="text" placeholder="Buscar na memória..." /></div>
+          <button class="btn ghost" id="mem-search"><svg class="ico ico-sm"><use href="#i-search"/></svg></button>
+          <button class="btn ghost" id="mem-sleep"><svg class="ico ico-sm"><use href="#i-moon"/></svg> Ciclo de Sono</button>
+        </div>
+        <div id="mem-stats" class="stats"></div>
+        <div id="memory-list"><div id="mem-list" class="mem-list"></div></div>
+      </section>
 
-        <section class="tab" id="tab-factory">
-          <h2 class="section-title">App Factory</h2>
-          <textarea id="fac-desc" placeholder="Descreva o app que deseja criar…"></textarea>
-          <select id="fac-template">
-            <option value="">Detectar automaticamente</option>
-            <option value="api_rest">API REST</option>
-            <option value="web_app">Web App</option>
-            <option value="cli_tool">CLI</option>
-            <option value="saas_dashboard">Dashboard</option>
-            <option value="data_pipeline">Data Pipeline</option>
-            <option value="mobile_app">Mobile</option>
-          </select>
-          <button id="fac-create">🏭 Criar App</button>
-          <div id="fac-result" class="fac-result"></div>
-        </section>
+      <!-- FACTORY -->
+      <section class="tab" id="tab-factory">
+        <div class="section-head"><h2><svg class="ico"><use href="#i-factory"/></svg> App Factory</h2></div>
+        <textarea class="field" id="factory-description" placeholder="Descreva o app que deseja criar..."></textarea>
+        <textarea id="fac-desc" style="display:none"></textarea>
+        <select class="field" id="factory-template">
+          <option value="">Detectar automaticamente</option>
+          <option value="api_rest">API REST</option>
+          <option value="web_app">Web App</option>
+          <option value="cli_tool">CLI</option>
+          <option value="saas_dashboard">Dashboard</option>
+          <option value="data_pipeline">Data Pipeline</option>
+        </select>
+        <select id="fac-template" style="display:none"></select>
+        <button class="btn" id="factory-create"><svg class="ico ico-sm"><use href="#i-factory"/></svg> Criar App</button>
+        <button id="fac-create" style="display:none"></button>
+        <div id="fac-result" class="fac-result">Descreva um app e clique em "Criar App".</div>
+      </section>
 
-        <section class="tab" id="tab-settings">
-          <h2 class="section-title">Ajustes</h2>
-          <label class="switch-row">
-            <span>Tema claro</span>
-            <input type="checkbox" id="theme-toggle" />
-          </label>
-          <div id="health-info" class="stats"></div>
-          <p class="muted">Ant's — colônia de bots com mente colmeia.</p>
-        </section>
-      </main>
+      <!-- COLÔNIA (dashboard vivo) -->
+      <section class="tab" id="tab-colony">
+        <div class="section-head">
+          <h2><svg class="ico"><use href="#i-crown"/></svg> Colônia Viva</h2>
+          <span class="badge" id="colony-state-badge">observando</span>
+        </div>
+        <p class="muted">Você está observando um organismo vivo trabalhando.</p>
 
-      <nav class="bottomnav">
-        <button class="nav-btn active" data-tab="chat" aria-label="Chat">💬</button>
-        <button class="nav-btn" data-tab="bots" aria-label="Bots">🤖</button>
-        <button class="nav-btn" data-tab="memory" aria-label="Memória">🧠</button>
-        <button class="nav-btn" data-tab="factory" aria-label="Factory">🏭</button>
-        <button class="nav-btn" data-tab="settings" aria-label="Ajustes">⚙️</button>
-      </nav>
+        <h3 class="sub">Hierarquia da colônia</h3>
+        <div id="org-hierarchy"></div>
+
+        <h3 class="sub">Rede viva</h3>
+        <div id="colony-network" class="bg-hexagon-mesh" style="border-radius:8px;padding:8px"></div>
+
+        <h3 class="sub">Centro cognitivo — as 9 camadas</h3>
+        <div id="cognitive-center"></div>
+
+        <h3 class="sub">Recursos do dispositivo</h3>
+        <div id="resource-center"></div>
+
+        <h3 class="sub">Linha do tempo das decisões</h3>
+        <div id="decision-timeline"></div>
+      </section>
+
+      <!-- AJUSTES -->
+      <section class="tab" id="tab-settings">
+        <div class="section-head"><h2><svg class="ico"><use href="#i-settings"/></svg> Ajustes</h2></div>
+        <label class="switch-row">
+          <span style="display:flex;align-items:center;gap:9px"><svg class="ico"><use href="#i-moon"/></svg> Tema claro</span>
+          <span class="switch"><input type="checkbox" id="theme-toggle" /><span class="slider"></span></span>
+        </label>
+        <div id="settings-theme" style="display:none"></div>
+        <h3 class="sub">Sistema</h3>
+        <div id="health-info" class="stats"></div>
+        <h3 class="sub">Permissões concedidas</h3>
+        <div id="settings-permissions" class="stats"><span class="muted">Nenhuma permissão ativa</span></div>
+        <p class="muted" style="margin-top:8px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
+      </section>
+    </main>
+
+    <!-- Bottom nav (mobile) -->
+    <nav class="bottomnav">
+      <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
+      <button class="nav-item" data-tab="bots"><svg class="ico"><use href="#i-bots"/></svg><span>Bots</span></button>
+      <button class="nav-item" data-tab="memory"><svg class="ico"><use href="#i-mem"/></svg><span>Memória</span></button>
+      <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
+      <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
+    </nav>
+  </div>
+</div>
+
+<!-- Painel de progresso flutuante minimizado -->
+<div class="floating" id="floating-progress">
+  <div class="ft"><svg class="ico ico-sm"><use href="#i-ant"/></svg> Trabalhando...</div>
+  <div class="fbar"><span style="width:0%"></span></div>
+  <div class="fmeta">0 bots ativos</div>
+</div>
+
+<!-- Modal de visão do bot -->
+<div class="modal-backdrop" id="bot-vision-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="m-title"><svg class="ico"><use href="#i-worker"/></svg> <span id="bot-vision-name">Bot</span></span>
+      <div class="m-actions">
+        <button class="btn ghost" id="bot-vision-assume" style="min-height:40px"><svg class="ico ico-sm"><use href="#i-zap"/></svg> Assumir</button>
+        <button class="btn ghost" id="bot-vision-close" style="min-height:40px;min-width:40px"><svg class="ico ico-sm"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="mv-grid">
+        <div class="mv-box">
+          <h4><svg class="ico ico-sm"><use href="#i-pin"/></svg> Ação atual</h4>
+          <div id="bot-vision-action">Aguardando tarefa...</div>
+        </div>
+        <div class="mv-box">
+          <h4>Status</h4>
+          <div class="mv-status-dot" id="bot-vision-status">Ativo</div>
+          <div class="muted" style="margin-top:8px">Casta: <span id="bot-vision-caste">Exploradora</span></div>
+        </div>
+      </div>
+      <div class="mv-box">
+        <h4><svg class="ico ico-sm"><use href="#i-clock"/></svg> Log em tempo real</h4>
+        <div id="bot-vision-log">Sem atividade registrada.</div>
+      </div>
+      <div class="bot-progress" style="height:8px"><span id="bot-vision-bar" style="width:0%"></span></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="bot-vision-stop"><svg class="ico ico-sm"><use href="#i-x"/></svg> Parar</button>
+      <button class="btn ghost" id="bot-vision-pause">Pausar</button>
+      <button class="btn ghost" id="bot-vision-resume">Retomar</button>
+      <button class="btn"><svg class="ico ico-sm"><use href="#i-worker"/></svg> Recrutar Ajuda</button>
     </div>
   </div>
+</div>
 
-  <div id="toast" class="toast"></div>
+<div id="toast" class="toast"></div>
+<div id="connection-indicator" style="display:none"></div>
 
-  <!-- Lógica original do Ant's — NÃO ALTERADA -->
-  <script src="/js/app.js"></script>
-  <script src="/js/chat.js"></script>
-  <script src="/js/bots.js"></script>
-  <script src="/js/memory.js"></script>
-  <script src="/js/factory.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/scripts.js"></script>
+<script src="/js/chat.js"></script>
+<script src="/js/bots.js"></script>
+<script src="/js/memory.js"></script>
+<script src="/js/factory.js"></script>
+<script src="/js/notifications.js"></script>
+<script src="/js/device_permissions.js"></script>
+<script src="/js/context_engine.js"></script>
+<script src="/js/live_dashboard.js"></script>
+<script src="/js/cognitive_center.js"></script>
+<script src="/js/resource_center.js"></script>
+<script src="/js/timeline.js"></script>
+<script>
+/* Monta o dashboard vivo ao abrir a aba Colônia (aditivo, só UI). */
+(function () {
+  function mountColony() {
+    if (window.AntDashboard) AntDashboard.mount("org-hierarchy", "colony-network");
+    if (window.AntCognitive) AntCognitive.mount("cognitive-center");
+    if (window.AntResources) AntResources.mount("resource-center");
+    if (window.AntTimeline) AntTimeline.mount("decision-timeline");
+    var b = document.getElementById("colony-state-badge");
+    if (b && window.AntContext) b.textContent =
+      (AntContext.STATES[AntContext.getCurrentContext()] || {}).label || "observando";
+  }
+  document.querySelectorAll('.nav-item[data-tab="colony"]').forEach(function (btn) {
+    btn.addEventListener("click", function () { setTimeout(mountColony, 30); });
+  });
+})();
+</script>
 </body>
 </html>

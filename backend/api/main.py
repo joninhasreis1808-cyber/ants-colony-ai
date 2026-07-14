@@ -15,7 +15,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.api.routes import action as action_routes
+from backend.api.routes import bio as bio_routes
 from backend.api.routes import factory as factory_routes
+from backend.api.routes import mind as mind_routes
+from backend.api.routes import evolution as evolution_routes
+from backend.api.routes import organism as organism_routes
 from backend.api.routes import hive as hive_routes
 from backend.api.routes import memory as memory_routes
 from backend.api.routes import perception as perception_routes
@@ -42,6 +46,10 @@ app.include_router(action_routes.router)
 app.include_router(permission_routes.router)
 app.include_router(memory_routes.router)
 app.include_router(factory_routes.router)
+app.include_router(bio_routes.router)
+app.include_router(mind_routes.router)
+app.include_router(evolution_routes.router)
+app.include_router(organism_routes.router)
 
 
 @app.get("/health")
@@ -62,6 +70,23 @@ async def health() -> dict[str, Any]:
             "permissions": True,
             "memory": True,
             "factory": True,
+            "bio_inspired": True,
+            "computer_use": True,
+            "autonomy": True,
+            "superorganism": True,
+            "cognitive": True,
+            "reasoning": True,
+            "colony_states": True,
+            "meta_cognition": True,
+            "homeostasis": True,
+            "observability": True,
+            "metabolism": True,
+            "immune_system": True,
+            "hormones": True,
+            "circadian": True,
+            "colony_dna": True,
+            "trust_autonomy": True,
+            "observer": True,
         },
         "bots_active": 5,
         "memories_stored": mem_count,

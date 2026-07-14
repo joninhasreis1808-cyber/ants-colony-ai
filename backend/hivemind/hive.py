@@ -43,8 +43,29 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # Enxame: feromônios (estigmergia) + gestão de energia dos bots.
         self.pheromones = pheromones or PheromoneField()
         self.lifecycle = lifecycle or ColonyLifecycle()
+        # Superorganismo: castas, economia e polimorfismo (aditivos, leves).
+        # Observam a colônia sem interferir no pipeline — cada bot é
+        # registrado na sua casta e ganha uma conta na economia interna.
+        from backend.hivemind.castes import CasteSystem
+        from backend.hivemind.economy import BotEconomy
+        from backend.hivemind.polymorphism import Polymorphism
+        self.castes = CasteSystem()
+        self.economy = BotEconomy()
+        self.polymorphism = Polymorphism()
+        # Evolução máxima: estados, homeostase, cultura e meta-cognição.
+        # Tudo aditivo — observam e regulam sem alterar o pipeline central.
+        from backend.cognitive.meta_supervisor import MetaSupervisor
+        from backend.hivemind.colony_state import ColonyStateMachine
+        from backend.hivemind.culture import ColonyCulture
+        from backend.hivemind.homeostasis import Homeostasis
+        self.colony_state = ColonyStateMachine()
+        self.homeostasis = Homeostasis()
+        self.culture = ColonyCulture()
+        self.meta = MetaSupervisor()
         for bot in roster:
             self.lifecycle.register(bot.name)
+            self.castes.register(bot.name, "worker")
+            self.polymorphism.register(bot.name)
 
     async def _emit(self, event: BotEvent) -> None:
         """Callback injetado nos bots para publicar eventos no bus."""

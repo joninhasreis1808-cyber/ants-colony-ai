@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════════════════════════
+   ANT'S — DESIGN SYSTEM PRÓPRIO (identidade exclusiva da colônia)
+   Não imita GitHub/ChatGPT/Claude/Manus. Paleta de terra, âmbar e
+   pergaminho — como olhar dentro de um formigueiro vivo.
+   ═══════════════════════════════════════════════════════════════ */
+:root{
+  /* Cores exclusivas do Ant's */
+  --ant-bg-deep:#0a0e14;         /* fundo profundo da colônia */
+  --ant-bg-surface:#141a22;      /* superfície dos cards */
+  --ant-amber:#d4a017;           /* âmbar — feromônio */
+  --ant-ember:#c0392b;           /* brasa — alerta */
+  --ant-honey:#e8b84b;           /* mel — sucesso */
+  --ant-leaf:#3d7a3d;            /* folha — jardineiras */
+  --ant-soil:#5c4033;            /* terra — operárias */
+  --ant-queen-gold:#d4a017;      /* ouro da rainha */
+  --ant-soldier-red:#8b0000;     /* vermelho dos soldados */
+  --ant-scout-blue:#2563eb;      /* azul das exploradoras */
+  --ant-text-primary:#e8e0d5;    /* pergaminho */
+  --ant-text-secondary:#9b8e7e;  /* pergaminho apagado */
+}
+
+/* ── Padrão de fundo: malha hexagonal (colmeia) ── */
+.bg-hexagon-mesh{
+  background-color:var(--ant-bg-deep);
+  background-image:
+    linear-gradient(30deg,rgba(212,160,23,.03) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.03) 87.5%,rgba(212,160,23,.03)),
+    linear-gradient(150deg,rgba(212,160,23,.03) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.03) 87.5%,rgba(212,160,23,.03)),
+    linear-gradient(30deg,rgba(212,160,23,.03) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.03) 87.5%,rgba(212,160,23,.03)),
+    linear-gradient(150deg,rgba(212,160,23,.03) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.03) 87.5%,rgba(212,160,23,.03));
+  background-size:40px 70px;
+  background-position:0 0,0 0,20px 35px,20px 35px;
+}
+
+/* ── Trilhas de feromônio: linhas que fluem (só quando ativo) ── */
+.bg-pheromone-trails{position:relative;overflow:hidden}
+.bg-pheromone-trails::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:repeating-linear-gradient(115deg,transparent 0 18px,rgba(212,160,23,.06) 18px 20px);
+  background-size:200% 100%;transition:opacity .6s ease;
+}
+.bg-pheromone-trails.colony-working::after{opacity:1;animation:trail-flow 20s linear infinite}
+@keyframes trail-flow{from{background-position:0 0}to{background-position:200% 0}}
+
+/* ── Pulso da colônia: iluminação sutil conforme atividade ── */
+.bg-colony-pulse{position:relative}
+.bg-colony-pulse::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 0%,rgba(212,160,23,.05),transparent 60%);
+  animation:colony-pulse 3s ease-in-out infinite;
+}
+@keyframes colony-pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── Cores por casta (aplicáveis a bordas e ícones) ── */
+.caste-queen{--caste:var(--ant-queen-gold)}
+.caste-soldier{--caste:var(--ant-soldier-red)}
+.caste-explorer{--caste:var(--ant-scout-blue)}
+.caste-worker{--caste:var(--ant-soil)}
+.caste-gardener{--caste:var(--ant-leaf)}
+.caste-nurse{--caste:var(--ant-honey)}
+
+/* ═══ Estados da colônia (Bloco 10): tema muda discretamente ═══ */
+[data-colony-state]{transition:background-color .5s ease-in-out,box-shadow .5s ease-in-out}
+[data-colony-state] .state-indicator{display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;padding:5px 12px;border-radius:20px;font-weight:600;
+  border:1px solid var(--state-color,#4a5568);color:var(--state-color,#9b8e7e)}
+[data-colony-state] .state-indicator::before{content:"";width:8px;height:8px;
+  border-radius:50%;background:var(--state-color,#4a5568)}
+
+[data-colony-state="dormant"]{--state-color:#5b6b82}
+[data-colony-state="observing"]{--state-color:var(--ant-scout-blue)}
+[data-colony-state="exploring"]{--state-color:var(--ant-amber)}
+[data-colony-state="building"]{--state-color:var(--ant-leaf)}
+[data-colony-state="learning"]{--state-color:#8b5cf6}
+[data-colony-state="defending"]{--state-color:var(--ant-ember);
+  box-shadow:inset 0 0 0 2px rgba(192,57,43,.4);animation:defend-pulse 1.2s ease-in-out infinite}
+[data-colony-state="executing"]{--state-color:#3b82f6}
+[data-colony-state="emergency"]{--state-color:#ff2d2d;
+  box-shadow:inset 0 0 0 3px rgba(255,45,45,.6)}
+@keyframes defend-pulse{50%{box-shadow:inset 0 0 0 3px rgba(192,57,43,.7)}}
+[data-colony-state="observing"]{box-shadow:inset 0 0 40px rgba(37,99,235,.05)}
+[data-colony-state="learning"] .neural-link{animation:neural-blink 1.5s ease-in-out infinite}
+@keyframes neural-blink{50%{opacity:.4}}
+
+/* ── Barras cognitivas (Centro Cognitivo) ── */
+.cog-layer{margin-bottom:8px}
+.cog-layer .cog-name{font-size:12px;color:var(--ant-text-secondary);
+  display:flex;justify-content:space-between;margin-bottom:3px}
+.cog-track{height:7px;background:var(--ant-bg-deep);border-radius:5px;overflow:hidden}
+.cog-fill{height:100%;border-radius:5px;background:var(--caste,var(--ant-amber));
+  width:0;transition:width .6s cubic-bezier(.3,.7,.3,1)}
+
+/* ── Nós vivos (rede biológica) ── */
+.colony-node{fill:var(--ant-bg-surface);stroke:var(--caste,var(--ant-amber));
+  stroke-width:2;transition:all .3s ease;cursor:pointer}
+.colony-node.busy{fill:rgba(212,160,23,.15)}
+.colony-node.idle{opacity:.45}
+.colony-link{stroke:var(--ant-amber);stroke-width:1.5;opacity:.3}
+.colony-link.transmitting{animation:link-flash 1s ease-in-out infinite}
+@keyframes link-flash{50%{opacity:.9;stroke:var(--ant-honey)}}
+
+/* ── Reduz movimento se solicitado ── */
+@media(prefers-reduced-motion:reduce){
+  .bg-pheromone-trails.colony-working::after,.bg-colony-pulse::before,
+  [data-colony-state="defending"],.colony-link.transmitting{animation:none}
+}

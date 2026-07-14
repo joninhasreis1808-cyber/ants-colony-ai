@@ -36,6 +36,9 @@
     if (app) app.setAttribute("data-colony-state", state);
     const ind = ensureIndicator();
     ind.textContent = STATES[state].label;
+    // reflete no indicador do design (topbar)
+    const si = document.getElementById("state-ind");
+    if (si) si.textContent = STATES[state].label;
     // trilhas de feromônio no conteúdo só quando a colônia trabalha
     const content = document.querySelector(".content");
     if (content) {

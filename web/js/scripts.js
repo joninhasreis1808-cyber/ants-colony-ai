@@ -5,27 +5,55 @@
   "use strict";
   const $ = (id) => document.getElementById(id);
 
-  /* ---- Navegação entre abas + título dinâmico ---- */
-  const TAB = { chat: "Chat", bots: "Bots", memory: "Memória",
-                factory: "App Factory", colony: "Colônia", settings: "Ajustes" };
-  const TAB_ICON = { chat: "i-chat", bots: "i-bots", memory: "i-mem",
-                     factory: "i-factory", colony: "i-crown", settings: "i-settings" };
+  /* ---- Navegação entre abas (design usa .tab.is-active) ---- */
   function showTab(name) {
-    document.querySelectorAll(".tab").forEach((t) =>
-      t.classList.toggle("active", t.id === "tab-" + name));
+    document.querySelectorAll(".tab").forEach((t) => {
+      const on = t.id === "tab-" + name;
+      t.classList.toggle("is-active", on);
+      t.classList.toggle("active", on);
+    });
     document.querySelectorAll(".nav-item").forEach((b) =>
       b.classList.toggle("active", b.dataset.tab === name));
-    const tt = $("topbar-title");
-    if (tt) {
-      tt.innerHTML = '<svg class="ico"><use href="#' + TAB_ICON[name] +
-        '"/></svg>' + TAB[name];
-    }
     // aciona os hooks dos módulos originais (sem alterá-los)
-    if (name === "memory" && window.Memory) window.Memory.refresh();
+    if (name === "environment" && window.Memory) window.Memory.refresh();
     if (name === "settings" && window.Ant) window.Ant.showHealth();
+    document.dispatchEvent(new CustomEvent("ants:tab", { detail: name }));
   }
   document.querySelectorAll(".nav-item").forEach((b) =>
     b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+  /* ---- Perfis (Usuário/Dev/Cientista): data-mode no #app ---- */
+  const modeSwitch = $("mode-switch");
+  if (modeSwitch) modeSwitch.querySelectorAll("button").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      modeSwitch.querySelectorAll("button").forEach((b) => b.classList.remove("on"));
+      btn.classList.add("on");
+      const app = $("app");
+      if (app) app.setAttribute("data-mode", btn.dataset.mode || "user");
+    }));
+
+  /* ---- Tema: settings-theme (visível) <-> theme-toggle (app.js) ---- */
+  const setTheme = $("settings-theme"), legacyTheme = $("theme-toggle");
+  if (setTheme && legacyTheme) {
+    setTheme.checked = legacyTheme.checked ||
+      localStorage.getItem("ant-theme") === "light";
+    setTheme.addEventListener("change", () => {
+      legacyTheme.checked = setTheme.checked;
+      legacyTheme.dispatchEvent(new Event("change"));
+    });
+  }
+
+  /* ---- Conexão: espelha #conn (app.js) -> #connection-indicator (design) ---- */
+  const conn = $("conn"), connInd = $("connection-indicator");
+  if (conn && connInd) {
+    const mirror = () => {
+      connInd.textContent = conn.textContent || "Conectado";
+      connInd.classList.toggle("offline", conn.classList.contains("offline"));
+    };
+    new MutationObserver(mirror).observe(conn,
+      { childList: true, characterData: true, subtree: true, attributes: true });
+    mirror();
+  }
 
   /* ---- Pontes de compatibilidade (campo visível -> ID legado) ----
      A UI nova usa IDs descritivos; os .js originais leem os IDs antigos.

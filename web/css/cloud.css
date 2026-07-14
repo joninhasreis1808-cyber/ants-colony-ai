@@ -46,6 +46,24 @@
 #ant-tour .skip { background: transparent; color: var(--ant-parchment, #e8e0d5); opacity: .6; border-color: transparent; }
 #ant-tour button:focus-visible, #ant-health-footer:focus-visible { outline: 2px solid var(--ant-amber, #d4a017); outline-offset: 2px; }
 
+/* ---- Modo Laboratório ---- */
+#ant-lab { position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 92vw); z-index: 8500;
+  transform: translateX(105%); transition: transform .3s ease; overflow-y: auto;
+  background: var(--ant-panel, #121821); color: var(--ant-parchment, #e8e0d5);
+  border-left: 1px solid rgba(255,255,255,.12); padding: 14px; font-size: .82rem; }
+#ant-lab.show { transform: translateX(0); }
+#ant-lab header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+#ant-lab header button { background: transparent; color: inherit; border: none; font-size: 1.3rem; cursor: pointer; }
+#ant-lab h4 { margin: 14px 0 6px; font-size: .8rem; color: var(--ant-amber, #d4a017); }
+#ant-lab button#lab-replay { background: var(--ant-amber, #d4a017); color: #1a1206; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; }
+#lab-heatmap { display: flex; flex-wrap: wrap; gap: 6px; }
+#ant-lab .hm-cell { display: flex; flex-direction: column; padding: 6px 8px; border-radius: 8px; color: #fff; min-width: 64px; }
+#ant-lab .hm-name { font-weight: 600; } #ant-lab .hm-n { opacity: .85; }
+#lab-replay-out, #lab-feed { margin-top: 6px; max-height: 180px; overflow-y: auto; }
+#ant-lab .rp-row, #ant-lab .lab-ev { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,.06); }
+#ant-lab .muted { opacity: .55; }
+
 @media (prefers-reduced-motion: reduce) {
   #ant-awaken, #ant-awaken .aw-ant, #ant-health-footer .dot { animation: none !important; transition: none !important; }
+  #ant-lab { transition: none !important; }
 }

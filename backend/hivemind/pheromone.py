@@ -28,6 +28,7 @@ class PheromoneType(str, Enum):
     SUCCESS = "success"
     DANGER = "danger"
     RECRUITMENT = "recruitment"
+    DANGER_AVOID = "danger_avoid"  # repulsão forte: "nunca mais por aqui"
 
 
 @dataclass
@@ -120,6 +121,16 @@ class PheromoneField:
         oldest = sorted(self._trails.values(), key=lambda t: t.last_update)
         for trail in oldest[: len(self._trails) - self._max_trails]:
             self._trails.pop(trail.id, None)
+
+    def mark_danger(self, trail_id: str, intensity: float = 0.4) -> float:
+        """Deposita feromônio negativo forte (a colônia evita a trilha)."""
+        return self.deposit(trail_id, PheromoneType.DANGER_AVOID, intensity)
+
+    def should_avoid(self, trail_id: str, threshold: float = 0.5) -> bool:
+        """True se a repulsão (DANGER + DANGER_AVOID) supera o limiar."""
+        s = self.sense(trail_id)
+        repel = s.get("danger", 0.0) + s.get("danger_avoid", 0.0)
+        return repel >= threshold
 
     def snapshot(self) -> dict[str, dict[str, float]]:
         """Panorama de todas as trilhas por tipo, para telemetria."""

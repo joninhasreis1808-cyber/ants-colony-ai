@@ -15,6 +15,8 @@ from backend.cognitive.planner import Planner
 from backend.cognitive.researcher import Researcher
 from backend.cognitive.specialist import Specialist
 from backend.cognitive.verifier import Verifier
+from backend.events.event_bus import EventType as _EV
+from backend.events.event_bus import get_event_bus as _bus
 from backend.reasoning.engine import ReasoningEngine
 
 
@@ -47,7 +49,9 @@ class CognitiveOrchestrator:
         """Executa o pipeline cognitivo completo sobre a pergunta."""
         knowledge = knowledge or []
         self.planner.plan(question)  # estrutura o problema
+        _bus().publish(_EV.PLAN_CREATED, {"question": question})
         report = self.researcher.deep_research(question, knowledge)
+        _bus().publish(_EV.RESEARCH_COMPLETED, {"gaps": len(report.gaps)})
         hyps = self.hypothesizer.generate_hypotheses(question)
         for h in hyps:
             self.hypothesizer.test_hypothesis(h, knowledge)
@@ -57,6 +61,8 @@ class CognitiveOrchestrator:
         domain = self.specialist.detect_domain(question)
         # Confiança final combina o raciocínio e a verificação.
         confidence = round((answer.confidence + score.value) / 2, 3)
+        _bus().publish(_EV.DECISION_TAKEN,
+                       {"domain": domain, "confidence": confidence, "critique_ok": critique.ok})
         return CognitiveResult(
             question=question, answer=answer.text, confidence=confidence,
             domain=domain, hypotheses=len(hyps), gaps=report.gaps,

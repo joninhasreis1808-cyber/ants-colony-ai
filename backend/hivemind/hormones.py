@@ -10,9 +10,12 @@ from enum import Enum
 
 
 class Hormone(str, Enum):
-    DOPAMINE = "dopamine"    # recompensa: repetir o que deu certo
-    CORTISOL = "cortisol"    # estresse: mais verificação, menos risco
-    OXYTOCIN = "oxytocin"    # cooperação: compartilhar mais
+    DOPAMINE = "dopamine"      # recompensa: repetir o que deu certo
+    CORTISOL = "cortisol"      # estresse: mais verificação, menos risco
+    OXYTOCIN = "oxytocin"      # cooperação: compartilhar mais
+    SEROTONIN = "serotonin"    # bem-estar: tarefa concluída com sucesso
+    ADRENALINE = "adrenaline"  # urgência: acelera o processamento
+    MELATONIN = "melatonin"    # fim do ciclo diurno: hora de consolidar
 
 
 class HormoneSystem:
@@ -43,3 +46,15 @@ class HormoneSystem:
     def cooperation_bonus(self) -> float:
         """Quanto a ocitocina incentiva o compartilhamento."""
         return self._levels["oxytocin"]
+
+    def well_being(self) -> float:
+        """Bem-estar da colônia: serotonina alta, cortisol baixo."""
+        return round(max(0.0, self._levels["serotonin"] - 0.5 * self._levels["cortisol"]), 3)
+
+    def urgency_boost(self) -> float:
+        """Aceleração por adrenalina (1.0 = normal, até 1.5)."""
+        return round(1.0 + 0.5 * self._levels["adrenaline"], 3)
+
+    def consolidation_ready(self) -> bool:
+        """Melatonina alta indica que é hora de consolidar a memória."""
+        return self._levels["melatonin"] >= 0.6

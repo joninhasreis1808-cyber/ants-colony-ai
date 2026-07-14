@@ -24,6 +24,9 @@ from backend.api.routes import hive as hive_routes
 from backend.api.routes import memory as memory_routes
 from backend.api.routes import perception as perception_routes
 from backend.api.routes import permissions as permission_routes
+from backend.api.routes import nervous as nervous_routes
+from backend.events.audit import EventAuditor
+from backend.events.middleware import EventBusMiddleware
 
 VERSION = "2.0.0"
 _STARTED = time.time()
@@ -39,7 +42,12 @@ app.add_middleware(
     allow_credentials=False,
 )
 
+# Sistema nervoso central: injeta o EventBus e mantém auditoria/replay.
+app.add_middleware(EventBusMiddleware)
+app.state.auditor = EventAuditor()  # subscreve a "*" (todos os eventos)
+
 # Registro de todos os módulos.
+app.include_router(nervous_routes.router)
 app.include_router(hive_routes.router, prefix="/hive")
 app.include_router(perception_routes.router)
 app.include_router(action_routes.router)
@@ -87,6 +95,8 @@ async def health() -> dict[str, Any]:
             "colony_dna": True,
             "trust_autonomy": True,
             "observer": True,
+            "nervous_system": True,
+            "metrics": True,
         },
         "bots_active": 5,
         "memories_stored": mem_count,

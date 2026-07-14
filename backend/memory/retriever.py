@@ -12,6 +12,8 @@ from backend.memory.distributed_store import DistributedStore
 from backend.memory.encoder import NeuralEncoder
 from backend.memory.reports import ReconstructedMemory, RetrievalResult
 from backend.memory.schemas import Memory
+from backend.events.event_bus import EventType as _EV
+from backend.events.event_bus import get_event_bus as _bus
 
 
 class MemoryRetriever:
@@ -41,6 +43,8 @@ class MemoryRetriever:
         for mem in merged[:limit]:
             self._consolidator.reinforce(mem.id, boost=0.05)
         confidence = self._confidence(merged, features)
+        _bus().publish(_EV.MEMORY_RECALLED,
+                       {"query": query[:60], "found": len(merged[:limit])})
         return RetrievalResult(
             memories=merged[:limit],
             confidence=confidence,

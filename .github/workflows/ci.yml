@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependências (enxutas) + testes
+        run: |
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr
+          python -m pip install --upgrade pip
+          pip install -r requirements-cloud.txt
+          pip install pytest pytest-asyncio
+
+      - name: Rodar testes
+        run: python -m pytest tests/ -q
+
+      - name: Verificar integridade dos 4 JS legados
+        run: |
+          echo "e1cc6df5be37d6e0502b1063767601bd  web/js/chat.js"   > /tmp/sum
+          echo "ed95b37ebbf0b926daa685dfe09419c1  web/js/bots.js"   >> /tmp/sum
+          echo "de5d8499d12efd869baa138497996e10  web/js/memory.js" >> /tmp/sum
+          echo "18b0d5a834fda16f613633a250db053d  web/js/factory.js" >> /tmp/sum
+          md5sum -c /tmp/sum

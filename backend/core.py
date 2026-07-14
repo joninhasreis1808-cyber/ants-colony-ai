@@ -111,3 +111,34 @@ class SearchResult:
             "snippet": self.snippet,
             "source": self.source,
         }
+
+
+# ── Arquitetura em camadas (núcleo imutável → apps) ──────────────────────
+# Cada camada só depende das inferiores. A INTERFACE pode ser totalmente
+# substituída sem tocar no KERNEL. Manifesto para introspecção/documentação;
+# não altera imports (core.py continua sendo módulo, não pacote).
+LAYERS: dict[str, list[str]] = {
+    "kernel": ["events", "security", "permissions"],   # NUNCA muda
+    "biology": ["hivemind", "stigmergy_field"],         # castas, feromônios, hormônios
+    "cognition": ["cognitive", "reasoning", "nlp", "evaluation", "learning"],
+    "interface": ["api", "web"],
+    "apps": ["app_factory", "intelligence", "agents"],
+}
+_LAYER_ORDER = ["kernel", "biology", "cognition", "interface", "apps"]
+
+
+def layer_of(module: str) -> Optional[str]:
+    """Retorna a camada de um módulo (ex.: 'hivemind' → 'biology')."""
+    top = module.split(".")[0]
+    for layer, mods in LAYERS.items():
+        if top in mods:
+            return layer
+    return None
+
+
+def may_depend(higher: str, lower: str) -> bool:
+    """True se `higher` pode depender de `lower` (mesma camada ou inferior)."""
+    lh, ll = layer_of(higher), layer_of(lower)
+    if lh is None or ll is None:
+        return True
+    return _LAYER_ORDER.index(ll) <= _LAYER_ORDER.index(lh)

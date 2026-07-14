@@ -1,6 +1,6 @@
 # 🐜 Projeto Ant's — Colônia de Bots com Mente Colmeia
 
-![tests](https://img.shields.io/badge/tests-162%20passing-3ad29f)
+![tests](https://img.shields.io/badge/tests-326%20passing-3ad29f)
 ![python](https://img.shields.io/badge/python-3.11%2B-0f3460)
 ![pwa](https://img.shields.io/badge/PWA-instal%C3%A1vel-e94560)
 
@@ -8,6 +8,56 @@ Uma colônia de **bots autônomos** que colaboram como uma mente colmeia:
 percebem o mundo, agem sobre ele, lembram do que aprendem e criam
 aplicativos completos — tudo acessível por uma **interface web (PWA)** que
 funciona no computador e no celular.
+
+
+
+## ⚡ Evolução máxima (mente colmeia no ápice)
+
+A colônia agora se **autorregula** e **pensa sobre como pensa** — mais inteligência emergente, menos complexidade:
+
+- **3 estados** (`hivemind/colony_state.py`) — adormecida, ativa, intensiva. Nunca mantém bots ociosos; hiberna sozinha após 60s.
+- **Meta-cognição** (`cognitive/meta_supervisor.py`) — observa o pipeline, acha gargalos e recalibra os pesos das camadas.
+- **Mercado cognitivo** (`hivemind/economy.py`) — bots apostam tempo/custo por tarefa; quem acerta ganha, quem falha perde. Seleção natural real.
+- **Estigmergia digital** (`hivemind/stigmergy_field.py`) — comunicação pelo ambiente (feromônios vetoriais que evaporam e se propagam), quase sem mensagens diretas.
+- **Plasticidade + morfogênese** — bots mudam de casta conforme a necessidade; a arquitetura cresce e poda sozinha.
+- **Homeostase** (`hivemind/homeostasis.py`) — CPU alta reduz bots, RAM baixa compacta memória, bateria crítica hiberna.
+- **Cultura** (`hivemind/culture.py`), **memória procedural** (`memory/procedural.py`), **conselho da rainha**, **raciocínio avançado** (contrafactual/causal/abdutivo), **observabilidade total** e mais.
+
+Endpoints em `/colony/*`. Tudo offline, aditivo, sem quebrar nada.
+
+## 🖥️ Interface: uma janela para a colônia viva
+
+Identidade visual **própria** (paleta de terra, âmbar e pergaminho — não imita ChatGPT/Claude/Manus), com aba **Colônia** que mostra o organismo trabalhando: hierarquia das castas, rede viva (nós que pulsam), as 9 camadas cognitivas em tempo real, recursos do dispositivo e linha do tempo de decisões. A interface **respira** conforme o estado da colônia (8 estados com temas distintos). Zero emojis — só ícones SVG coesos.
+
+## 🧠 Superorganismo cognitivo (processamento próprio)
+
+A colônia raciocina com **módulos próprios** — sem depender de Ollama nem de APIs externas (que são aceleradores opcionais, não requisitos):
+
+- **Sistema de castas** (`hivemind/castes.py`) — rainha, soldados, operárias, exploradoras, jardineiras, cuidadoras; recrutamento por tarefa, promoção/rebaixamento por mérito. Com **polimorfismo** (tamanhos por carga) e **economia** interna (reputação dos bots).
+- **9 camadas cognitivas** (`cognitive/`) — planner, researcher, hypothesizer, executor, critic, verifier, specialist, simulator, learner, unidas por um `orchestrator`.
+- **Raciocínio próprio** (`reasoning/`) — motor simbólico-estatístico + inferência lógica (forward/backward chaining), offline.
+- **NLP próprio** (`nlp/`) — tokenização, sentimento, TF-IDF e embeddings por co-ocorrência (PMI), sem NLTK/spaCy/transformers.
+- **Conhecimento** (`memory/`) — grafo de conhecimento vivo, busca híbrida, memória semântica (resolve "minha IA" = "Jarvis") e cache mundial.
+- **Autonomia** — investigador, navegação autônoma, scheduler, consciência temporal, predição por analogia e consciência das próprias limitações.
+
+Endpoints em `/mind/*` (think, reason, infer, assess). Tudo funciona **offline**; startup ~1.3s, RAM ~85MB.
+
+## 🧬 Evolução bio-inspirada + autonomia total
+
+A colônia opera como um organismo vivo, com mecanismos tirados da natureza:
+
+| Mecanismo | Inspiração | Módulo |
+|-----------|-----------|--------|
+| **Feromônios** (4 tipos) | formigas marcam trilhas | `hivemind/pheromone.py` |
+| **Decisão por quórum** | abelhas votam por consenso | `hivemind/quorum.py` |
+| **Regeneração de bots** | axolote regenera membros | `hivemind/regeneration.py` |
+| **Rede de micélio** | fungos conectam a floresta | `hivemind/mycelium.py` |
+
+E é **autossuficiente** — funciona mesmo sem internet ou APIs pagas: IA
+local (Ollama + fallback por regras), navegação por navegador real sem API
+(Playwright), cache de dois níveis para respostas instantâneas, Computer
+Use sob permissão explícita (whitelist + sandbox + auditoria) e
+recomendações proativas no estilo de Claude e Manus. Endpoints em `/bio/*`.
 
 ## 🧠 Mente colmeia orgânica
 
@@ -27,6 +77,74 @@ bash scripts/start.sh        # instala, testa e sobe tudo
 ```
 
 Ou na nuvem (grátis): `bash scripts/deploy_cloud.sh` (Railway / Render / Fly.io).
+
+## 📦 App nativo (desktop + mobile)
+
+Além do site/PWA, o Ant's tem um app nativo em **Tauri 2** (`app/`) que sobe o
+backend Python automaticamente e abre a interface em `http://localhost:8765`.
+
+```bash
+bash scripts/build_app.sh     # gera o app da plataforma atual
+# ou o pipeline completo (testes + site + app):
+bash scripts/build_all.sh
+```
+
+O que cada script faz:
+
+| Script | Resultado |
+|--------|-----------|
+| `scripts/build_website.sh` | site estático (PWA) em `dist_web/` |
+| `scripts/build_backend_binary.sh` | binário `ants_backend` (PyInstaller) → sidecar |
+| `scripts/build_app.sh` | app nativo em `app/src-tauri/target/release/bundle/` |
+| `scripts/build_all.sh` | testes → site → app |
+
+**Desktop (Linux / Windows / macOS):** o app empacota o sidecar `ants_backend`
+(binário do backend com a interface embutida), sobe-o ao abrir e o encerra ao
+fechar. No Linux gera `.deb`, `.rpm` e `.AppImage`; no Windows `.msi`/`.exe`
+(NSIS); no macOS `.app`/`.dmg`.
+Pré-requisitos: Rust (`cargo`), Node (`npm`) e, no Linux,
+`webkit2gtk-4.1`, `libsoup-3.0`, `librsvg2`, `patchelf`.
+
+**Celular (Android / iOS):** o projeto já está pronto para mobile
+(`npm run android:init` / `npm run ios:init` em `app/`). Como o celular não roda
+o sidecar Python, o app mobile aponta para um backend hospedado — ajuste
+`REMOTE_URL` em `app/src-tauri/src/lib.rs` para o endereço da sua colônia
+(ex.: o deploy grátis de `scripts/deploy_cloud.sh`) e rode
+`npm run android:build` / `npm run ios:build`.
+
+## ☁️ Deploy na nuvem (link público 24/7)
+
+Para qualquer pessoa usar **só abrindo um link** (sem instalar nada), faça o
+deploy grátis. As configs já estão prontas na raiz (`render.yaml`,
+`railway.json`, `fly.toml`) e usam `deploy/Dockerfile` com dependências
+**enxutas** (`requirements-cloud.txt`) — imagem leve, sem torch, ideal para
+plano gratuito. `$PORT` é injetado pela plataforma; `/health` é o healthcheck.
+
+**Render (1 clique):**
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joninhasreis1808-cyber/ants-colony-ai)
+→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe. A URL sai
+como `https://ants.onrender.com`.
+
+**Railway:** conecte o repo em <https://railway.app/new> (detecta o
+`railway.json`) e clique em *Deploy*. Depois *Settings → Networking →
+Generate Domain*.
+
+**Fly.io (CLI):**
+```bash
+flyctl launch --copy-config --name SEU-NOME   # usa fly.toml
+flyctl deploy
+flyctl open
+```
+
+**Docker local:**
+```bash
+docker compose -f deploy/docker-compose.yml up --build   # http://localhost:8765
+```
+
+> Observação: os botões/deploy usam o branch **padrão** do repo. Faça o merge
+> desta branch para `main` (ou aponte a plataforma para a branch) antes de
+> clicar. Depois do deploy, copie a URL para `COMO_USAR.txt` e compartilhe —
+> há também uma página de entrada simples em `/acesso.html`.
 
 ## 🧩 As 5 capacidades
 

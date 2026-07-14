@@ -1,20 +1,13 @@
+# Ant's 6.0 — subir localmente com Docker (1 comando):
+#   docker compose -f deploy/docker-compose.yml up --build
+# Depois abra http://localhost:8765
 services:
-  backend:
+  ants:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     ports:
       - "8765:8765"
-    volumes:
-      - ../data:/app/data
     environment:
-      - ANTS_REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    restart: unless-stopped
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
+      - PORT=8765
     restart: unless-stopped

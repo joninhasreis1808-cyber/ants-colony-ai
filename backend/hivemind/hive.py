@@ -14,6 +14,8 @@ from typing import Any, Optional
 
 from backend.bots.base import Bot
 from backend.core import BotEvent, Phase, Task, TaskStatus
+from backend.events.event_bus import EventType as NervEvent
+from backend.events.event_bus import get_event_bus as _nervous_bus
 from backend.hivemind.hive_memory import MemoryMixin
 from backend.hivemind.lifecycle import ColonyLifecycle
 from backend.hivemind.recruiter import Recruiter
@@ -43,8 +45,29 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # Enxame: feromônios (estigmergia) + gestão de energia dos bots.
         self.pheromones = pheromones or PheromoneField()
         self.lifecycle = lifecycle or ColonyLifecycle()
+        # Superorganismo: castas, economia e polimorfismo (aditivos, leves).
+        # Observam a colônia sem interferir no pipeline — cada bot é
+        # registrado na sua casta e ganha uma conta na economia interna.
+        from backend.hivemind.castes import CasteSystem
+        from backend.hivemind.economy import BotEconomy
+        from backend.hivemind.polymorphism import Polymorphism
+        self.castes = CasteSystem()
+        self.economy = BotEconomy()
+        self.polymorphism = Polymorphism()
+        # Evolução máxima: estados, homeostase, cultura e meta-cognição.
+        # Tudo aditivo — observam e regulam sem alterar o pipeline central.
+        from backend.cognitive.meta_supervisor import MetaSupervisor
+        from backend.hivemind.colony_state import ColonyStateMachine
+        from backend.hivemind.culture import ColonyCulture
+        from backend.hivemind.homeostasis import Homeostasis
+        self.colony_state = ColonyStateMachine()
+        self.homeostasis = Homeostasis()
+        self.culture = ColonyCulture()
+        self.meta = MetaSupervisor()
         for bot in roster:
             self.lifecycle.register(bot.name)
+            self.castes.register(bot.name, "worker")
+            self.polymorphism.register(bot.name)
 
     async def _emit(self, event: BotEvent) -> None:
         """Callback injetado nos bots para publicar eventos no bus."""
@@ -55,9 +78,13 @@ class Hivemind(MemoryMixin, SwarmMixin):
         """Resolve uma tarefa do início ao fim, atualizando seu estado."""
         task.touch(TaskStatus.PLANNING)
         self.memory.save_task(task)
+        # Sistema nervoso: anuncia a tarefa (aditivo, não afeta o fluxo).
+        _nervous_bus().publish(NervEvent.TASK_CREATED, {"id": task.id, "goal": task.goal})
 
         needs = self.recruiter.infer_needs(task.goal)
         bots = self.recruiter.recruit(needs)
+        _nervous_bus().publish(NervEvent.BOT_RECRUITED,
+                               {"task": task.id, "bots": [b.name for b in bots]})
 
         # Injeta o emissor de eventos em cada bot recrutado.
         for bot in bots:

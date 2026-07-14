@@ -1,0 +1,22 @@
+# Mantém a imagem enxuta: só backend/ + web/ + requirements entram.
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.db
+*.sqlite
+deploy/data
+
+# App nativo (Tauri) — nada disso vai para a imagem da nuvem
+app/
+dist/
+dist_web/
+build/
+**/node_modules
+**/target
+
+# Testes e docs pesados
+tests/
+design_reference/
+*.tar.gz

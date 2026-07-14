@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#100e08; --bg2:#161209; --surface:#1e1810; --surface2:#251d12;
+  --border:#3a2f1c; --border2:#4a3c24;
+  --amber:#d4a017; --honey:#e8b84b; --ember:#c0603b;
+  --leaf:#6aa15a; --soil:#b98a5e; --queen:#e8b84b; --soldier:#c25a4e; --scout:#5f97c9; --nurse:#e0a54b;
+  --text:#ece3d2; --muted:#a89a80; --dim:#7a6e58;
+  --ok:#6aa15a; --warn:#d4a017; --err:#c25a4e;
+  --serif:'Newsreader',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r:10px; --rs:7px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+.ant-shell,.ant-shell *{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.ant-shell ::-webkit-scrollbar{width:8px;height:8px}
+.ant-shell ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:8px}
+.ant-shell a{color:var(--amber);text-decoration:none}
+.ant-shell a:hover{color:var(--honey)}
+.ant-shell{
+  font-family:var(--serif);color:var(--text);font-size:15px;line-height:1.55;
+  height:100dvh;display:grid;grid-template-columns:1fr;grid-template-rows:auto 1fr auto;
+  background:var(--bg);-webkit-font-smoothing:antialiased;position:relative;overflow:hidden;
+  background-image:
+    linear-gradient(150deg,rgba(212,160,23,.028) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.028) 87.5%,rgba(212,160,23,.028)),
+    linear-gradient(30deg,rgba(212,160,23,.028) 12%,transparent 12.5%,transparent 87%,rgba(212,160,23,.028) 87.5%,rgba(212,160,23,.028));
+  background-size:44px 76px;background-position:0 0,22px 38px;
+}
+.ant-shell::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 60% at 50% -10%,rgba(212,160,23,.07),transparent 55%);
+  animation:colonyPulse 5s ease-in-out infinite}
+@keyframes colonyPulse{0%,100%{opacity:.5}50%{opacity:1}}
+.ant-shell.light{--bg:#f2ece0;--bg2:#e8e0d0;--surface:#fbf7ee;--surface2:#f3ecdd;--border:#d8cdb4;--border2:#c8ba98;--text:#2a2216;--muted:#6b5f47;--dim:#8a7d62}
+
+h1,h2,h3,h4{font-weight:500;letter-spacing:-.01em;line-height:1.2}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;color:var(--text);background:transparent;border:none;outline:none;width:100%;font-size:16px}
+svg{display:block}
+.ico{width:19px;height:19px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.ico.sm{width:15px;height:15px}.ico.lg{width:24px;height:24px}
+.mono{font-family:var(--mono)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+
+/* ── SIDEBAR ── */
+#sidebar{display:none}
+.main-col{display:grid;grid-template-rows:auto 1fr;min-width:0;min-height:0;position:relative;z-index:1}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;gap:12px;padding:11px 16px;background:rgba(22,18,9,.86);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--border);min-height:58px;position:relative;z-index:2}
+.light .topbar{background:rgba(248,244,236,.86)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .mark{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;
+  background:radial-gradient(circle at 35% 30%,#2a2112,#161009);border:1px solid var(--border2);color:var(--amber)}
+.brand .wm{font-family:var(--mono);font-weight:600;letter-spacing:.22em;font-size:13px}
+.brand .ver{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.1em}
+.state-ind{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;padding:6px 13px;border-radius:20px;
+  border:1px solid var(--sc,var(--border2));color:var(--sc,var(--muted));white-space:nowrap}
+.state-ind::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sc,var(--dim));
+  box-shadow:0 0 8px var(--sc,transparent);animation:blink 2.2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+.spacer{flex:1}
+.mode-switch{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:3px}
+.mode-switch button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 12px;border-radius:18px;
+  color:var(--muted);min-height:34px;transition:.18s;white-space:nowrap}
+.mode-switch button.on{background:var(--surface2);color:var(--honey);box-shadow:inset 0 0 0 1px var(--border2)}
+#connection-indicator{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.06em;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--ok)}
+#connection-indicator::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);
+  box-shadow:0 0 0 0 var(--ok);animation:ping 2s cubic-bezier(0,0,.2,1) infinite}
+@keyframes ping{75%,100%{box-shadow:0 0 0 6px transparent}}
+
+/* ── CONTENT / TABS ── */
+.content{min-height:0;overflow-y:auto;padding:22px 20px 30px;position:relative;z-index:1}
+.wrap{max-width:1060px;margin-inline:auto;width:100%}
+.tab{display:none}
+.tab.is-active{display:block;animation:rise .4s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.page-head{margin-bottom:20px}
+.page-head h2{font-size:27px;font-weight:500;display:flex;align-items:center;gap:12px;letter-spacing:-.02em}
+.page-head h2 .ph-ico{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;
+  background:var(--surface);border:1px solid var(--border);color:var(--amber)}
+.page-head p{color:var(--muted);margin-top:7px;max-width:60ch;font-size:15px}
+.sub-h{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+  margin:26px 0 12px;display:flex;align-items:center;gap:9px}
+.sub-h::after{content:"";flex:1;height:1px;background:var(--border)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr}
+.g3{grid-template-columns:1fr}
+
+/* ── BUTTONS / FIELDS ── */
+.btn{min-height:48px;padding:0 20px;border-radius:24px;font-family:var(--mono);font-size:13px;letter-spacing:.04em;
+  font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:.18s;
+  background:var(--amber);color:#1a1204}
+.btn:hover{filter:brightness(1.08)}.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn.ghost:hover{border-color:var(--amber);color:var(--honey)}
+.field{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rs);padding:0 14px;min-height:50px;transition:.18s}
+.field:focus-within{border-color:var(--amber);box-shadow:0 0 0 3px rgba(212,160,23,.14)}
+textarea.field{padding:13px;min-height:96px;resize:vertical;line-height:1.5;align-items:stretch}
+select.field{padding:0 12px;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:6px 13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+/* ── CHAT ── */
+#tab-chat.is-active{display:flex;flex-direction:column;height:100%}
+.chat-wrap{max-width:820px;margin-inline:auto;width:100%;display:flex;flex-direction:column;flex:1;min-height:0}
+#chat-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:4px 2px 12px}
+.msg{max-width:88%;padding:13px 17px;border-radius:14px;overflow-wrap:break-word;animation:rise .35s ease both}
+.msg.bot,.message-bot{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg.user,.message-user{align-self:flex-end;background:linear-gradient(135deg,#d4a017,#b8850f);color:#1a1204;border-bottom-right-radius:4px}
+.msg .lead{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);
+  margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.msg-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;padding-top:10px;border-top:1px solid var(--border);
+  font-family:var(--mono);font-size:11px;color:var(--dim)}
+.msg-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.msg-actions button{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:18px;min-height:38px;
+  background:var(--bg2);border:1px solid var(--border);color:var(--muted);transition:.18s}
+.msg-actions button:hover{border-color:var(--amber);color:var(--honey)}
+
+/* research flow */
+.flow{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px 16px;margin-top:6px;display:none}
+.flow.show{display:block;animation:rise .35s ease both}
+.flow-head{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.flow-head .pct{margin-left:auto;color:var(--honey)}
+.flow-track{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
+.flow-step{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:74px;flex:0 0 auto;opacity:.4;transition:.4s}
+.flow-step.on{opacity:1}.flow-step.done{opacity:.85}
+.flow-step .fs-dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:var(--bg2);border:1.5px solid var(--border2);color:var(--muted);transition:.3s}
+.flow-step.on .fs-dot{border-color:var(--amber);color:var(--honey);box-shadow:0 0 0 4px rgba(212,160,23,.16);
+  background:#2a2112;animation:beat 1s ease-in-out infinite}
+.flow-step.done .fs-dot{border-color:var(--leaf);color:var(--leaf)}
+@keyframes beat{50%{transform:scale(1.12)}}
+.flow-step .fs-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;text-align:center;color:var(--muted);line-height:1.25}
+.flow-arm{flex:1 0 14px;height:2px;background:var(--border);position:relative;min-width:14px;margin-top:-17px}
+.flow-arm.lit{background:linear-gradient(90deg,var(--amber),transparent);background-size:200% 100%;animation:flow 1.4s linear infinite}
+@keyframes flow{from{background-position:0 0}to{background-position:-200% 0}}
+.flow-narr{margin-top:13px;padding-top:12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:12.5px;color:var(--muted);min-height:20px;display:flex;align-items:center;gap:9px;line-height:1.4}
+.flow-narr b{color:var(--honey)}
+.flow-narr::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--amber);flex:0 0 auto;box-shadow:0 0 8px var(--amber);animation:blink 1s ease-in-out infinite}
+.dfb{display:flex;gap:7px;margin-top:11px}
+.dfb button{width:44px;height:44px;border-radius:9px;display:grid;place-items:center;border:1px solid var(--border);background:var(--bg2);color:var(--dim);transition:.16s}
+.dfb button:hover{color:var(--honey);border-color:var(--amber)}
+.dfb button.chosen{color:var(--leaf);border-color:var(--leaf);background:rgba(106,161,90,.12)}
+.ant-shell[data-colony-state="observing"]::before,.ant-shell[data-colony-state="dormant"]::before{animation-duration:calc(6s * var(--bm,1))}
+.ant-shell[data-colony-state="exploring"]::before,.ant-shell[data-colony-state="executing"]::before,.ant-shell[data-colony-state="verifying"]::before{animation-duration:calc(2.2s * var(--bm,1))}
+.ant-shell[data-colony-state="building"]::before,.ant-shell[data-colony-state="learning"]::before{animation-duration:calc(2.8s * var(--bm,1))}
+
+.composer{display:flex;gap:9px;align-items:flex-end;padding-top:12px;border-top:1px solid var(--border);margin-top:6px}
+.icon-btn{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;color:var(--muted);transition:.18s;flex:0 0 auto}
+.icon-btn:hover{background:var(--surface);color:var(--honey)}
+.composer .field{flex:1}
+#chat-input{padding:12px 4px;min-height:46px}
+#chat-send{width:52px;height:52px;border-radius:50%;background:var(--amber);color:#1a1204;display:grid;place-items:center;flex:0 0 auto;transition:.18s}
+#chat-send:hover{filter:brightness(1.1)}#chat-send:active{transform:scale(.94)}
+
+/* ── COLONY NETWORK ── */
+.colony-layout{display:grid;grid-template-columns:1fr;gap:16px}
+.net-stage{position:relative;background:radial-gradient(circle at 50% 42%,#1c1710,#100d07);
+  border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.net-stage svg{width:100%;height:auto;display:block}
+.phero{stroke-width:1.4;fill:none;stroke-dasharray:5 7;opacity:.42;animation:march 2.4s linear infinite}
+@keyframes march{to{stroke-dashoffset:-24}}
+.node-ring{fill:none;stroke-width:1.5;opacity:.9}
+.node-core{stroke-width:0}
+.node-lbl{font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--text)}
+.node-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;fill:var(--dim)}
+.traveler{animation:none}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.legend span::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--lc,var(--amber))}
+
+.caste-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--rs);
+  background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--cc,var(--amber));margin-bottom:8px}
+.caste-row .cr-ico{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;color:var(--cc,var(--amber));background:var(--bg2)}
+.caste-row .cr-name{font-weight:500;font-size:15px}
+.caste-row .cr-role{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.caste-row .cr-count{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.caste-row .cr-count b{color:var(--cc,var(--honey))}
+
+/* ── BOT CARDS ── */
+#bots-grid .bot-grid{display:grid;gap:12px;grid-template-columns:1fr}
+.bot-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--cc,var(--dim));
+  border-radius:var(--rs);padding:14px;cursor:pointer;transition:.2s;animation:rise .4s ease both}
+.bot-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.4);border-color:var(--border2)}
+.bot-card.working{border-left-color:var(--amber)}.bot-card.done{border-left-color:var(--leaf)}
+.bc-head{display:flex;align-items:center;gap:10px}
+.bc-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto;color:var(--cc,var(--amber));background:var(--bg2)}
+.bc-name{font-weight:500;font-size:14.5px}
+.bc-role{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.bot-status{margin-left:auto;font-family:var(--mono);font-size:11px;display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.bot-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.bot-card.working .bot-status::before{background:var(--amber);animation:blink 1.3s infinite}
+.bot-card.done .bot-status::before{background:var(--leaf)}
+.bc-task{font-size:13px;color:var(--muted);margin-top:9px;overflow-wrap:break-word}
+.bot-progress{height:6px;background:var(--bg2);border-radius:4px;margin-top:11px;overflow:hidden}
+.bot-progress>span{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--honey));transition:width .7s ease}
+
+/* ── COGNITIVE ── */
+.cog-layer{margin-bottom:13px}
+.cog-name{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.cog-name .cn{font-size:14px}.cog-name .cn small{font-family:var(--mono);font-size:10px;color:var(--dim);margin-left:8px;letter-spacing:.08em}
+.cog-name .cp{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.cog-track{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden}
+.cog-fill{height:100%;border-radius:6px;background:var(--cc,var(--amber));width:0;transition:width 1s cubic-bezier(.3,.7,.3,1);
+  box-shadow:0 0 10px var(--cc,var(--amber))}
+
+/* ── RESOURCES ── */
+.metric{margin-bottom:15px}
+.metric .mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.metric .mh .ml{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.metric .mh .mv{font-family:var(--mono);font-size:17px;color:var(--honey)}
+.metric .mtrack{height:9px;background:var(--bg2);border-radius:6px;overflow:hidden}
+.metric .mfill{height:100%;border-radius:6px;transition:width .8s ease,background .4s}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:14px}
+.stat .sv{font-family:var(--mono);font-size:26px;color:var(--honey);line-height:1}
+.stat .sl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:7px}
+
+/* ── QUEEN ── */
+.queen-hero{background:radial-gradient(circle at 20% 0%,rgba(232,184,75,.14),transparent 60%),var(--surface);
+  border:1px solid var(--border);border-radius:var(--r);padding:22px;display:flex;gap:18px;align-items:flex-start}
+.queen-hero .qcrown{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;flex:0 0 auto;
+  color:var(--queen);background:#241b0d;border:1px solid var(--border2)}
+.queen-hero h3{font-size:20px;font-weight:500}
+.queen-hero .qgoal{font-size:16px;color:var(--text);margin-top:6px;font-style:italic}
+.decision{display:flex;gap:12px;padding:13px 15px;border-radius:var(--rs);background:var(--surface);
+  border:1px solid var(--border);margin-bottom:9px}
+.decision .dt{font-family:var(--mono);font-size:11px;color:var(--dim);min-width:52px;flex:0 0 auto}
+.decision .dtxt{font-size:14px}
+.decision .dcaste{font-family:var(--mono);font-size:10px;color:var(--cc,var(--amber));letter-spacing:.08em;margin-top:3px}
+
+/* ── ENVIRONMENT MAP ── */
+.env-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.env-node{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.env-node .en-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.env-node .en-h .ico{color:var(--amber)}
+.env-node .en-h h4{font-size:15px;font-weight:500}
+.env-node .en-h .tag{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--leaf);border:1px solid var(--border);border-radius:12px;padding:3px 9px}
+.env-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border);font-size:13px}
+.env-item:first-of-type{border-top:none}
+.env-item .ev{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* ── TIMELINE ── */
+.tl-item{display:flex;gap:14px;padding:0 0 4px 0;position:relative}
+.tl-item .tl-rail{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;width:34px}
+.tl-item .tl-dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--cc,var(--amber));
+  background:var(--bg2);border:1px solid var(--cc,var(--border2));flex:0 0 auto;z-index:1}
+.tl-item .tl-line{flex:1;width:2px;background:var(--border);margin:2px 0}
+.tl-item:last-child .tl-line{display:none}
+.tl-item .tl-body{padding-bottom:20px;flex:1;min-width:0}
+.tl-item .tl-time{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tl-item .tl-txt{font-size:14.5px;margin-top:2px}
+.tl-item .tl-detail{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;padding:7px 10px;
+  background:var(--bg2);border-radius:6px;border-left:2px solid var(--cc,var(--border2))}
+
+/* ── MISSIONS ── */
+.mission{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.mission .mm-h{display:flex;align-items:flex-start;gap:11px}
+.mission .mm-h h4{font-size:16px;font-weight:500;flex:1}
+.mission .mm-state{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 10px;border-radius:12px;border:1px solid var(--cc,var(--border2));color:var(--cc,var(--amber));flex:0 0 auto}
+.mission .mm-track{height:7px;background:var(--bg2);border-radius:5px;overflow:hidden;margin:12px 0}
+.mission .mm-track>span{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--amber),var(--honey))}
+.subtask{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;color:var(--muted)}
+.subtask .stbox{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);display:grid;place-items:center;flex:0 0 auto;color:var(--leaf)}
+.subtask.done .stbox{background:rgba(106,161,90,.16);border-color:var(--leaf)}
+.subtask.done{color:var(--text)}.subtask.doing .stbox{border-color:var(--amber);color:var(--amber)}
+
+/* ── FACTORY ── */
+.factory-form{display:flex;flex-direction:column;gap:12px;max-width:640px}
+#fac-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;
+  font-size:14px;overflow-wrap:break-word;color:var(--muted)}
+.tmpl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tmpl{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:13px;cursor:pointer;transition:.18s}
+.tmpl:hover,.tmpl.on{border-color:var(--amber);background:var(--surface2)}
+.tmpl .tn{font-family:var(--mono);font-size:13px;color:var(--honey)}
+.tmpl .td{font-size:12px;color:var(--dim);margin-top:4px}
+
+/* ── CONSOLE ── */
+.console{background:#0c0a05;border:1px solid var(--border);border-radius:var(--r);padding:14px;
+  font-family:var(--mono);font-size:12.5px;line-height:1.75;max-height:60vh;overflow-y:auto}
+.console .ln{display:flex;gap:10px;padding:1px 0;overflow-wrap:break-word}
+.console .ln .lt{color:var(--dim);flex:0 0 auto}
+.console .ln .lc{flex:0 0 auto;letter-spacing:.04em}
+.console .ln.info .lc{color:var(--scout)}.console .ln.ok .lc{color:var(--leaf)}
+.console .ln.warn .lc{color:var(--amber)}.console .ln.err .lc{color:var(--soldier)}
+.console .ln .lm{color:var(--muted);word-break:break-word}
+.console-bar{display:flex;gap:8px;margin-bottom:12px}
+
+/* ── SETTINGS ── */
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--rs);padding:15px 16px;margin-bottom:10px}
+.set-row .srl{display:flex;flex-direction:column;gap:2px}
+.set-row .srl .t{font-size:14.5px}.set-row .srl .d{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.switch{position:relative;width:50px;height:28px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:var(--border2);border-radius:20px;transition:.2s;cursor:pointer}
+.switch .sl::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.switch input:checked+.sl{background:var(--amber)}
+.switch input:checked+.sl::before{transform:translateX(22px)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font-family:var(--mono);font-size:12px;padding:9px 15px;border-radius:18px;border:1px solid var(--border2);color:var(--muted);min-height:42px;transition:.18s}
+.seg button.on{background:var(--surface2);border-color:var(--amber);color:var(--honey)}
+
+/* ── MODE VISIBILITY ── */
+.only-dev,.only-sci{display:none}
+[data-mode="dev"] .only-dev{display:revert}[data-mode="dev"] .only-user{display:none}
+[data-mode="sci"] .only-sci{display:revert}[data-mode="sci"] .only-user{display:none}
+[data-mode="dev"] .tl-item .tl-detail,[data-mode="sci"] .tl-item .tl-detail{display:block}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(6,4,2,.72);backdrop-filter:blur(3px);z-index:80;display:none;
+  align-items:center;justify-content:center;padding:16px}
+.modal-bg.show{display:flex;animation:fade .2s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:600px;
+  max-height:90dvh;overflow-y:auto;animation:rise .3s ease both}
+.modal-head{display:flex;align-items:center;gap:11px;padding:16px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)}
+.modal-head .mt{font-weight:500;font-size:17px;display:flex;align-items:center;gap:10px}
+.modal-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.mv-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:14px}
+.mv-box h5{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+#bot-vision-log{font-family:var(--mono);font-size:11.5px;color:var(--muted);max-height:170px;overflow-y:auto;line-height:1.7}
+.modal-foot{display:flex;flex-wrap:wrap;gap:8px;padding:14px 18px;border-top:1px solid var(--border)}
+.modal-foot .btn{flex:1;min-width:130px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface2);
+  color:var(--honey);border:1px solid var(--border2);padding:12px 20px;border-radius:24px;font-family:var(--mono);
+  font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:90}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ── BOTTOM NAV (mobile) ── */
+.bottomnav{display:flex;overflow-x:auto;background:rgba(22,18,9,.94);backdrop-filter:blur(8px);
+  border-top:1px solid var(--border);position:relative;z-index:2}
+.bottomnav .nav-item{flex:0 0 auto;min-width:20vw;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:9px 6px;min-height:60px;color:var(--muted);font-family:var(--mono);font-size:9.5px;letter-spacing:.02em;transition:.18s}
+.bottomnav .nav-item.active{color:var(--honey)}
+.bottomnav .nav-item.active .ico{color:var(--amber)}
+
+@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ── TABLET ── */
+@media(min-width:640px){
+  .g2{grid-template-columns:1fr 1fr}
+  .colony-layout{grid-template-columns:1.5fr 1fr}
+  #bots-grid .bot-grid{grid-template-columns:repeat(2,1fr)}
+  .env-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(min-width:960px){
+  .ant-shell{grid-template-columns:236px 1fr;grid-template-rows:1fr}
+  #sidebar{display:flex;flex-direction:column;gap:3px;padding:18px 12px;background:rgba(22,18,9,.7);
+    border-right:1px solid var(--border);grid-row:1/-1;position:relative;z-index:2;overflow-y:auto}
+  #sidebar .side-brand{display:flex;align-items:center;gap:11px;padding:4px 10px 16px}
+  #sidebar .side-brand .mark{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+    background:radial-gradient(circle at 35% 30%,#2a2112,#161009);border:1px solid var(--border2);color:var(--amber)}
+  #sidebar .side-brand .wm{font-family:var(--mono);font-weight:600;letter-spacing:.2em;font-size:14px}
+  #sidebar .side-brand .ver{font-family:var(--mono);font-size:10px;color:var(--dim)}
+  #sidebar .nav-item{display:flex;align-items:center;gap:12px;padding:0 13px;height:46px;border-radius:9px;
+    color:var(--muted);font-size:14px;transition:.16s;position:relative;text-align:left}
+  #sidebar .nav-item .ico{color:var(--dim);transition:.16s}
+  #sidebar .nav-item:hover{background:var(--surface);color:var(--text)}
+  #sidebar .nav-item:hover .ico{color:var(--muted)}
+  #sidebar .nav-item.active{background:linear-gradient(90deg,rgba(212,160,23,.14),transparent);color:var(--honey)}
+  #sidebar .nav-item.active .ico{color:var(--amber)}
+  #sidebar .nav-item.active::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--amber)}
+  #sidebar .nav-item .badge{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--surface2);
+    border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--muted)}
+  #sidebar .side-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+  .main-col{grid-column:2}
+  .bottomnav{display:none}
+  .topbar .brand{display:none}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  #bots-grid .bot-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</helmet>
+
+<div class="ant-shell" id="ant-root" data-mode="user" data-colony-state="observing">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <symbol id="i-ant" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><ellipse cx="12" cy="11.4" rx="2.4" ry="2.7"/><ellipse cx="12" cy="18.4" rx="2.9" ry="3.2"/><path d="M10 3.6 8 2M14 3.6 16 2M9.6 11H5.6M14.4 11h4M9 18H5M15 18h4"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 0 1 4 11.5 8.5 8.5 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5z"/></symbol>
+    <symbol id="i-colony" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><circle cx="5" cy="6" r="1.8"/><circle cx="19" cy="6" r="1.8"/><circle cx="5" cy="18" r="1.8"/><circle cx="19" cy="18" r="1.8"/><path d="m10 10.5-3.7-3M14 10.5l3.7-3M10 13.5l-3.7 3M14 13.5l3.7 3"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-4 4c0 .5-1 .8-1 2.5A3.5 3.5 0 0 0 9 13v4a2.5 2.5 0 0 0 3 2M12 3a4 4 0 0 1 4 4c0 .5 1 .8 1 2.5A3.5 3.5 0 0 1 15 13v4a2.5 2.5 0 0 1-3 2"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 6 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-6-3.5-9s1-6.5 3.5-9z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14 16 9"/><path d="M4 18a8 8 0 1 1 16 0"/><circle cx="12" cy="14" r="1.4"/></symbol>
+    <symbol id="i-crown" viewBox="0 0 24 24"><path d="m3 18 2.5-10 4.5 5 2-8 2 8 4.5-5L21 18z"/><path d="M3 18h18"/></symbol>
+    <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 21h18M4 21V10l6 4V10l6 4V6l4 2v13"/><path d="M9 21v-4h6v4"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.8 1.2V21a2 2 0 0 1-4 0v-.1A1.6 1.6 0 0 0 8 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 4.6 15H4.5a2 2 0 0 1 0-4h.1A1.6 1.6 0 0 0 6 9.4l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 12 3.1V3a2 2 0 0 1 4 0v.1a1.6 1.6 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.6 1.6 0 0 0 20.9 9h.1a2 2 0 0 1 0 4h-.1a1.6 1.6 0 0 0-1.5 2z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 4 13c0-6 8-11 16-11 0 8-5 16-9 18z"/><path d="M4 20c4-4 6-6 8-8"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 8-2.5 5.5L8 16l2.5-5.5z"/></symbol>
+    <symbol id="i-worker" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-nurse" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5 12 20a5 5 0 0 1-7-7l9-8.5a3.5 3.5 0 0 1 5 5l-9 8.5a1.5 1.5 0 0 1-2-2l8-7.5"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></symbol>
+  </defs></svg>
+
+  <aside id="sidebar">
+    <div class="side-brand">
+      <span class="mark"><svg class="ico lg"><use href="#i-ant"/></svg></span>
+      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v4.0</div></div>
+    </div>
+    <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
+    <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count">18</span></button>
+    <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
+    <button class="nav-item" data-tab="environment"><svg class="ico"><use href="#i-globe"/></svg><span>Ambiente</span></button>
+    <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
+    <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span><span class="badge">3</span></button>
+    <button class="nav-item" data-tab="resources"><svg class="ico"><use href="#i-gauge"/></svg><span>Recursos</span></button>
+    <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
+    <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
+    <button class="nav-item" data-tab="console"><svg class="ico"><use href="#i-terminal"/></svg><span>Console</span></button>
+    <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
+    <div class="side-foot">
+      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">265</span> testes ✓</span>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <span class="brand"><span class="mark"><svg class="ico"><use href="#i-ant"/></svg></span><span class="wm">ANT'S</span></span>
+      <span class="state-ind" id="state-ind">Observando</span>
+      <span class="spacer"></span>
+      <div class="mode-switch" id="mode-switch">
+        <button data-mode="user" class="on">Usuário</button>
+        <button data-mode="dev">Dev</button>
+        <button data-mode="sci">Cientista</button>
+      </div>
+      <span id="connection-indicator">Conectado</span>
+    </header>
+
+    <main class="content">
+
+      <!-- ═══ CHAT ═══ -->
+      <section class="tab is-active" id="tab-chat">
+        <div class="chat-wrap">
+          <div id="chat-messages">
+            <div class="msg bot">
+              <div class="lead"><svg class="ico sm"><use href="#i-ant"/></svg> Colônia Ant's</div>
+              Olá. Sou um superorganismo — uma colônia de castas coordenadas por feromônios, não um chatbot. Descreva um objetivo e eu recruto as operárias certas, exploro, verifico e devolvo o resultado.
+              <div class="msg-actions">
+                <button data-fill="Pesquise o estado atual da computação quântica">Pesquisar um tema</button>
+                <button data-fill="Crie uma API REST de gestão de tarefas">Construir um app</button>
+                <button data-fill="Analise as tendências do meu mercado">Analisar dados</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow" id="research-flow">
+            <div class="flow-head"><svg class="ico sm"><use href="#i-colony"/></svg> Fluxo da colônia<span class="pct" id="flow-pct">0%</span></div>
+            <div class="flow-track" id="flow-track">
+              <div class="flow-step" data-caste="user"><span class="fs-dot"><svg class="ico sm"><use href="#i-worker"/></svg></span><span class="fs-lbl">Você</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="queen"><span class="fs-dot"><svg class="ico sm"><use href="#i-crown"/></svg></span><span class="fs-lbl">Rainha</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="queen"><span class="fs-dot"><svg class="ico sm"><use href="#i-target"/></svg></span><span class="fs-lbl">Planner</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="explorer"><span class="fs-dot"><svg class="ico sm"><use href="#i-compass"/></svg></span><span class="fs-lbl">Exploradoras</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="explorer"><span class="fs-dot"><svg class="ico sm"><use href="#i-search"/></svg></span><span class="fs-lbl">Pesquisa</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="worker"><span class="fs-dot"><svg class="ico sm"><use href="#i-colony"/></svg></span><span class="fs-lbl">Knowledge Graph</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="soldier"><span class="fs-dot"><svg class="ico sm"><use href="#i-shield"/></svg></span><span class="fs-lbl">Critic</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="soldier"><span class="fs-dot"><svg class="ico sm"><use href="#i-check"/></svg></span><span class="fs-lbl">Verifier</span></div>
+              <div class="flow-arm"></div>
+              <div class="flow-step" data-caste="queen"><span class="fs-dot"><svg class="ico sm"><use href="#i-chat"/></svg></span><span class="fs-lbl">Resposta</span></div>
+            </div>
+            <div class="flow-narr" id="flow-narr">a colônia aguarda um objetivo…</div>
+          </div>
+
+          <div class="composer">
+            <button class="icon-btn" title="Anexar"><svg class="ico"><use href="#i-clip"/></svg></button>
+            <button class="icon-btn" title="Voz"><svg class="ico"><use href="#i-mic"/></svg></button>
+            <div class="field"><input id="chat-input" type="text" placeholder="Descreva um objetivo para a colônia…" autocomplete="off"/></div>
+            <button id="chat-send" title="Enviar"><svg class="ico"><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ COLÔNIA ═══ -->
+      <section class="tab" id="tab-colony">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-colony"/></svg></span> Colônia Viva</h2>
+            <p>Você está observando um organismo vivo. Cada nó é uma casta; as trilhas de feromônio mostram quem fala com quem agora.</p></div>
+          <div class="colony-layout">
+            <div>
+              <div class="net-stage" id="colony-network"></div>
+              <div class="legend">
+                <span style="--lc:var(--queen)">Rainha</span>
+                <span style="--lc:var(--scout)">Exploradoras</span>
+                <span style="--lc:var(--soil)">Operárias</span>
+                <span style="--lc:var(--leaf)">Jardineiras</span>
+                <span style="--lc:var(--soldier)">Soldados</span>
+                <span style="--lc:var(--nurse)">Cuidadoras</span>
+              </div>
+            </div>
+            <div>
+              <div class="sub-h" style="margin-top:0">Hierarquia</div>
+              <div class="caste-row" style="--cc:var(--queen)"><span class="cr-ico"><svg class="ico"><use href="#i-crown"/></svg></span><span><div class="cr-name">Rainha</div><div class="cr-role">coordenação · objetivos</div></span><span class="cr-count"><b>1</b>/1</span></div>
+              <div class="caste-row" style="--cc:var(--scout)"><span class="cr-ico"><svg class="ico"><use href="#i-compass"/></svg></span><span><div class="cr-name">Exploradoras</div><div class="cr-role">busca · descoberta</div></span><span class="cr-count"><b>3</b>/5</span></div>
+              <div class="caste-row" style="--cc:var(--soil)"><span class="cr-ico"><svg class="ico"><use href="#i-worker"/></svg></span><span><div class="cr-name">Operárias</div><div class="cr-role">execução · estrutura</div></span><span class="cr-count"><b>5</b>/6</span></div>
+              <div class="caste-row" style="--cc:var(--leaf)"><span class="cr-ico"><svg class="ico"><use href="#i-leaf"/></svg></span><span><div class="cr-name">Jardineiras</div><div class="cr-role">memória · cultivo</div></span><span class="cr-count"><b>2</b>/2</span></div>
+              <div class="caste-row" style="--cc:var(--soldier)"><span class="cr-ico"><svg class="ico"><use href="#i-shield"/></svg></span><span><div class="cr-name">Soldados</div><div class="cr-role">crítica · verificação</div></span><span class="cr-count"><b>2</b>/2</span></div>
+              <div class="caste-row" style="--cc:var(--nurse)"><span class="cr-ico"><svg class="ico"><use href="#i-nurse"/></svg></span><span><div class="cr-name">Cuidadoras</div><div class="cr-role">aprendizado · saúde</div></span><span class="cr-count"><b>1</b>/2</span></div>
+            </div>
+          </div>
+
+          <div class="sub-h">Operárias ativas <span class="only-dev" style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· clique para inspecionar</span></div>
+          <div class="new-task" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <div class="field" style="flex:1;min-width:200px"><input id="task-input" type="text" placeholder="Nova tarefa para a colônia…"/></div>
+            <button class="btn" id="task-send"><svg class="ico sm"><use href="#i-send"/></svg> Recrutar</button>
+          </div>
+          <div id="bots-grid"><div class="bot-grid" id="bot-grid"></div></div>
+        </div>
+      </section>
+
+      <!-- ═══ CENTRO COGNITIVO ═══ -->
+      <section class="tab" id="tab-cognitive">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-brain"/></svg></span> Centro Cognitivo</h2>
+            <p>As 9 camadas do pensamento da colônia, em ativação ao vivo. <span class="only-user">Quanto mais preenchida, mais aquela função está trabalhando agora.</span><span class="only-dev">Valores = nível de ativação normalizado (0–100) por ciclo de inferência.</span><span class="only-sci">Cada camada expõe hipóteses, evidências e contradições no modo Cientista.</span></p></div>
+          <div class="grid g2">
+            <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Ativação das camadas</div><div id="cognitive-center"></div></div>
+            <div>
+              <div class="only-sci">
+                <div class="sub-h" style="margin-top:0">Hipóteses ativas</div>
+                <div class="card" style="padding:15px;margin-bottom:10px"><div style="font-size:14px">H1 — A fonte primária é confiável (peer-reviewed)</div><div class="mono" style="font-size:11px;color:var(--leaf);margin-top:6px">evidência: 4 · contradição: 0 · confiança 0.88</div></div>
+                <div class="card" style="padding:15px;margin-bottom:10px"><div style="font-size:14px">H2 — Dados de 2023 ainda válidos em 2026</div><div class="mono" style="font-size:11px;color:var(--amber);margin-top:6px">evidência: 2 · contradição: 1 · confiança 0.54</div></div>
+                <div class="card" style="padding:15px"><div style="font-size:14px">H3 — Abordagem escala para 10× carga</div><div class="mono" style="font-size:11px;color:var(--soldier);margin-top:6px">evidência: 1 · contradição: 2 · confiança 0.31 · refutada</div></div>
+              </div>
+              <div class="only-user">
+                <div class="sub-h" style="margin-top:0">O que ela está pensando</div>
+                <div class="card" style="padding:16px;font-style:italic;color:var(--muted);font-size:15px">"Estou comparando três fontes sobre o tema, descartando as desatualizadas e verificando se os números batem antes de responder."</div>
+              </div>
+              <div class="only-dev">
+                <div class="sub-h" style="margin-top:0">Ciclo de inferência</div>
+                <div class="card mono" style="padding:14px;font-size:12px;color:var(--muted);line-height:1.9">
+                  <div>tick <span style="color:var(--honey)" id="cog-tick">0</span> · 9 camadas</div>
+                  <div>latência média <span style="color:var(--honey)">42ms</span></div>
+                  <div>backpressure <span style="color:var(--leaf)">nominal</span></div>
+                  <div>ciclos de sono <span style="color:var(--honey)">3</span> · última consolidação há 12min</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ AMBIENTE ═══ -->
+      <section class="tab" id="tab-environment">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-globe"/></svg></span> Mapa do Ambiente</h2>
+            <p>O corpo estendido da colônia: o dispositivo, a internet e o conhecimento que ela cultivou.</p></div>
+          <div class="env-grid">
+            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-cpu"/></svg><h4>Dispositivo</h4><span class="tag">acesso concedido</span></div>
+              <div class="env-item"><span>Sistema de arquivos</span><span class="ev">1.284 arquivos indexados</span></div>
+              <div class="env-item"><span>Processos observados</span><span class="ev">37 ativos</span></div>
+              <div class="env-item"><span>Sensores</span><span class="ev">bateria · rede · relógio</span></div>
+            </div>
+            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-globe"/></svg><h4>Internet</h4><span class="tag">acesso concedido</span></div>
+              <div class="env-item"><span>Requisições nesta sessão</span><span class="ev" id="env-reqs">142</span></div>
+              <div class="env-item"><span>Domínios visitados</span><span class="ev">28</span></div>
+              <div class="env-item"><span>Fontes verificadas</span><span class="ev" style="color:var(--leaf)">89%</span></div>
+            </div>
+            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-book"/></svg><h4>Conhecimento</h4><span class="tag">cultivado</span></div>
+              <div class="env-item"><span>Nós no grafo</span><span class="ev" id="env-nodes">4.712</span></div>
+              <div class="env-item"><span>Relações</span><span class="ev">11.938</span></div>
+              <div class="env-item"><span>Confiança média</span><span class="ev">0.79</span></div>
+            </div>
+            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-brain"/></svg><h4>Memória</h4><span class="tag">viva</span></div>
+              <div class="env-item"><span>Memórias (curto prazo)</span><span class="ev">312</span></div>
+              <div class="env-item"><span>Consolidadas (sono)</span><span class="ev">2.086</span></div>
+              <div class="env-item"><span>Força média</span><span class="ev" id="memory-strength">0.71</span></div>
+            </div>
+          </div>
+          <div class="sub-h">Buscar na memória</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div class="field" style="flex:1;min-width:220px"><svg class="ico sm" style="color:var(--dim)"><use href="#i-search"/></svg><input id="memory-search" type="text" placeholder="Buscar memórias, fontes, conceitos…"/></div>
+            <button class="btn ghost" id="mem-sleep"><svg class="ico sm"><use href="#i-moon"/></svg> Ciclo de Sono</button>
+          </div>
+          <div id="memory-list" style="margin-top:12px"></div>
+        </div>
+      </section>
+
+      <!-- ═══ LINHA DO TEMPO ═══ -->
+      <section class="tab" id="tab-timeline">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-clock"/></svg></span> Linha do Tempo</h2>
+            <p>Cada ação que a colônia tomou, mais recente no topo.</p></div>
+          <div id="decision-timeline"></div>
+        </div>
+      </section>
+
+      <!-- ═══ MISSÕES ═══ -->
+      <section class="tab" id="tab-missions">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-target"/></svg></span> Missões</h2>
+            <p>Projetos que a colônia está conduzindo, com subtarefas e progresso.</p></div>
+          <div class="mission" style="--cc:var(--amber)">
+            <div class="mm-h"><h4>Relatório sobre computação quântica</h4><span class="mm-state">em andamento</span></div>
+            <div class="mm-track"><span style="width:64%"></span></div>
+            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Definir escopo e perguntas-chave</div>
+            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Coletar 12 fontes primárias</div>
+            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-compass"/></svg></span> Verificar dados e resolver contradições</div>
+            <div class="subtask"><span class="stbox"></span> Redigir e revisar o relatório final</div>
+          </div>
+          <div class="mission" style="--cc:var(--leaf)">
+            <div class="mm-h"><h4>API REST de gestão de tarefas</h4><span class="mm-state" style="--cc:var(--leaf)">construindo</span></div>
+            <div class="mm-track"><span style="width:38%"></span></div>
+            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Gerar esquema de dados</div>
+            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-worker"/></svg></span> Implementar endpoints CRUD</div>
+            <div class="subtask"><span class="stbox"></span> Escrever testes</div>
+            <div class="subtask"><span class="stbox"></span> Empacotar e documentar</div>
+          </div>
+          <div class="mission" style="--cc:var(--scout)">
+            <div class="mm-h"><h4>Monitorar tendências de mercado</h4><span class="mm-state" style="--cc:var(--scout)">contínua</span></div>
+            <div class="mm-track"><span style="width:82%"></span></div>
+            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Definir fontes e frequência</div>
+            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-compass"/></svg></span> Coleta diária automatizada</div>
+            <div class="subtask"><span class="stbox"></span> Alertar sobre mudanças relevantes</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ RECURSOS ═══ -->
+      <section class="tab" id="tab-resources">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-gauge"/></svg></span> Recursos</h2>
+            <p>O metabolismo da colônia — o que ela consome do dispositivo em tempo real.</p></div>
+          <div class="stat-grid" style="margin-bottom:20px">
+            <div class="stat"><div class="sv" id="stat-bots">18</div><div class="sl">Bots vivos</div></div>
+            <div class="stat"><div class="sv" id="stat-tasks">7</div><div class="sl">Tarefas ativas</div></div>
+            <div class="stat"><div class="sv" id="stat-uptime">04:12</div><div class="sl">Tempo ativo</div></div>
+            <div class="stat"><div class="sv" id="stat-tests">265</div><div class="sl">Testes ✓</div></div>
+          </div>
+          <div class="grid g2">
+            <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Sistema</div><div id="resource-center"></div></div>
+            <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Rede</div><div id="network-center"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ RAINHA ═══ -->
+      <section class="tab" id="tab-queen">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-crown"/></svg></span> A Rainha</h2>
+            <p>O centro de gravidade da colônia: objetivos de longo prazo, conselho e decisões.</p></div>
+          <div class="queen-hero">
+            <span class="qcrown"><svg class="ico lg"><use href="#i-crown"/></svg></span>
+            <div><div class="eyebrow">Objetivo mestre</div><div class="qgoal">"Ser uma extensão confiável da mente do usuário — antecipar, pesquisar e construir sem supervisão constante."</div>
+            <div class="chips" style="margin-top:14px"><span class="chip">confiança do usuário · 0.82</span><span class="chip">autonomia · supervisionada</span><span class="chip">3 objetivos ativos</span></div></div>
+          </div>
+          <div class="sub-h">Decisões recentes <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· seu feedback ajusta os pesos</span></div>
+          <div class="decision" style="--cc:var(--queen)"><span class="dt">14:02</span><div style="flex:1"><div class="dtxt">Priorizou o relatório quântico sobre o monitoramento de mercado</div><div class="dcaste">rainha · custo/benefício</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
+          <div class="decision" style="--cc:var(--soldier)"><span class="dt">13:58</span><div style="flex:1"><div class="dtxt">Refutou a hipótese H3 — não escala para 10× carga</div><div class="dcaste">soldado · verificação</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
+          <div class="decision" style="--cc:var(--scout)"><span class="dt">13:51</span><div style="flex:1"><div class="dtxt">Recrutou 2 exploradoras extras para ampliar as fontes</div><div class="dcaste">rainha · alocação</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
+          <div class="sub-h">Aprendizado da colônia</div>
+          <div id="queen-learned"><div style="color:var(--dim);font-family:var(--mono);font-size:12px">Dê feedback nas decisões acima — a colônia ajusta os pesos e registra aqui o que aprendeu.</div></div>
+        </div>
+      </section>
+
+      <!-- ═══ FACTORY ═══ -->
+      <section class="tab" id="tab-factory">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-factory"/></svg></span> App Factory</h2>
+            <p>Descreva um software e a colônia o constrói: esquema, código, testes e empacotamento.</p></div>
+          <div class="factory-form">
+            <textarea class="field" id="factory-description" placeholder="Descreva o app que deseja criar… (ex: um dashboard SaaS para acompanhar assinaturas)"></textarea>
+            <div class="tmpl-grid" id="tmpl-grid">
+              <div class="tmpl" data-tmpl="api_rest"><div class="tn">API REST</div><div class="td">endpoints, banco, testes</div></div>
+              <div class="tmpl" data-tmpl="web_app"><div class="tn">Web App</div><div class="td">SPA com backend</div></div>
+              <div class="tmpl" data-tmpl="cli_tool"><div class="tn">CLI</div><div class="td">ferramenta de terminal</div></div>
+              <div class="tmpl" data-tmpl="saas_dashboard"><div class="tn">Dashboard</div><div class="td">painel SaaS</div></div>
+            </div>
+            <select id="factory-template" style="display:none"><option value="">auto</option><option value="api_rest">API REST</option><option value="web_app">Web App</option><option value="cli_tool">CLI</option><option value="saas_dashboard">Dashboard</option></select>
+            <button class="btn" id="factory-create"><svg class="ico sm"><use href="#i-factory"/></svg> Construir App</button>
+            <div id="fac-result">Descreva um app e escolha um modelo — a colônia entra em estado <b>construindo</b>.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ CONSOLE ═══ -->
+      <section class="tab" id="tab-console">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-terminal"/></svg></span> Console</h2>
+            <p>O fluxo de eventos cru da colônia — estilo DevTools.</p></div>
+          <div class="console-bar">
+            <span class="chip">stream ao vivo</span><span class="chip only-dev">nível: debug</span><span class="chip only-sci">nível: trace</span>
+            <button class="btn ghost" id="console-clear" style="min-height:38px;margin-left:auto">Limpar</button>
+          </div>
+          <div class="console" id="console-log"></div>
+        </div>
+      </section>
+
+      <!-- ═══ AJUSTES ═══ -->
+      <section class="tab" id="tab-settings">
+        <div class="wrap">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-settings"/></svg></span> Ajustes</h2>
+            <p>Permissões, confiança, aparência e perfis da colônia.</p></div>
+          <div class="sub-h" style="margin-top:0">Aparência</div>
+          <div class="set-row"><span class="srl"><span class="t">Tema claro</span><span class="d">pergaminho diurno · padrão: escuro</span></span>
+            <label class="switch"><input type="checkbox" id="settings-theme"/><span class="sl"></span></label></div>
+          <div class="sub-h">Confiança &amp; autonomia</div>
+          <div class="set-row"><span class="srl"><span class="t">Nível de autonomia</span><span class="d">quanto a colônia age sem confirmar</span></span>
+            <div class="seg" id="autonomy-seg"><button>Cautelosa</button><button class="on">Supervisionada</button><button>Autônoma</button></div></div>
+          <div class="sub-h">Permissões concedidas</div>
+          <div id="settings-permissions" class="chips">
+            <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-check"/></svg> Sistema de arquivos</span>
+            <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-check"/></svg> Internet</span>
+            <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-check"/></svg> Memória persistente</span>
+            <span class="chip" style="color:var(--dim)"><svg class="ico sm"><use href="#i-x"/></svg> Enviar e-mails</span>
+          </div>
+          <div class="sub-h">Sistema</div>
+          <div class="chips"><span class="chip">versão 4.0.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">265 testes ✓</span></div>
+          <p class="mono" style="margin-top:18px;color:var(--dim);font-size:12px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="bottomnav">
+      <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
+      <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span></button>
+      <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
+      <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span></button>
+      <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
+      <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
+    </nav>
+  </div>
+
+  <div class="modal-bg" id="bot-vision-modal">
+    <div class="modal">
+      <div class="modal-head"><span class="mt"><svg class="ico"><use href="#i-worker"/></svg> <span id="bot-vision-name">Operária</span></span>
+        <button class="btn ghost" id="bot-vision-close" style="margin-left:auto;min-width:44px;padding:0"><svg class="ico sm"><use href="#i-x"/></svg></button></div>
+      <div class="modal-body">
+        <div class="grid g2">
+          <div class="mv-box"><h5>Casta</h5><div id="bot-vision-caste">Exploradora</div></div>
+          <div class="mv-box"><h5>Status</h5><div id="bot-vision-status" style="color:var(--leaf)">Ativa</div></div>
+        </div>
+        <div class="mv-box"><h5>Ação atual</h5><div id="bot-vision-action">Buscando fontes primárias sobre o tema…</div></div>
+        <div class="mv-box"><h5>Log em tempo real</h5><div id="bot-vision-log"></div></div>
+        <div class="bot-progress" style="height:8px"><span id="bot-vision-bar" style="width:0%"></span></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost">Pausar</button>
+        <button class="btn"><svg class="ico sm"><use href="#i-worker"/></svg> Recrutar ajuda</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e8b84b&quot;,&quot;options&quot;:[&quot;#d4a017&quot;,&quot;#e8b84b&quot;,&quot;#6aa15a&quot;,&quot;#5f97c9&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Aparência&quot;},&quot;pheromones&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Aparência&quot;},&quot;liveness&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Calma&quot;,&quot;Viva&quot;,&quot;Frenética&quot;],&quot;default&quot;:&quot;Viva&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vida&quot;},&quot;thinkingPace&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:560,&quot;min&quot;:300,&quot;max&quot;:900,&quot;step&quot;:20,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Vida&quot;},&quot;defaultMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Usuário&quot;,&quot;Dev&quot;,&quot;Cientista&quot;],&quot;default&quot;:&quot;Usuário&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Comportamento&quot;},&quot;consoleChatter&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Comportamento&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){
+    const root = document.getElementById('ant-root');
+    this.root = root;
+    this.timers = [];
+    this.reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    this._applyProps();
+    this._buildBots();
+    this._buildCognitive();
+    this._buildResources();
+    this._buildNetwork();
+    this._buildTimeline();
+    this._buildMemory();
+    this._wireNav();
+    this._wireModes();
+    this._wireChat();
+    this._wireMisc();
+    this._applyMode();
+    this._startLive();
+  }
+  componentWillUnmount(){ (this.timers||[]).forEach(clearInterval); }
+  _applyProps(){
+    const p=this.props||{};
+    const accent=p.accent||'#d4a017';
+    this.root.style.setProperty('--amber',accent);
+    this.root.style.setProperty('--honey',accent);
+    this._phero=p.pheromones!==false;
+    this._chatter=p.consoleChatter!==false;
+    this._flowSpeed=p.thinkingPace||560;
+    this._lv={'Calma':1.7,'Viva':1,'Frenética':0.55}[p.liveness||'Viva']||1;
+    this.root.style.setProperty('--bm',this._lv);
+    this._defaultMode={'Usuário':'user','Dev':'dev','Cientista':'sci',user:'user',dev:'dev',sci:'sci'}[p.defaultMode||'user']||'user';
+  }
+  _applyMode(){
+    const sw=this.$('mode-switch'); this.root.setAttribute('data-mode',this._defaultMode);
+    if(sw)sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.mode===this._defaultMode));
+  }
+  componentDidUpdate(){ this._applyProps(); this._applyMode(); this._buildNetwork(); }
+
+  $(id){ return document.getElementById(id); }
+  toast(m){ const t=this.$('toast'); if(!t)return; t.textContent=m; t.classList.add('show'); clearTimeout(this._tt); this._tt=setTimeout(()=>t.classList.remove('show'),2400); }
+
+  /* ---- state indicator / colony state ---- */
+  setState_colony(s){
+    const map={dormant:['Adormecida','var(--dim)'],observing:['Observando','var(--scout)'],exploring:['Explorando','var(--amber)'],building:['Construindo','var(--leaf)'],learning:['Aprendendo','#a07fd0'],verifying:['Verificando','var(--soldier)'],executing:['Executando','var(--honey)']};
+    const m=map[s]||map.observing;
+    this.root.setAttribute('data-colony-state',s);
+    const el=this.$('state-ind'); if(el){ el.textContent=m[0]; el.style.setProperty('--sc',m[1]); }
+  }
+  inferState(g){ g=(g||'').toLowerCase();
+    if(/cri(e|ar)|app|api|constr|build/.test(g))return'building';
+    if(/pesquis|busca|encontr|descob|estado|tend/.test(g))return'exploring';
+    if(/analis|process|document|dados/.test(g))return'executing';
+    if(/aprend|memó|consolid|sono/.test(g))return'learning';
+    return'exploring'; }
+
+  /* ---- BOTS ---- */
+  _buildBots(){
+    const bots=[
+      {n:'Explorer-01',c:'explorer',cc:'--scout',ico:'i-compass',role:'Exploradora',st:'working',task:'Varrendo fontes primárias',p:72},
+      {n:'Explorer-02',c:'explorer',cc:'--scout',ico:'i-compass',role:'Exploradora',st:'working',task:'Consultando arquivos acadêmicos',p:54},
+      {n:'Explorer-03',c:'explorer',cc:'--scout',ico:'i-compass',role:'Exploradora',st:'done',task:'12 fontes coletadas',p:100},
+      {n:'Worker-01',c:'worker',cc:'--soil',ico:'i-worker',role:'Operária',st:'working',task:'Estruturando o knowledge graph',p:61},
+      {n:'Worker-02',c:'worker',cc:'--soil',ico:'i-worker',role:'Operária',st:'working',task:'Gerando endpoints CRUD',p:38},
+      {n:'Worker-03',c:'worker',cc:'--soil',ico:'i-worker',role:'Operária',st:'done',task:'Esquema de dados pronto',p:100},
+      {n:'Gardener-01',c:'gardener',cc:'--leaf',ico:'i-leaf',role:'Jardineira',st:'working',task:'Consolidando memórias',p:44},
+      {n:'Soldier-01',c:'soldier',cc:'--soldier',ico:'i-shield',role:'Soldado',st:'working',task:'Criticando hipótese H2',p:66},
+      {n:'Soldier-02',c:'soldier',cc:'--soldier',ico:'i-check',role:'Soldado',st:'working',task:'Verificando evidências',p:80},
+      {n:'Nurse-01',c:'nurse',cc:'--nurse',ico:'i-nurse',role:'Cuidadora',st:'done',task:'Saúde da colônia: nominal',p:100},
+    ];
+    this.bots=bots;
+    const g=this.$('bot-grid'); if(!g)return;
+    g.innerHTML=bots.map((b,i)=>`<div class="bot-card ${b.st}" style="--cc:var(${b.cc});animation-delay:${i*40}ms" data-caste="${b.role}" data-name="${b.n}">
+      <div class="bc-head"><span class="bc-icon"><svg class="ico"><use href="#${b.ico}"/></svg></span>
+      <span><div class="bc-name">${b.n}</div><div class="bc-role">${b.role}</div></span>
+      <span class="bot-status">${b.st==='done'?'concluído':b.st==='working'?'ativa':'ociosa'}</span></div>
+      <div class="bc-task">${b.task}</div>
+      <div class="bot-progress"><span style="width:${b.p}%"></span></div></div>`).join('');
+  }
+
+  /* ---- COGNITIVE ---- */
+  _buildCognitive(){
+    this.layers=[
+      {k:'planner',n:'Planejamento',cc:'--queen',sub:'planner'},
+      {k:'researcher',n:'Pesquisa',cc:'--scout',sub:'researcher'},
+      {k:'hypo',n:'Hipóteses',cc:'--scout',sub:'hypothesizer'},
+      {k:'infer',n:'Inferência',cc:'--soil',sub:'inference'},
+      {k:'sim',n:'Simulação',cc:'--leaf',sub:'simulator'},
+      {k:'critic',n:'Crítica',cc:'--soldier',sub:'critic'},
+      {k:'verify',n:'Verificação',cc:'--soldier',sub:'verifier'},
+      {k:'learn',n:'Aprendizado',cc:'--nurse',sub:'learner'},
+      {k:'exec',n:'Execução',cc:'--soil',sub:'executor'},
+    ];
+    const el=this.$('cognitive-center'); if(!el)return;
+    el.innerHTML=this.layers.map(l=>`<div class="cog-layer" style="--cc:var(${l.cc})">
+      <div class="cog-name"><span class="cn">${l.n}<small>${l.sub}</small></span><span class="cp" id="cp-${l.k}">0%</span></div>
+      <div class="cog-track"><div class="cog-fill" id="cf-${l.k}"></div></div></div>`).join('');
+    this._targets={}; this.layers.forEach(l=>this._targets[l.k]=30+Math.random()*55);
+    setTimeout(()=>this._tickCognitive(),120);
+  }
+  _tickCognitive(){
+    this.layers.forEach(l=>{
+      const t=this._targets[l.k]; const v=Math.max(6,Math.min(99,Math.round(t+(Math.random()*20-10))));
+      const f=this.$('cf-'+l.k), p=this.$('cp-'+l.k);
+      if(f)f.style.width=v+'%'; if(p)p.textContent=v+'%';
+    });
+    const tk=this.$('cog-tick'); if(tk)tk.textContent=(+tk.textContent+1);
+  }
+
+  /* ---- RESOURCES ---- */
+  _buildResources(){
+    this.metrics=[{k:'cpu',l:'CPU',inv:false},{k:'ram',l:'RAM',inv:false},{k:'disk',l:'Disco',inv:false},{k:'batt',l:'Bateria',inv:true}];
+    this.netm=[{k:'up',l:'Upload'},{k:'down',l:'Download'},{k:'lat',l:'Latência'}];
+    const mk=(arr)=>arr.map(m=>`<div class="metric"><div class="mh"><span class="ml">${m.l}</span><span class="mv" id="mv-${m.k}">—</span></div>
+      <div class="mtrack"><div class="mfill" id="mf-${m.k}"></div></div></div>`).join('');
+    const r=this.$('resource-center'); if(r)r.innerHTML=mk(this.metrics);
+    const n=this.$('network-center'); if(n)n.innerHTML=mk(this.netm);
+    this._vals={cpu:34,ram:58,disk:41,batt:76,up:22,down:64,lat:38};
+    this._tickResources();
+  }
+  _metricColor(v,inv){ const x=inv?100-v:v; if(x>78)return'var(--ember)'; if(x>48)return'var(--amber)'; return'var(--leaf)'; }
+  _tickResources(){
+    const step=(k,min,max)=>{ let v=this._vals[k]+(Math.random()*14-7); v=Math.max(min,Math.min(max,v)); this._vals[k]=v; return Math.round(v); };
+    [['cpu',8,92,false],['ram',30,88,false],['disk',38,52,false],['batt',60,80,true]].forEach(([k,a,b,inv])=>{
+      const v=step(k,a,b); const f=this.$('mf-'+k),x=this.$('mv-'+k);
+      if(f){f.style.width=v+'%';f.style.background=this._metricColor(v,inv);} if(x)x.textContent=v+'%';
+    });
+    const up=step('up',10,60),down=step('down',30,95),lat=step('lat',18,70);
+    const setn=(k,v,unit,pct)=>{const f=this.$('mf-'+k),x=this.$('mv-'+k); if(f){f.style.width=pct+'%';f.style.background=this._metricColor(pct,k==='lat');} if(x)x.textContent=v+unit;};
+    setn('up',up,' Mb/s',up*1.6); setn('down',down,' Mb/s',down); setn('lat',lat,' ms',lat*1.2);
+  }
+
+  /* ---- NETWORK (living) ---- */
+  _buildNetwork(){
+    const el=this.$('colony-network'); if(!el)return;
+    const W=600,H=380,cx=300,cy=190,R=142;
+    const castes=[
+      {c:'explorer',v:'--scout',label:'Exploradoras',n:'3/5'},
+      {c:'worker',v:'--soil',label:'Operárias',n:'5/6'},
+      {c:'gardener',v:'--leaf',label:'Jardineiras',n:'2/2'},
+      {c:'soldier',v:'--soldier',label:'Soldados',n:'2/2'},
+      {c:'nurse',v:'--nurse',label:'Cuidadoras',n:'1/2'},
+    ];
+    const pts=castes.map((c,i)=>{const a=(i/castes.length)*Math.PI*2-Math.PI/2;return{...c,x:cx+Math.cos(a)*R,y:cy+Math.sin(a)*R};});
+    let s=`<svg viewBox="0 0 ${W} ${H}">`;
+    // guide paths + pheromone lines + travelers
+    pts.forEach((p,i)=>{ s+=`<path id="gp-${i}" d="M${cx},${cy} L${p.x},${p.y}" fill="none" stroke="none"/>`;
+      s+=`<line class="phero" x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="var(${p.v})" style="animation-delay:${i*0.3}s"/>`; });
+    // travelers (ants moving along trails)
+    if(!this.reduce && this._phero!==false){ pts.forEach((p,i)=>{ for(let k=0;k<2;k++){ const dur=(2.6+i*0.3+k*0.9).toFixed(1);
+      s+=`<circle r="3" fill="var(${p.v})"><animateMotion dur="${dur}s" repeatCount="indefinite" keyPoints="${k?'1;0':'0;1'}" keyTimes="0;1" calcMode="linear"><mpath href="#gp-${i}"/></animateMotion></circle>`; } }); }
+    // nodes
+    pts.forEach(p=>{ s+=`<circle class="node-core" cx="${p.x}" cy="${p.y}" r="15" fill="var(${p.v})" opacity="0.16"/>
+      <circle class="node-ring" cx="${p.x}" cy="${p.y}" r="15" stroke="var(${p.v})"/>
+      <circle cx="${p.x}" cy="${p.y}" r="4" fill="var(${p.v})"/>
+      <text class="node-lbl" x="${p.x}" y="${p.y+30}" text-anchor="middle">${p.label}</text>
+      <text class="node-sub" x="${p.x}" y="${p.y+43}" text-anchor="middle">${p.n} ativas</text>`; });
+    // queen center
+    s+=`<circle cx="${cx}" cy="${cy}" r="26" fill="var(--queen)" opacity="0.14"/>
+      <circle class="node-ring" cx="${cx}" cy="${cy}" r="26" stroke="var(--queen)" stroke-width="2"/>
+      <circle cx="${cx}" cy="${cy}" r="6" fill="var(--queen)"><animate attributeName="r" values="6;8;6" dur="2.4s" repeatCount="indefinite"/></circle>
+      <text class="node-lbl" x="${cx}" y="${cy+45}" text-anchor="middle" style="font-size:12px;fill:var(--honey)">Rainha</text></svg>`;
+    el.innerHTML=s;
+  }
+
+  /* ---- TIMELINE ---- */
+  _buildTimeline(){
+    this.tl=[
+      {t:'agora',ico:'i-crown',cc:'--queen',txt:'Rainha priorizou o relatório quântico',d:'peso: custo/benefício · confiança 0.82'},
+      {t:'−4s',ico:'i-check',cc:'--soldier',txt:'Verifier confirmou 9 de 12 fontes',d:'3 fontes marcadas para re-checagem'},
+      {t:'−11s',ico:'i-colony',cc:'--soil',txt:'Operárias montaram 214 nós no grafo',d:'knowledge_graph.add(214) · 11ms'},
+      {t:'−18s',ico:'i-compass',cc:'--scout',txt:'Exploradoras trouxeram 12 fontes primárias',d:'domínios: 8 · verificados: 7'},
+      {t:'−26s',ico:'i-shield',cc:'--soldier',txt:'Critic refutou a hipótese H3',d:'contradições: 2 · confiança caiu p/ 0.31'},
+      {t:'−34s',ico:'i-leaf',cc:'--leaf',txt:'Jardineiras consolidaram 40 memórias',d:'ciclo de sono parcial · força +0.06'},
+      {t:'−41s',ico:'i-target',cc:'--queen',txt:'Planner dividiu o objetivo em 6 subtarefas',d:'plan.depth=3 · branches=6'},
+    ];
+    const el=this.$('decision-timeline'); if(!el)return;
+    el.innerHTML=this.tl.map(e=>`<div class="tl-item" style="--cc:var(${e.cc})">
+      <div class="tl-rail"><span class="tl-dot"><svg class="ico sm"><use href="#${e.ico}"/></svg></span><span class="tl-line"></span></div>
+      <div class="tl-body"><div class="tl-time">${e.t}</div><div class="tl-txt">${e.txt}</div><div class="tl-detail">${e.d}</div></div></div>`).join('');
+  }
+
+  /* ---- MEMORY ---- */
+  _buildMemory(){
+    const mem=[
+      {t:'Fontes sobre supremacia quântica são de 2019–2024',s:0.88,tag:'pesquisa'},
+      {t:'Usuário prefere respostas com fontes citadas',s:0.94,tag:'preferência'},
+      {t:'API REST → template api_rest é o mais rápido',s:0.71,tag:'procedimento'},
+      {t:'Mercado-alvo do usuário: fintech B2B',s:0.66,tag:'contexto'},
+    ];
+    const el=this.$('memory-list'); if(!el)return;
+    el.innerHTML=mem.map(m=>`<div class="card" style="padding:13px 15px;margin-bottom:9px">
+      <div style="display:flex;gap:10px;align-items:baseline"><span style="flex:1;font-size:14px">${m.t}</span>
+      <span class="mono" style="font-size:11px;color:var(--dim)">${m.tag}</span></div>
+      <div style="height:5px;background:var(--bg2);border-radius:4px;margin-top:9px;overflow:hidden"><span style="display:block;height:100%;width:${m.s*100}%;background:linear-gradient(90deg,var(--honey),var(--amber))"></span></div></div>`).join('');
+  }
+
+  /* ---- NAV ---- */
+  _wireNav(){
+    const show=(name)=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('is-active',t.id==='tab-'+name));
+      document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+      const c=this.$('console-log')?this.$('console-log').parentElement:null;
+      const content=document.querySelector('.content'); if(content)content.scrollTop=0;
+    };
+    document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+    this.showTab=show;
+  }
+
+  /* ---- MODES ---- */
+  _wireModes(){
+    const sw=this.$('mode-switch'); if(!sw)return;
+    sw.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      sw.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+      this.root.setAttribute('data-mode',b.dataset.mode);
+      const names={user:'Usuário',dev:'Desenvolvedor',sci:'Cientista'};
+      this.toast('Modo '+names[b.dataset.mode]);
+    }));
+  }
+
+  /* ---- CHAT + research flow ---- */
+  _wireChat(){
+    const input=this.$('chat-input'), send=this.$('chat-send'), box=this.$('chat-messages');
+    if(!input||!send||!box)return;
+    document.querySelectorAll('[data-fill]').forEach(b=>b.addEventListener('click',()=>{input.value=b.dataset.fill;input.focus();}));
+    const doSend=()=>{
+      const g=(input.value||'').trim(); if(!g||this._busy)return;
+      const u=document.createElement('div'); u.className='msg user'; u.textContent=g; box.appendChild(u);
+      input.value=''; box.scrollTop=box.scrollHeight;
+      this.setState_colony(this.inferState(g));
+      this._runFlow(g);
+    };
+    send.addEventListener('click',doSend);
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')doSend();});
+  }
+  _runFlow(goal){
+    this._busy=true;
+    const flow=this.$('research-flow'), steps=[...document.querySelectorAll('#flow-track .flow-step')],
+      arms=[...document.querySelectorAll('#flow-track .flow-arm')], pct=this.$('flow-pct'), narr=this.$('flow-narr');
+    flow.classList.add('show'); steps.forEach(s=>s.classList.remove('on','done')); arms.forEach(a=>a.classList.remove('lit'));
+    const build=/cri(e|ar)|app|api|constr|build/.test(goal.toLowerCase());
+    // narração causal — quem chamou quem, não só "etapa X"
+    const story=build
+      ? ['Objetivo recebido pela colônia','Rainha aceitou · <b>modo construção</b>','Planner esboçou a arquitetura','Rainha recrutou <b>operárias</b> e jardineiras','Operária gerou o esquema de dados','Montou endpoints e estrutura','Critic revisou o código e pediu ajuste','Verifier rodou <b>5 testes · todos passaram</b>','Colônia empacotou e documentou o app']
+      : ['Objetivo recebido pela colônia','Rainha definiu a prioridade','Planner dividiu em <b>4 subtarefas</b>','Rainha recrutou <b>3 exploradoras</b>','Explorer #3 achou um <b>conflito</b> → chamou o Critic','Operárias mapearam 214 nós no grafo','Critic rejeitou a hipótese fraca','Verifier confirmou <b>9/12 fontes · 0.94</b>','Colônia sintetizou a resposta'];
+    let i=0; const speed=this.reduce?60:(this._flowSpeed||560);
+    const advance=()=>{
+      if(i>0){steps[i-1].classList.remove('on');steps[i-1].classList.add('done'); if(arms[i-1])arms[i-1].classList.remove('lit');}
+      if(i>=steps.length){ pct.textContent='100%'; return this._finishFlow(build,goal); }
+      steps[i].classList.add('on'); if(arms[i])arms[i].classList.add('lit');
+      if(narr)narr.innerHTML=story[i];
+      pct.textContent=Math.round((i/steps.length)*100)+'%';
+      const c=steps[i].dataset.caste; if(c==='soldier')this.setState_colony('verifying'); else if(c==='explorer')this.setState_colony('exploring');
+      i++; this._ft=setTimeout(advance,speed);
+    };
+    advance();
+  }
+  _finishFlow(build,goal){
+    const box=this.$('chat-messages');
+    setTimeout(()=>{
+      const s=document.createElement('div'); s.className='msg bot';
+      const body=build
+        ? 'App gerado: <b>api_rest</b> — 6 arquivos, 5 testes (todos passaram), qualidade <b>B+</b>. A colônia empacotou tudo e registrou o procedimento na memória.'
+        : 'As formigas coordenam por <b>feromônios</b>: cada operária marca o ambiente e as outras percebem o rastro. A inteligência emerge da colônia — sem chefe único. Cruzei 12 fontes, descartei 3 desatualizadas e verifiquei os números antes de responder.';
+      s.innerHTML=`<div class="lead"><svg class="ico sm"><use href="#i-ant"/></svg> Colônia Ant's</div>${body}
+        <div class="msg-meta"><span>${build?'4':'5'} castas recrutadas</span><span>confiança 0.${build?'86':'82'}</span><span class="only-dev only-sci">${build?'1.9s':'2.4s'} · ${build?'8':'21'} eventos</span></div>
+        <div class="msg-actions">${build?'<button data-fill="Adicione autenticação JWT ao app">Adicionar auth</button><button data-fill="Escreva os testes de integração">Escrever testes</button>':'<button data-fill="Aprofunde nas aplicações práticas">Aprofundar</button><button data-fill="Liste as fontes que você usou">Ver fontes</button>'}</div>`;
+      box.appendChild(s); box.scrollTop=box.scrollHeight;
+      s.querySelectorAll('[data-fill]').forEach(b=>b.addEventListener('click',()=>{const inp=this.$('chat-input');inp.value=b.dataset.fill;inp.focus();}));
+      this._busy=false;
+      setTimeout(()=>{ this.$('research-flow').classList.remove('show'); this.setState_colony('observing'); },1400);
+    },this.reduce?60:400);
+  }
+
+  /* ---- MISC (modal, factory, settings, console) ---- */
+  _wireMisc(){
+    // bot vision modal
+    const modal=this.$('bot-vision-modal');
+    document.addEventListener('click',e=>{
+      const card=e.target.closest && e.target.closest('.bot-card');
+      if(card&&modal){
+        this.$('bot-vision-name').textContent=card.dataset.name||'Operária';
+        this.$('bot-vision-caste').textContent=card.dataset.caste||'—';
+        const task=card.querySelector('.bc-task'); this.$('bot-vision-action').textContent=task?task.textContent:'—';
+        const w=card.querySelector('.bot-progress>span'); this.$('bot-vision-bar').style.width=w?w.style.width:'0%';
+        const log=this.$('bot-vision-log');
+        log.innerHTML=['percebeu feromônio de "pesquisa"','requisitou 3 fontes','avaliou confiança das fontes','marcou trilha p/ operárias','reportou à rainha'].map((l,i)=>`<div>${['t−4.1s','t−3.0s','t−2.2s','t−1.1s','t−0.3s'][i]}  ${l}</div>`).join('');
+        modal.classList.add('show');
+      }
+    });
+    const close=()=>modal&&modal.classList.remove('show');
+    this.$('bot-vision-close')&&this.$('bot-vision-close').addEventListener('click',close);
+    modal&&modal.addEventListener('click',e=>{if(e.target===modal)close();});
+
+    // factory
+    document.querySelectorAll('#tmpl-grid .tmpl').forEach(t=>t.addEventListener('click',()=>{
+      document.querySelectorAll('#tmpl-grid .tmpl').forEach(x=>x.classList.toggle('on',x===t));
+      const sel=this.$('factory-template'); if(sel)sel.value=t.dataset.tmpl;
+    }));
+    const fc=this.$('factory-create');
+    fc&&fc.addEventListener('click',()=>{
+      const desc=(this.$('factory-description')||{}).value||'';
+      if(!desc.trim()){this.toast('Descreva o app primeiro');return;}
+      this.setState_colony('building'); this.showTab&&this.showTab('factory');
+      const r=this.$('fac-result'); const tmpl=(this.$('factory-template')||{}).value||'auto';
+      r.innerHTML='<span class="mono" style="color:var(--amber)">construindo…</span> a colônia recrutou operárias e jardineiras.';
+      let p=0; const iv=setInterval(()=>{ p+=Math.round(8+Math.random()*16); if(p>=100){p=100;clearInterval(iv);
+        r.innerHTML=`App <b>${tmpl==='auto'?'api_rest':tmpl}</b> criado — 6 arquivos, 5 testes (passaram), qualidade <b>B+</b>.`;
+        this.toast('App construído ✓'); setTimeout(()=>this.setState_colony('observing'),1200);
+      } else { r.innerHTML=`<span class="mono" style="color:var(--amber)">construindo ${p}%…</span>`; } },420);
+    });
+
+    // theme
+    const th=this.$('settings-theme');
+    th&&th.addEventListener('change',()=>this.root.classList.toggle('light',th.checked));
+    // autonomy seg
+    const seg=this.$('autonomy-seg');
+    seg&&seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))));
+    // memory sleep
+    const ms=this.$('mem-sleep'); ms&&ms.addEventListener('click',()=>{this.setState_colony('learning');this.toast('Ciclo de sono: memórias consolidadas');setTimeout(()=>this.setState_colony('observing'),1600);});
+    // task send (colony)
+    const ts=this.$('task-send'); ts&&ts.addEventListener('click',()=>{const t=this.$('task-input');if(t&&t.value.trim()){this.toast('Tarefa distribuída à colônia');this._pushConsole('info','task',`recrutando p/ "${t.value.trim().slice(0,40)}"`);t.value='';}});
+    // console clear
+    const cc=this.$('console-clear'); cc&&cc.addEventListener('click',()=>{const l=this.$('console-log');if(l)l.innerHTML='';});
+    // decision feedback → aprendizado visível (ajusta pesos)
+    const fbMap={up:['reforçou a estratégia','peso +0.08','ok'],down:['reduziu o peso da estratégia','peso −0.10','warn'],teach:['registrou instrução do usuário','memória procedural','info'],pin:['tornou isto padrão','peso máximo','ok']};
+    document.querySelectorAll('.decision').forEach(dec=>{
+      const bar=dec.querySelector('.dfb'); if(!bar)return;
+      bar.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{
+        bar.querySelectorAll('button').forEach(x=>x.classList.remove('chosen')); btn.classList.add('chosen');
+        const info=fbMap[btn.dataset.fb], txt=((dec.querySelector('.dtxt')||{}).textContent||'');
+        this.toast('Rainha ' + info[0]); this._pushConsole(info[2],'queen',info[0]+' · '+info[1]);
+        this._learn(txt,info); if(btn.dataset.fb!=='down')this.setState_colony('learning'),setTimeout(()=>this.setState_colony('observing'),1400);
+      }));
+    });
+    // seed console
+    this._consoleSeed();
+  }
+  _learn(txt,info){
+    const box=this.$('queen-learned'); if(!box)return;
+    if(box._seeded!==true){box.innerHTML='';box._seeded=true;}
+    const card=document.createElement('div'); card.className='card';
+    card.style.cssText='padding:13px 15px;margin-bottom:9px;border-left:3px solid var(--leaf);animation:rise .35s ease both';
+    card.innerHTML='<div style="font-size:13.5px">Aprendeu: '+info[0]+'</div><div class="mono" style="font-size:11px;color:var(--leaf);margin-top:5px">“'+txt.slice(0,58)+'” · '+info[1]+'</div>';
+    box.insertBefore(card,box.firstChild);
+    while(box.children.length>4)box.removeChild(box.lastChild);
+  }
+
+  _consoleSeed(){
+    const seeds=[['ok','queen','objetivo aceito · plano gerado (6 subtarefas)'],['info','scout','GET arxiv.org/quantum · 200'],['info','scout','GET nature.com/articles · 200'],['ok','worker','knowledge_graph.add(214 nós)'],['warn','soldier','H2 contradição detectada · confiança 0.54'],['ok','soldier','verifier: 9/12 fontes confirmadas'],['info','nurse','health check · nominal']];
+    seeds.forEach((s,i)=>setTimeout(()=>this._pushConsole(s[0],s[1],s[2]),i*90));
+  }
+  _pushConsole(lvl,caste,msg){
+    const el=this.$('console-log'); if(!el)return;
+    const now=new Date(); const ts=now.toTimeString().slice(0,8)+'.'+String(now.getMilliseconds()).padStart(3,'0');
+    const ln=document.createElement('div'); ln.className='ln '+lvl;
+    ln.innerHTML=`<span class="lt">${ts}</span><span class="lc">[${caste}]</span><span class="lm">${msg}</span>`;
+    el.appendChild(ln); if(el.children.length>120)el.removeChild(el.firstChild); el.scrollTop=el.scrollHeight;
+  }
+
+  /* ---- LIVE loops ---- */
+  _startLive(){
+    if(this.reduce){ this._tickCognitive(); this._tickResources(); return; }
+    const k=this._lv||1;
+    this.timers.push(setInterval(()=>this._tickCognitive(),Math.round(1600*k)));
+    this.timers.push(setInterval(()=>this._tickResources(),Math.round(1400*k)));
+    // stray console chatter
+    const chatter=[['info','scout','feromônio detectado · seguindo trilha'],['ok','worker','tarefa concluída · retornando'],['info','gardener','memória reforçada +0.03'],['ok','nurse','métricas coletadas'],['info','worker','estruturando dados'],['warn','soldier','re-checando fonte'],['info','queen','realocando 1 operária']];
+    if(this._chatter!==false)this.timers.push(setInterval(()=>{const c=chatter[Math.floor(Math.random()*chatter.length)];this._pushConsole(c[0],c[1],c[2]);},Math.round(2600*k)));
+    // env counters + uptime
+    let up=252;
+    this.timers.push(setInterval(()=>{
+      up++; const m=String(Math.floor(up/60)).padStart(2,'0'),s=String(up%60).padStart(2,'0');
+      const el=this.$('stat-uptime'); if(el)el.textContent=m+':'+s;
+      const reqs=this.$('env-reqs'); if(reqs&&Math.random()>0.5)reqs.textContent=(+reqs.textContent+Math.ceil(Math.random()*3));
+      const nodes=this.$('env-nodes'); if(nodes&&Math.random()>0.6)nodes.textContent=(+nodes.textContent.replace(/\./g,'')+Math.ceil(Math.random()*5)).toLocaleString('pt-BR');
+    },1000));
+  }
+}
+</script>
+</body>
+</html>

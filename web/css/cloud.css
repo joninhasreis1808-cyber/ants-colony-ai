@@ -1,0 +1,69 @@
+/* Ant's — camada "nuvem": splash de despertar, rodapé de saúde e tour.
+   Aditivo, sem emojis, tema-aware, respeita prefers-reduced-motion. */
+
+/* ---- Splash: a colônia despertando ---- */
+#ant-awaken {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; background: var(--ant-bg, #0a0e14); color: var(--ant-parchment, #e8e0d5);
+  transition: opacity .5s ease; text-align: center; padding: 24px;
+}
+#ant-awaken.hide { opacity: 0; pointer-events: none; }
+#ant-awaken .aw-ant { width: 64px; height: 64px; color: var(--ant-amber, #d4a017); }
+#ant-awaken .aw-ant svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; }
+#ant-awaken .aw-msg { font-size: 1rem; letter-spacing: .02em; opacity: .85; min-height: 1.4em; }
+#ant-awaken .aw-sub { font-size: .8rem; opacity: .5; }
+@keyframes ant-breathe { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.08); opacity: 1; } }
+#ant-awaken .aw-ant { animation: ant-breathe 2.4s ease-in-out infinite; }
+
+/* ---- Rodapé de saúde ---- */
+#ant-health-footer {
+  position: fixed; right: 12px; bottom: 12px; z-index: 800;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border-radius: 999px; font-size: .78rem;
+  background: color-mix(in srgb, var(--ant-bg, #0a0e14) 82%, transparent);
+  border: 1px solid rgba(255,255,255,.10); color: var(--ant-parchment, #e8e0d5);
+  backdrop-filter: blur(6px); max-width: 70vw;
+}
+#ant-health-footer .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ant-leaf, #3d7a3d); flex: 0 0 auto; }
+#ant-health-footer.warn .dot { background: var(--ant-amber, #d4a017); }
+#ant-health-footer.down .dot { background: var(--ant-ember, #8b0000); }
+@keyframes ant-pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+#ant-health-footer .dot { animation: ant-pulse-dot 2s ease-in-out infinite; }
+@media (max-width: 600px) { #ant-health-footer { bottom: 76px; right: 10px; font-size: .72rem; } }
+
+/* ---- Tour de boas-vindas ---- */
+#ant-tour { position: fixed; inset: 0; z-index: 9100; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.6); padding: 20px; }
+#ant-tour .card { max-width: 380px; width: 100%; background: var(--ant-panel, #121821); color: var(--ant-parchment, #e8e0d5); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 24px; }
+#ant-tour .card h3 { margin: 0 0 8px; font-size: 1.15rem; color: var(--ant-amber, #d4a017); }
+#ant-tour .card p { margin: 0 0 18px; line-height: 1.5; opacity: .9; }
+#ant-tour .dots { display: flex; gap: 6px; margin-bottom: 16px; }
+#ant-tour .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); }
+#ant-tour .dots i.on { background: var(--ant-amber, #d4a017); }
+#ant-tour .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+#ant-tour button { font: inherit; cursor: pointer; border-radius: 10px; padding: 9px 16px; border: 1px solid transparent; }
+#ant-tour .next { background: var(--ant-amber, #d4a017); color: #1a1206; font-weight: 600; }
+#ant-tour .skip { background: transparent; color: var(--ant-parchment, #e8e0d5); opacity: .6; border-color: transparent; }
+#ant-tour button:focus-visible, #ant-health-footer:focus-visible { outline: 2px solid var(--ant-amber, #d4a017); outline-offset: 2px; }
+
+/* ---- Modo Laboratório ---- */
+#ant-lab { position: fixed; top: 0; right: 0; bottom: 0; width: min(360px, 92vw); z-index: 8500;
+  transform: translateX(105%); transition: transform .3s ease; overflow-y: auto;
+  background: var(--ant-panel, #121821); color: var(--ant-parchment, #e8e0d5);
+  border-left: 1px solid rgba(255,255,255,.12); padding: 14px; font-size: .82rem; }
+#ant-lab.show { transform: translateX(0); }
+#ant-lab header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+#ant-lab header button { background: transparent; color: inherit; border: none; font-size: 1.3rem; cursor: pointer; }
+#ant-lab h4 { margin: 14px 0 6px; font-size: .8rem; color: var(--ant-amber, #d4a017); }
+#ant-lab button#lab-replay { background: var(--ant-amber, #d4a017); color: #1a1206; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; }
+#lab-heatmap { display: flex; flex-wrap: wrap; gap: 6px; }
+#ant-lab .hm-cell { display: flex; flex-direction: column; padding: 6px 8px; border-radius: 8px; color: #fff; min-width: 64px; }
+#ant-lab .hm-name { font-weight: 600; } #ant-lab .hm-n { opacity: .85; }
+#lab-replay-out, #lab-feed { margin-top: 6px; max-height: 180px; overflow-y: auto; }
+#ant-lab .rp-row, #ant-lab .lab-ev { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,.06); }
+#ant-lab .muted { opacity: .55; }
+
+@media (prefers-reduced-motion: reduce) {
+  #ant-awaken, #ant-awaken .aw-ant, #ant-health-footer .dot { animation: none !important; transition: none !important; }
+  #ant-lab { transition: none !important; }
+}

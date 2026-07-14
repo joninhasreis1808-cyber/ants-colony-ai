@@ -7,51 +7,40 @@ juntos, lembram do que aprenderam e até criam aplicativos para você.
 
 🌐 PELO NAVEGADOR (jeito mais fácil)
 ────────────────────────────────────────
-1. Acesse o link do site (ou http://localhost:8765 se estiver rodando
-   no seu computador).
-2. O site carrega sozinho — não precisa instalar nada.
-3. Na aba "Chat", digite uma tarefa e veja os bots trabalharem.
+1. Acesse:  [URL_DO_DEPLOY]
+   (ou http://localhost:8765 se estiver rodando no seu computador)
+2. Comece a conversar com a colônia — não precisa instalar nada.
+   Dica: a página /acesso.html é uma entrada simples com um botão.
 
 
-📱 COMO APLICATIVO (instalável no celular)
+📱 NO CELULAR (como app)
 ────────────────────────────────────────
-1. Abra o site no Chrome (Android) ou Safari (iPhone).
-2. Toque em "Instalar app" ou "Adicionar à tela de início".
-3. O ícone do Ant's aparece na tela do seu celular, como um app.
+1. Abra o link no Chrome (Android) ou Safari (iPhone).
+2. Toque em "Instalar" ou "Adicionar à tela de início".
+3. O Ant's aparece como app na tela inicial!
 
 
-💻 NO SEU COMPUTADOR
+💻 NO COMPUTADOR
 ────────────────────────────────────────
-1. Abra o terminal na pasta do projeto.
-2. Execute:  bash scripts/start.sh
-3. Abra no navegador:  http://localhost:8765
+• Como site:  abra  [URL_DO_DEPLOY]
+• Como app instalável:  Chrome → Menu → "Instalar Ant's"
+• Rodando local:  bash scripts/start.sh  →  http://localhost:8765
+• App nativo (offline):  bash scripts/build_app.sh
 
 
-🧩 AS 5 ABAS
+☁️ COLOCAR NA NUVEM (grátis, link 24/7)
 ────────────────────────────────────────
-💬 Chat     — converse e envie tarefas para a colmeia
-🤖 Bots     — veja os bots trabalhando em tempo real
-🧠 Memória  — o que a colmeia lembrou; rode o "ciclo de sono"
-🏭 Factory  — descreva um app e a colmeia o cria para você
-⚙️ Ajustes  — tema claro/escuro e informações do sistema
+1 clique (recomendado): use o botão "Deploy" do Render/Railway no
+README (secção "Deploy na nuvem").
+Ou por CLI:  bash scripts/deploy_cloud.sh  (Railway, Render ou Fly.io).
+Ao terminar, a plataforma te dá uma URL pública — cole em [URL_DO_DEPLOY].
 
 
-❓ DÚVIDAS COMUNS
+❓ DÚVIDAS
 ────────────────────────────────────────
-• Os bots funcionam offline?
-  Sim, em modo limitado — o site abre e mostra o que já foi carregado.
-• Preciso de internet?
-  Para pesquisa na web, sim. O resto funciona local.
-• Meus dados estão seguros?
-  Sim: tudo fica no seu computador ou no servidor que você controlar.
-• Como instalo no celular?
-  Abra o site e toque em "Adicionar à tela de início".
-
-
-☁️ COLOCAR NA NUVEM (grátis)
-────────────────────────────────────────
-Execute:  bash scripts/deploy_cloud.sh
-E escolha Railway, Render ou Fly.io. Todos têm plano gratuito.
+• Precisa de internet?     Sim, para acessar a nuvem.
+• Meus dados estão seguros? Sim, processados no servidor que você controla.
+• Posso usar offline?       Sim, instalando o app nativo (Tauri).
 
 ════════════════════════════════════════
 Feito com 🐜 pela colônia Ant's.

@@ -1,0 +1,13 @@
+# Ant's 6.0 — Render Blueprint (deploy grátis, 1 clique).
+# Fica na RAIZ do repo para o Render detectar automaticamente.
+# Botão: https://render.com/deploy?repo=<url-do-seu-repo>
+services:
+  - type: web
+    name: ants
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars: []

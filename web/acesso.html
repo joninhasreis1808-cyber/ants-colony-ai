@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0e14" />
+<title>Ant's — Acesso</title>
+<link rel="manifest" href="/manifest.json" />
+<style>
+  :root { --amber:#d4a017; --bg:#0a0e14; --parchment:#e8e0d5; --panel:#121821; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(1200px 600px at 50% -10%, #16202b, var(--bg));
+    color: var(--parchment); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding:24px; }
+  .card { max-width:420px; width:100%; text-align:center; background: color-mix(in srgb, var(--panel) 90%, transparent);
+    border:1px solid rgba(255,255,255,.10); border-radius:20px; padding:36px 28px; }
+  .logo { width:76px; height:76px; margin:0 auto 16px; color:var(--amber); }
+  .logo svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+  h1 { margin:0 0 6px; font-size:1.5rem; }
+  .tag { margin:0 0 24px; opacity:.65; font-size:.95rem; }
+  a.cta { display:inline-block; width:100%; padding:14px 20px; border-radius:12px; background:var(--amber);
+    color:#1a1206; font-weight:700; text-decoration:none; font-size:1.05rem; }
+  a.cta:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+  .hint { margin-top:20px; font-size:.82rem; line-height:1.5; opacity:.7; }
+  @media (prefers-color-scheme: light) { body { color:#2a2118; } .card { background:#fff; } h1{color:#5c4033;} }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo"><svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="5" r="2.3"/><ellipse cx="12" cy="11.5" rx="2.5" ry="2.8"/>
+      <ellipse cx="12" cy="18.5" rx="3" ry="3.3"/>
+      <path d="M10 3.5 8 1.8M14 3.5l2-1.7M9.5 11H5.5M14.5 11h4M9 18H5M15 18h4"/></svg></div>
+    <h1>Bem-vindo ao Ant's</h1>
+    <p class="tag">Superorganismo Digital Transparente</p>
+    <a class="cta" href="/">Acessar Colônia</a>
+    <p class="hint">Abra este link no celular e toque em <strong>"Instalar app"</strong>
+      (ou "Adicionar à tela inicial") para ter o Ant's na tela inicial.</p>
+  </main>
+</body>
+</html>

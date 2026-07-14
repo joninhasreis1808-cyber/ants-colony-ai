@@ -112,6 +112,40 @@ o sidecar Python, o app mobile aponta para um backend hospedado — ajuste
 (ex.: o deploy grátis de `scripts/deploy_cloud.sh`) e rode
 `npm run android:build` / `npm run ios:build`.
 
+## ☁️ Deploy na nuvem (link público 24/7)
+
+Para qualquer pessoa usar **só abrindo um link** (sem instalar nada), faça o
+deploy grátis. As configs já estão prontas na raiz (`render.yaml`,
+`railway.json`, `fly.toml`) e usam `deploy/Dockerfile` com dependências
+**enxutas** (`requirements-cloud.txt`) — imagem leve, sem torch, ideal para
+plano gratuito. `$PORT` é injetado pela plataforma; `/health` é o healthcheck.
+
+**Render (1 clique):**
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joninhasreis1808-cyber/ants-colony-ai)
+→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe. A URL sai
+como `https://ants.onrender.com`.
+
+**Railway:** conecte o repo em <https://railway.app/new> (detecta o
+`railway.json`) e clique em *Deploy*. Depois *Settings → Networking →
+Generate Domain*.
+
+**Fly.io (CLI):**
+```bash
+flyctl launch --copy-config --name SEU-NOME   # usa fly.toml
+flyctl deploy
+flyctl open
+```
+
+**Docker local:**
+```bash
+docker compose -f deploy/docker-compose.yml up --build   # http://localhost:8765
+```
+
+> Observação: os botões/deploy usam o branch **padrão** do repo. Faça o merge
+> desta branch para `main` (ou aponte a plataforma para a branch) antes de
+> clicar. Depois do deploy, copie a URL para `COMO_USAR.txt` e compartilhe —
+> há também uma página de entrada simples em `/acesso.html`.
+
 ## 🧩 As 5 capacidades
 
 | Fase | Capacidade | Onde |

@@ -9,3 +9,6 @@ dist_web/
 build/
 *.spec.bak
 node_modules/
+deploy/*.db
+deploy/*.sqlite
+deploy/data/

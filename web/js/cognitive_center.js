@@ -30,9 +30,10 @@
   }
 
   function setActivation(values) {
+    values = values || {};
     LAYERS.forEach((l) => {
-      const v = Math.max(0, Math.min(100, values[l.key] != null
-        ? values[l.key] : Math.round(40 + Math.random() * 60)));
+      // Sem dados reais => 0 (ocioso). Nunca inventar (sem Math.random).
+      const v = Math.max(0, Math.min(100, values[l.key] != null ? values[l.key] : 0));
       const fill = document.getElementById("cog-fill-" + l.key);
       const pct = document.getElementById("cog-pct-" + l.key);
       if (fill) fill.style.width = v + "%";
@@ -43,8 +44,7 @@
   function mount(targetId) {
     const el = document.getElementById(targetId);
     if (!el) return;
-    render(el);
-    setActivation({});
+    render(el);        // barras em 0 até chegar dado real de /mind/think
   }
 
   window.AntCognitive = { mount, setActivation, LAYERS };

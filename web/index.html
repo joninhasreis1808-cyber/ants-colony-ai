@@ -51,11 +51,11 @@
       <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v6.1</div></div>
     </div>
     <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
-    <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count">18</span></button>
+    <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count"></span></button>
     <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
     <button class="nav-item" data-tab="environment"><svg class="ico"><use href="#i-globe"/></svg><span>Ambiente</span></button>
     <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
-    <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span><span class="badge">3</span></button>
+    <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span><span class="badge" id="nav-mission-count"></span></button>
     <button class="nav-item" data-tab="resources"><svg class="ico"><use href="#i-gauge"/></svg><span>Recursos</span></button>
     <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
     <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
@@ -176,13 +176,11 @@
             <div>
               <div class="only-sci">
                 <div class="sub-h" style="margin-top:0">Hipóteses ativas</div>
-                <div class="card" style="padding:15px;margin-bottom:10px"><div style="font-size:14px">H1 — A fonte primária é confiável (peer-reviewed)</div><div class="mono" style="font-size:11px;color:var(--leaf);margin-top:6px">evidência: 4 · contradição: 0 · confiança 0.88</div></div>
-                <div class="card" style="padding:15px;margin-bottom:10px"><div style="font-size:14px">H2 — Dados de 2023 ainda válidos em 2026</div><div class="mono" style="font-size:11px;color:var(--amber);margin-top:6px">evidência: 2 · contradição: 1 · confiança 0.54</div></div>
-                <div class="card" style="padding:15px"><div style="font-size:14px">H3 — Abordagem escala para 10× carga</div><div class="mono" style="font-size:11px;color:var(--soldier);margin-top:6px">evidência: 1 · contradição: 2 · confiança 0.31 · refutada</div></div>
+                <div id="cognition-hypotheses"></div>
               </div>
               <div class="only-user">
                 <div class="sub-h" style="margin-top:0">O que ela está pensando</div>
-                <div class="card" style="padding:16px;font-style:italic;color:var(--muted);font-size:15px">"Estou comparando três fontes sobre o tema, descartando as desatualizadas e verificando se os números batem antes de responder."</div>
+                <div class="card" style="padding:16px;font-style:italic;color:var(--muted);font-size:15px"><span id="cognition-thought">Aguardando um objetivo — envie uma pergunta no Chat.</span></div>
               </div>
               <div class="only-dev">
                 <div class="sub-h" style="margin-top:0">Ciclo de inferência</div>
@@ -205,24 +203,24 @@
             <p>O corpo estendido da colônia: o dispositivo, a internet e o conhecimento que ela cultivou.</p></div>
           <div class="env-grid">
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-cpu"/></svg><h4>Dispositivo</h4><span class="tag">acesso concedido</span></div>
-              <div class="env-item"><span>Sistema de arquivos</span><span class="ev">1.284 arquivos indexados</span></div>
-              <div class="env-item"><span>Processos observados</span><span class="ev">37 ativos</span></div>
+              <div class="env-item"><span>Sistema de arquivos</span><span class="ev" id="env-files">—</span></div>
+              <div class="env-item"><span>Processos observados</span><span class="ev" id="env-procs">—</span></div>
               <div class="env-item"><span>Sensores</span><span class="ev">bateria · rede · relógio</span></div>
             </div>
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-globe"/></svg><h4>Internet</h4><span class="tag">acesso concedido</span></div>
-              <div class="env-item"><span>Requisições nesta sessão</span><span class="ev" id="env-reqs">142</span></div>
-              <div class="env-item"><span>Domínios visitados</span><span class="ev">28</span></div>
-              <div class="env-item"><span>Fontes verificadas</span><span class="ev" style="color:var(--leaf)">89%</span></div>
+              <div class="env-item"><span>Requisições nesta sessão</span><span class="ev" id="env-reqs">—</span></div>
+              <div class="env-item"><span>Domínios visitados</span><span class="ev" id="env-domains">—</span></div>
+              <div class="env-item"><span>Fontes verificadas</span><span class="ev" id="env-verified">—</span></div>
             </div>
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-book"/></svg><h4>Conhecimento</h4><span class="tag">cultivado</span></div>
-              <div class="env-item"><span>Nós no grafo</span><span class="ev" id="env-nodes">4.712</span></div>
-              <div class="env-item"><span>Relações</span><span class="ev">11.938</span></div>
-              <div class="env-item"><span>Confiança média</span><span class="ev">0.79</span></div>
+              <div class="env-item"><span>Nós no grafo</span><span class="ev" id="env-nodes">—</span></div>
+              <div class="env-item"><span>Relações</span><span class="ev" id="env-relations">—</span></div>
+              <div class="env-item"><span>Confiança média</span><span class="ev" id="env-confidence">—</span></div>
             </div>
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-brain"/></svg><h4>Memória</h4><span class="tag">viva</span></div>
-              <div class="env-item"><span>Memórias (curto prazo)</span><span class="ev">312</span></div>
-              <div class="env-item"><span>Consolidadas (sono)</span><span class="ev">2.086</span></div>
-              <div class="env-item"><span>Força média</span><span class="ev" id="memory-strength">0.71</span></div>
+              <div class="env-item"><span>Memórias (curto prazo)</span><span class="ev" id="env-mem-short">—</span></div>
+              <div class="env-item"><span>Consolidadas (sono)</span><span class="ev" id="env-mem-consolidated">—</span></div>
+              <div class="env-item"><span>Força média</span><span class="ev" id="memory-strength">—</span></div>
             </div>
           </div>
           <div class="sub-h">Buscar na memória</div>
@@ -248,29 +246,7 @@
         <div class="wrap">
           <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-target"/></svg></span> Missões</h2>
             <p>Projetos que a colônia está conduzindo, com subtarefas e progresso.</p></div>
-          <div class="mission" style="--cc:var(--amber)">
-            <div class="mm-h"><h4>Relatório sobre computação quântica</h4><span class="mm-state">em andamento</span></div>
-            <div class="mm-track"><span style="width:64%"></span></div>
-            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Definir escopo e perguntas-chave</div>
-            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Coletar 12 fontes primárias</div>
-            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-compass"/></svg></span> Verificar dados e resolver contradições</div>
-            <div class="subtask"><span class="stbox"></span> Redigir e revisar o relatório final</div>
-          </div>
-          <div class="mission" style="--cc:var(--leaf)">
-            <div class="mm-h"><h4>API REST de gestão de tarefas</h4><span class="mm-state" style="--cc:var(--leaf)">construindo</span></div>
-            <div class="mm-track"><span style="width:38%"></span></div>
-            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Gerar esquema de dados</div>
-            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-worker"/></svg></span> Implementar endpoints CRUD</div>
-            <div class="subtask"><span class="stbox"></span> Escrever testes</div>
-            <div class="subtask"><span class="stbox"></span> Empacotar e documentar</div>
-          </div>
-          <div class="mission" style="--cc:var(--scout)">
-            <div class="mm-h"><h4>Monitorar tendências de mercado</h4><span class="mm-state" style="--cc:var(--scout)">contínua</span></div>
-            <div class="mm-track"><span style="width:82%"></span></div>
-            <div class="subtask done"><span class="stbox"><svg class="ico sm"><use href="#i-check"/></svg></span> Definir fontes e frequência</div>
-            <div class="subtask doing"><span class="stbox"><svg class="ico sm"><use href="#i-compass"/></svg></span> Coleta diária automatizada</div>
-            <div class="subtask"><span class="stbox"></span> Alertar sobre mudanças relevantes</div>
-          </div>
+          <div id="missions-list"><div class="mono" style="color:var(--dim);font-size:12px">Carregando missões…</div></div>
         </div>
       </section>
 
@@ -280,9 +256,9 @@
           <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-gauge"/></svg></span> Recursos</h2>
             <p>O metabolismo da colônia — o que ela consome do dispositivo em tempo real.</p></div>
           <div class="stat-grid" style="margin-bottom:20px">
-            <div class="stat"><div class="sv" id="stat-bots">18</div><div class="sl">Bots vivos</div></div>
-            <div class="stat"><div class="sv" id="stat-tasks">7</div><div class="sl">Tarefas ativas</div></div>
-            <div class="stat"><div class="sv" id="stat-uptime">04:12</div><div class="sl">Tempo ativo</div></div>
+            <div class="stat"><div class="sv" id="stat-bots">—</div><div class="sl">Bots vivos</div></div>
+            <div class="stat"><div class="sv" id="stat-tasks">—</div><div class="sl">Tarefas ativas</div></div>
+            <div class="stat"><div class="sv" id="stat-uptime">—</div><div class="sl">Tempo ativo</div></div>
             <div class="stat"><div class="sv" id="stat-tests">352</div><div class="sl">Testes </div></div>
           </div>
           <div class="grid g2">
@@ -300,14 +276,13 @@
           <div class="queen-hero">
             <span class="qcrown"><svg class="ico lg"><use href="#i-crown"/></svg></span>
             <div><div class="eyebrow">Objetivo mestre</div><div class="qgoal">"Ser uma extensão confiável da mente do usuário — antecipar, pesquisar e construir sem supervisão constante."</div>
-            <div class="chips" style="margin-top:14px"><span class="chip">confiança do usuário · 0.82</span><span class="chip">autonomia · supervisionada</span><span class="chip">3 objetivos ativos</span></div></div>
+            <div class="chips" style="margin-top:14px"><span class="chip" id="queen-trust">confiança · —</span><span class="chip">autonomia · supervisionada</span><span class="chip" id="queen-goals">— objetivos ativos</span></div></div>
           </div>
           <div class="sub-h">Decisões recentes <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· seu feedback ajusta os pesos</span></div>
-          <div class="decision" style="--cc:var(--queen)"><span class="dt">14:02</span><div style="flex:1"><div class="dtxt">Priorizou o relatório quântico sobre o monitoramento de mercado</div><div class="dcaste">rainha · custo/benefício</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
-          <div class="decision" style="--cc:var(--soldier)"><span class="dt">13:58</span><div style="flex:1"><div class="dtxt">Refutou a hipótese H3 — não escala para 10× carga</div><div class="dcaste">soldado · verificação</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
-          <div class="decision" style="--cc:var(--scout)"><span class="dt">13:51</span><div style="flex:1"><div class="dtxt">Recrutou 2 exploradoras extras para ampliar as fontes</div><div class="dcaste">rainha · alocação</div><div class="dfb"><button data-fb="up" title="Funcionou"><svg class="ico sm"><use href="#i-check"/></svg></button><button data-fb="down" title="Não gostei"><svg class="ico sm"><use href="#i-x"/></svg></button><button data-fb="teach" title="Ensinar"><svg class="ico sm"><use href="#i-chat"/></svg></button><button data-fb="pin" title="Tornar padrão"><svg class="ico sm"><use href="#i-target"/></svg></button></div></div></div>
+          <div id="queen-decisions"><div class="mono" style="color:var(--dim);font-size:12px">Carregando decisões…</div></div>
+          
           <div class="sub-h">Aprendizado da colônia</div>
-          <div id="queen-learned"><div style="color:var(--dim);font-family:var(--mono);font-size:12px">Dê feedback nas decisões acima — a colônia ajusta os pesos e registra aqui o que aprendeu.</div></div>
+          <div id="queen-learned"><div style="color:var(--dim);font-family:var(--mono);font-size:12px">Dê feedback nas decisões acima — a colônia ajusta os pesos e registra aqui o que aprendeu.</div></div><div class="sub-h">DNA da colônia</div><div id="queen-dna" class="chips"><span class="chip">—</span></div>
         </div>
       </section>
 
@@ -402,6 +377,7 @@
 
   <div id="conn" class="conn" style="display:none"></div><div class="toast" id="toast"></div>
 </div>
+<script src="/js/api_bridge.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/scripts.js"></script>
 <script src="/js/chat.js"></script>

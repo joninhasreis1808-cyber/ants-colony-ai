@@ -16,6 +16,9 @@
 /* Estatísticas de memória / saúde em chips */
 #mem-stats:empty, #health-info:empty { display: none; }
 
+/* Indicador de estado redundante do context_engine (usamos #state-ind) */
+#colony-state-indicator { display: none !important; }
+
 @media (prefers-reduced-motion: reduce) {
   .tab.active, .tab.is-active { animation: none !important; }
 }

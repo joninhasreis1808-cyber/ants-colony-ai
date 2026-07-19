@@ -122,8 +122,13 @@ plano gratuito. `$PORT` é injetado pela plataforma; `/health` é o healthcheck.
 
 **Render (1 clique):**
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joninhasreis1808-cyber/ants-colony-ai)
-→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe. A URL sai
-como `https://ants.onrender.com`.
+→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe.
+
+**Serviço público atual:** <https://ants-uoat.onrender.com> · saúde:
+<https://ants-uoat.onrender.com/health> (deve retornar JSON `status: healthy`
+com 25 módulos; no plano free o primeiro acesso após ociosidade leva ~30–50s).
+⚠️ O serviço precisa ser **Web Service (Docker)**, não Static Site — um Static
+Site não tem backend e a interface fica em "colônia adormecida".
 
 **Railway:** conecte o repo em <https://railway.app/new> (detecta o
 `railway.json`) e clique em *Deploy*. Depois *Settings → Networking →

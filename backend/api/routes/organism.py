@@ -12,11 +12,14 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from backend.hivemind.circadian import Circadian
-from backend.hivemind.colony_dna import ColonyDNA
 from backend.hivemind.hormones import Hormone, HormoneSystem
 from backend.intelligence.observer import Observer
+from backend.hivemind.dna_store import get_dna, save_dna
 from backend.intelligence.permanent_missions import PermanentMissions
-from backend.learning.feedback_learner import FeedbackLearner
+from backend.learning.feedback_store import (
+    get_feedback_learner,
+    save_feedback_learner,
+)
 from backend.security.immune_system import ImmuneSystem
 
 router = APIRouter(prefix="/organism", tags=["organism"])
@@ -25,8 +28,6 @@ HORMONES = HormoneSystem()
 IMMUNE = ImmuneSystem()
 MISSIONS = PermanentMissions()
 OBSERVER = Observer()
-DNA = ColonyDNA()
-FEEDBACK = FeedbackLearner()
 CIRCADIAN = Circadian()
 
 
@@ -45,6 +46,13 @@ class MissionIn(BaseModel):
     frequency: float = 3600.0
 
 
+class SnapshotIn(BaseModel):
+    duplicates: int = 0
+    backup_age_days: int = 0
+    disk_usage: int = 0
+    update_available: bool = False
+
+
 @router.get("/vitals")
 async def vitals(hour: int = 12) -> dict[str, Any]:
     """Sinais do organismo: hormônios, fase circadiana e imunidade."""
@@ -60,26 +68,65 @@ async def vitals(hour: int = 12) -> dict[str, Any]:
 async def immune_analyze(body: ThreatIn) -> dict[str, Any]:
     """Analisa uma ação quanto a ameaça (aprendendo assinaturas)."""
     level = IMMUNE.analyze_threat(body.action)
-    return {"level": level.value, "known": IMMUNE.is_known_threat(body.action)}
+    lvl = level.value
+    dangerous = lvl == "dangerous"
+    # Guarda da UI: 'suspicious' e 'dangerous' pedem confirmação explícita.
+    requires_confirmation = lvl in ("suspicious", "dangerous")
+    return {"level": lvl, "dangerous": dangerous,
+            "requires_confirmation": requires_confirmation,
+            "known": IMMUNE.is_known_threat(body.action)}
+
+
+@router.get("/observer")
+async def observer_findings() -> dict[str, Any]:
+    """Achados reais do observador (consultivo, nunca age).
+
+    Sem snapshot do dispositivo (ex.: sandbox), a lista vem vazia — honesto,
+    sem inventar achados. Alimente via POST /organism/observer/analyze.
+    """
+    findings = OBSERVER.get_findings()
+    return {"findings": findings, "suggestions": OBSERVER.suggest_improvements(),
+            "count": len(findings)}
+
+
+@router.post("/observer/analyze")
+async def observer_analyze(body: SnapshotIn) -> dict[str, Any]:
+    """Analisa um retrato real do ambiente e gera achados consultivos."""
+    OBSERVER.detect_anomalies(body.model_dump())
+    findings = OBSERVER.get_findings()
+    return {"findings": findings, "suggestions": OBSERVER.suggest_improvements(),
+            "count": len(findings)}
 
 
 @router.post("/feedback")
 async def feedback(body: FeedbackIn) -> dict[str, Any]:
-    """Aplica o feedback do usuário a uma estratégia (ajusta pesos)."""
+    """Aplica o feedback do usuário a uma estratégia (ajusta pesos).
+
+    Usa o learner compartilhado do processo (mesmo que o orquestrador
+    consulta), buscado a cada chamada para nunca ficar com referência velha.
+    """
+    learner = get_feedback_learner()
     kind = body.kind
     if kind == "approve":
-        FEEDBACK.approve(body.strategy)
+        learner.approve(body.strategy)
     elif kind == "reject":
-        FEEDBACK.reject(body.strategy)
+        learner.reject(body.strategy)
     elif kind == "teach":
-        FEEDBACK.teach(body.text)
+        learner.teach(body.text)
     elif kind == "default":
-        FEEDBACK.make_default(body.strategy)
+        learner.make_default(body.strategy)
+        # 📌 tornar padrão vira um gene de TRADIÇÃO no DNA (durável).
+        get_dna().encode("tradition", body.strategy, 1.0)
+        save_dna()
     elif kind == "forbid":
-        FEEDBACK.forbid(body.strategy)
+        learner.forbid(body.strategy)
+        # 🚫 nunca faça vira uma REGRA hereditária no DNA (durável).
+        get_dna().encode("rule", "nunca: " + body.strategy, 1.0)
+        save_dna()
+    save_feedback_learner()  # durável: sobrevive a reinícios (§4.1)
     return {"strategy": body.strategy,
-            "weight": FEEDBACK.weight_of(body.strategy),
-            "blocked": FEEDBACK.is_blocked(body.strategy)}
+            "weight": learner.weight_of(body.strategy),
+            "blocked": learner.is_blocked(body.strategy)}
 
 
 @router.get("/missions")
@@ -101,4 +148,5 @@ async def add_mission(body: MissionIn) -> dict[str, Any]:
 @router.get("/dna")
 async def dna() -> dict[str, Any]:
     """Genoma atual da colônia (traços herdáveis)."""
-    return {"genome_size": DNA.genome_size(), "traits": DNA.inherit()}
+    dna = get_dna()
+    return {"genome_size": dna.genome_size(), "traits": dna.inherit()}

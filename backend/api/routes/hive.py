@@ -42,6 +42,32 @@ class TaskRequest(BaseModel):
 class TaskResponse(BaseModel):
     task_id: str
     status: str
+    # Eco imediato (§4.2): resposta em <300ms, antes do pipeline rodar.
+    echo: str = ""
+    intent: str = ""
+    castes: list[str] = []
+
+
+# Mapa skill→casta amigável, para o eco "recrutando…" fazer sentido ao usuário.
+_SKILL_CASTE = {
+    "navigate": "exploradoras", "extract_text": "operárias",
+    "interpret_text": "operárias", "decide": "rainha", "learn": "cuidadoras",
+    "create_app": "operárias", "perceive_text": "exploradoras",
+}
+
+
+def _preview(goal: str) -> tuple[str, list[str]]:
+    """Lê a intenção e as castas prováveis sem rodar o pipeline (rápido)."""
+    from backend.hivemind.cognitive_router import CognitiveRouter
+    router = CognitiveRouter()
+    intent = router.intent_of(goal)
+    needs = router.infer_needs(goal)
+    castes: list[str] = []
+    for skill in needs:
+        c = _SKILL_CASTE.get(skill)
+        if c and c not in castes:
+            castes.append(c)
+    return intent, castes
 
 
 async def _run_task(task: Task) -> None:
@@ -67,8 +93,14 @@ async def create_task(req: TaskRequest) -> TaskResponse:
     task = Task(goal=req.goal)
     MEMORY.save_task(task)
     _TASK_COUNT["n"] += 1
+    intent, castes = _preview(req.goal)
     asyncio.create_task(_run_task(task))
-    return TaskResponse(task_id=task.id, status=task.status.value)
+    echo = (
+        f"Recebi — recrutando {len(castes)} casta(s): "
+        f"{', '.join(castes)}." if castes else "Recebi o objetivo."
+    )
+    return TaskResponse(task_id=task.id, status=task.status.value,
+                        echo=echo, intent=intent, castes=castes)
 
 
 @router.get("/status/{task_id}")

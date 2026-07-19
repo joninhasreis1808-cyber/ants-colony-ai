@@ -68,6 +68,33 @@ def test_api_health_endpoint():
     assert resp.json()["status"] == "healthy"
 
 
+def test_api_ping_endpoint():
+    from fastapi.testclient import TestClient
+
+    from backend.api.main import app
+
+    client = TestClient(app)
+    resp = client.get("/ping")
+    assert resp.status_code == 200
+    assert resp.json() == {"pong": "ok"}
+
+
+def test_task_returns_immediate_echo():
+    # §4.2 — a resposta do POST /hive/task traz o eco imediato (castas).
+    from fastapi.testclient import TestClient
+
+    from backend.api.main import app
+
+    client = TestClient(app)
+    resp = client.post("/hive/task", json={"goal": "crie um app de API REST"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["task_id"]
+    assert data["echo"]
+    assert data["intent"] == "create"
+    assert "rainha" in data["castes"]
+
+
 def test_api_rejects_empty_goal():
     from fastapi.testclient import TestClient
 

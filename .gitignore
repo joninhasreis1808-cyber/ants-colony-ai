@@ -12,3 +12,8 @@ node_modules/
 deploy/*.db
 deploy/*.sqlite
 deploy/data/
+
+.venv/
+ants.db
+*.db
+__pycache__/

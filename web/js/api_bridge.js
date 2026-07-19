@@ -37,7 +37,10 @@
       const res = await orig(input, init);
       if (track) { logCall(method, url.replace(api, "") || url, res.status, Math.round(performance.now() - t0)); AntAPI._mark(res.ok); }
       if (track && method === "POST" && /\/hive\/task\b/.test(url))
-        res.clone().json().then((d) => { const id = d && (d.task_id || d.id); if (id) startFlow(id); }).catch(() => {});
+        res.clone().json().then((d) => {
+          const id = d && (d.task_id || d.id);
+          if (id) startFlow(id, d && d.echo);  // eco imediato (§4.2)
+        }).catch(() => {});
       return res;
     } catch (e) {
       if (track) { logCall(method, url.replace(api, "") || url, "ERRO", Math.round(performance.now() - t0)); AntAPI._mark(false); }
@@ -49,13 +52,16 @@
     try { const b = JSON.parse((init && init.body) || "{}"); if (b.goal) window.__antLastQuestion = b.goal; } catch (e) {}
   }
 
-  function startFlow(taskId) {
+  function startFlow(taskId, echo) {
     const flow = document.getElementById("research-flow");
     if (!flow) return;
     flow.classList.add("show");
     const steps = [].slice.call(flow.querySelectorAll(".flow-step"));
     const arms = [].slice.call(flow.querySelectorAll(".flow-arm"));
     const pct = document.getElementById("flow-pct"), narr = document.getElementById("flow-narr");
+    // Eco imediato (<300ms): mostra o que a colônia recrutou antes do pipeline.
+    if (narr && echo) narr.innerHTML = "<b>" + String(echo).replace(/[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])) + "</b>";
     let i = 0;
     const paint = () => {
       steps.forEach((s, k) => { s.classList.toggle("on", k === i); s.classList.toggle("done", k < i); });
@@ -63,12 +69,36 @@
       if (pct) pct.textContent = Math.round(i / (steps.length - 1) * 100) + "%";
     };
     paint();
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const poll = setInterval(async () => {
       let st = null;
       try { st = await AntAPI.get("/hive/status/" + taskId); } catch (e) {}
       const done = st && ["done", "completed", "failed"].includes(st.status);
-      if (st && narr) { const r = st.result || {}; narr.innerHTML = done ? "<b>" + (r.answer ? "Resposta pronta." : "Concluído.") + "</b>" : "a colônia trabalha…"; }
-      if (done) { i = steps.length - 1; paint(); if (pct) pct.textContent = "100%"; clearInterval(poll); document.dispatchEvent(new CustomEvent("ants:task-done")); return; }
+      // Narração a partir dos EVENTOS REAIS emitidos pelo backend
+      // (recrutamento "quem chamou quem", desvio p/ o cérebro próprio, etc.).
+      if (st && narr) {
+        const r = st.result || {};
+        if (done) {
+          // Explicabilidade (§4.7): toda conclusão traz o MOTIVO real —
+          // confiança, nº de fontes externas e fatos do próprio cérebro.
+          var motivo = [];
+          if (r.confidence != null) motivo.push("confiança " + r.confidence);
+          var nsrc = (r.sources || []).length;
+          motivo.push(nsrc + (nsrc === 1 ? " fonte externa" : " fontes externas"));
+          if (r.cognition && r.cognition.knowledge_used != null)
+            motivo.push(r.cognition.knowledge_used + " fatos da memória");
+          narr.innerHTML = "<b>" + esc(r.answer ? "Resposta pronta." : "Concluído.") +
+            "</b>" + (motivo.length ? ' <span style="color:var(--dim)">· ' + esc(motivo.join(" · ")) + "</span>" : "");
+        } else {
+          const evs = st.events || [];
+          const last = evs.length ? evs[evs.length - 1] : null;
+          narr.innerHTML = last
+            ? "<b>" + esc(last.bot) + "</b> · " + esc(last.message)
+            : "a colônia trabalha…";
+        }
+      }
+      if (done) { i = steps.length - 1; paint(); if (pct) pct.textContent = "100%"; clearInterval(poll); document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st || {} })); return; }
       if (i < steps.length - 2) i++;
       paint();
     }, 600);

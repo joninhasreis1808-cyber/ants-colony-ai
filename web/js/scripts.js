@@ -47,12 +47,26 @@
   const conn = $("conn"), connInd = $("connection-indicator");
   if (conn && connInd) {
     const mirror = () => {
-      connInd.textContent = conn.textContent || "Conectado";
+      // Honestidade: só reflete o texto real do #conn; nunca fabrica
+      // "Conectado" quando o estado é desconhecido/vazio (§0.6).
+      const t = (conn.textContent || "").trim();
+      if (t) connInd.textContent = t;
       connInd.classList.toggle("offline", conn.classList.contains("offline"));
     };
     new MutationObserver(mirror).observe(conn,
       { childList: true, characterData: true, subtree: true, attributes: true });
     mirror();
+  }
+  /* Fonte autoritativa de online/offline: o api_bridge sabe se o backend
+     respondeu. Offline => "Adormecida" honesta, nunca "Conectado" falso. */
+  if (connInd) {
+    const setConn = (ok) => {
+      if (ok) { connInd.textContent = "Conectado"; connInd.classList.remove("offline"); }
+      else { connInd.textContent = "Adormecida"; connInd.classList.add("offline"); }
+    };
+    document.addEventListener("ants:online", (e) => setConn(!!e.detail));
+    // Caso o api_bridge já saiba o estado antes deste listener existir.
+    if (window.AntAPI && window.AntAPI.online != null) setConn(window.AntAPI.online);
   }
 
   /* ---- Pontes de compatibilidade (campo visível -> ID legado) ----
@@ -176,4 +190,85 @@
     const pp = document.querySelector(".progress-panel");
     if (pp) pp.scrollIntoView({ behavior: "smooth", block: "center" });
   });
+})();
+
+/* ============================================================
+   CAMADA DE EXIBIÇÃO SEM EMOJIS (§0.5) — MD5 dos JS protegidos intacto.
+   chat.js / bots.js / factory.js / memory.js (imutáveis) escrevem emojis
+   (🐜 ✅ ⚠️ 🤖 ⏳ 😴) no espelho legado. Esta camada, num arquivo LIVRE,
+   substitui o emoji por um ícone SVG coeso — SOMENTE nos nós que contêm
+   emoji. Conteúdo interativo (botões da saudação, .lead, ações) fica
+   intocado. Observadores são ALVO e debounced (rAF) — nada de varrer o
+   documento inteiro, para não sobrecarregar a máquina. Auto-cicatriza:
+   quando o JS protegido reescreve textContent (streaming), reaplica.
+   ============================================================ */
+(function noEmojiLayer() {
+  "use strict";
+  var HAS = /[\u{1F000}-\u{1FAFF}\u{2300}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{FE0F}\u{200D}]/u;
+  var STRIP = new RegExp(HAS.source, "gu");
+  var strip = function (s) { return (s || "").replace(STRIP, "").replace(/[ \t]{2,}/g, " ").replace(/ *\n */g, "\n").trim(); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); };
+  var svg = function (id) { return '<svg class="ico sm" aria-hidden="true" style="display:inline-block;vertical-align:-3px"><use href="#' + id + '"/></svg>'; };
+  var $ = function (id) { return document.getElementById(id); };
+
+  function iconFor(raw) {
+    if (/\u{1F41C}/u.test(raw)) return "i-ant";         // formiga (trabalhando)
+    if (/✅/.test(raw)) return "i-check";               // concluído
+    if (/[⚠\u{1F6AB}]/u.test(raw)) return "i-shield";   // aviso/erro
+    if (/⏳|⌛/.test(raw)) return "i-clock";             // aguardando
+    if (/\u{1F634}/u.test(raw)) return "i-moon";        // sono
+    if (/\u{1F916}/u.test(raw)) return "i-worker";      // bot
+    return null;
+  }
+
+  function debounced(fn) {   // rAF debounce por alvo (evita rajada no streaming)
+    var pending = false;
+    return function () { if (pending) return; pending = true; requestAnimationFrame(function () { pending = false; fn(); }); };
+  }
+
+  // Limpa um nó SÓ se tiver emoji: troca por ícone SVG + texto, preservando
+  // quebras de linha. Não toca em nós sem emoji (saudação/botões ficam intactos).
+  function cleanNode(el, forceIcon) {
+    if (!el || !HAS.test(el.textContent || "")) return;
+    var ic = forceIcon || iconFor(el.textContent || "");
+    var t = strip(el.textContent || "");
+    el.style.whiteSpace = "pre-wrap";
+    el.innerHTML = (ic ? '<span class="lead">' + svg(ic) + " Colônia</span>\n" : "") + esc(t);
+  }
+
+  function observe(el, fn) {
+    if (!el) return;
+    var run = debounced(fn);
+    new MutationObserver(run).observe(el, { childList: true, subtree: true, characterData: true });
+    run();
+  }
+
+  // Melhoria segura: liga os chips da saudação (data-fill) — antes eram
+  // botões sem função. Clicar preenche o objetivo e envia à colônia (real).
+  function wireQuickChips() {
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest && e.target.closest("[data-fill]");
+      if (!btn) return;
+      var input = $("chat-input"), send = $("chat-send");
+      if (input && send) { input.value = btn.getAttribute("data-fill"); send.click(); }
+    });
+  }
+
+  function init() {
+    wireQuickChips();
+    // 1) Mensagens do chat (só as que têm emoji; saudação com botões intacta).
+    var msgs = $("messages");
+    if (msgs) observe(msgs, function () { msgs.querySelectorAll(".msg").forEach(function (m) { cleanNode(m); }); });
+    // 2) Cards de bot (🤖 → ícone operária).
+    var grid = $("bot-grid");
+    if (grid) observe(grid, function () { grid.querySelectorAll(".bot-card .name").forEach(function (n) { cleanNode(n, "i-worker"); }); });
+    // 3) Resultado da factory (✅/⚠️/⏳).
+    var fac = $("fac-result");
+    if (fac) observe(fac, function () { cleanNode(fac); });
+    // 4) Toast (😴 e afins) — texto puro, sem ícone.
+    var toast = $("toast");
+    if (toast) observe(toast, function () { if (HAS.test(toast.textContent || "")) toast.textContent = strip(toast.textContent); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();

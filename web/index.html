@@ -48,7 +48,7 @@
   <aside id="sidebar">
     <div class="side-brand">
       <span class="mark"><svg class="ico lg"><use href="#i-ant"/></svg></span>
-      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v6.1</div></div>
+      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v6.2</div></div>
     </div>
     <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
     <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count"></span></button>
@@ -62,7 +62,7 @@
     <button class="nav-item" data-tab="console"><svg class="ico"><use href="#i-terminal"/></svg><span>Console</span></button>
     <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     <div class="side-foot">
-      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">352</span> testes </span>
+      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">361</span> testes </span>
     </div>
   </aside>
 
@@ -76,7 +76,7 @@
         <button data-mode="dev">Dev</button>
         <button data-mode="sci">Cientista</button>
       </div>
-      <span id="connection-indicator">Conectado</span>
+      <span id="connection-indicator">Verificando…</span>
     </header>
 
     <main class="content">
@@ -259,7 +259,7 @@
             <div class="stat"><div class="sv" id="stat-bots">—</div><div class="sl">Bots vivos</div></div>
             <div class="stat"><div class="sv" id="stat-tasks">—</div><div class="sl">Tarefas ativas</div></div>
             <div class="stat"><div class="sv" id="stat-uptime">—</div><div class="sl">Tempo ativo</div></div>
-            <div class="stat"><div class="sv" id="stat-tests">352</div><div class="sl">Testes </div></div>
+            <div class="stat"><div class="sv" id="stat-tests">361</div><div class="sl">Testes </div></div>
           </div>
           <div class="grid g2">
             <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Sistema</div><div id="resource-center"></div></div>
@@ -338,7 +338,7 @@
             <span class="chip" style="color:var(--dim)"><svg class="ico sm"><use href="#i-x"/></svg> Enviar e-mails</span>
           </div>
           <div class="sub-h">Sistema</div>
-          <div class="chips"><span class="chip">versão 6.1.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">352 testes </span></div>
+          <div class="chips"><span class="chip">versão 6.2.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">361 testes </span></div>
           <div id="health-info" class="chips" style="margin-top:12px"></div><p class="mono" style="margin-top:18px;color:var(--dim);font-size:12px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
         </div>
       </section>
@@ -369,8 +369,11 @@
         <div class="bot-progress" style="height:8px"><span id="bot-vision-bar" style="width:0%"></span></div>
       </div>
       <div class="modal-foot">
-        <button class="btn ghost">Pausar</button>
-        <button class="btn"><svg class="ico sm"><use href="#i-worker"/></svg> Recrutar ajuda</button>
+        <button class="btn ghost" id="bot-vision-pause" disabled
+          title="Sem endpoint de pausa por-bot no backend — desabilitado por honestidade.">Pausar</button>
+        <button class="btn" id="bot-vision-recruit" disabled
+          title="Recrutamento é decidido pela colônia ao receber um objetivo (Chat) — não há ação manual real aqui.">
+          <svg class="ico sm"><use href="#i-worker"/></svg> Recrutar ajuda</button>
       </div>
     </div>
   </div>
@@ -398,5 +401,7 @@
 <script src="/js/replay.js"></script>
 <script src="/js/lab_mode.js"></script>
 <script src="/js/live_panels.js"></script>
+<script src="/js/ants_bridge.js"></script>
+<script src="/js/controls.js"></script>
 </body>
 </html>

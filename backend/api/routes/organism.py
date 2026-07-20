@@ -84,6 +84,14 @@ async def trust_scores() -> dict[str, Any]:
     return {"bots": get_trust().snapshot()}
 
 
+@router.get("/traditions")
+async def traditions() -> dict[str, Any]:
+    """Tradições vigentes da colônia (duráveis, sobrevivem a reinícios)."""
+    from backend.hivemind.culture_store import get_culture
+    culture = get_culture()
+    return {"traditions": culture.all_traditions(), "count": culture.count()}
+
+
 @router.get("/observer")
 async def observer_findings() -> dict[str, Any]:
     """Achados reais do observador (consultivo, nunca age).
@@ -122,9 +130,13 @@ async def feedback(body: FeedbackIn) -> dict[str, Any]:
         learner.teach(body.text)
     elif kind == "default":
         learner.make_default(body.strategy)
-        # 📌 tornar padrão vira um gene de TRADIÇÃO no DNA (durável).
+        # 📌 tornar padrão vira um gene de TRADIÇÃO no DNA (durável)…
         get_dna().encode("tradition", body.strategy, 1.0)
         save_dna()
+        # …e consagra a tradição na CULTURA da colônia (durável).
+        from backend.hivemind.culture_store import get_culture, save_culture
+        get_culture().add_tradition("preferência do usuário", body.strategy)
+        save_culture()
     elif kind == "forbid":
         learner.forbid(body.strategy)
         # 🚫 nunca faça vira uma REGRA hereditária no DNA (durável).

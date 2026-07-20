@@ -41,9 +41,11 @@ Uma só aba, três seções coesas (`web/js/timeline_hub.js`, 161 linhas):
 
 ## Bloco D — melhorias pertinentes
 - **`GET /hive/recruitment/{task_id}`** — cadeia real "quem chamou quem".
-- **Trust persistente**: `trust_store` (KV/SQLite); a colmeia registra acerto/erro
-  por bot ao concluir tarefa; `GET /organism/trust` expõe. DNA/tradições/feedback
-  já persistiam (6.2). **Prova: trust e DNA sobrevivem a restart HTTP real.**
+- **Persistência evolutiva COMPLETA** (mesmo padrão KV/SQLite): DNA, feedback,
+  **trust** (`trust_store`, `GET /organism/trust`) e **tradições**
+  (`culture_store`, `GET /organism/traditions`). 'Tornar padrão' consagra uma
+  tradição na cultura da colônia. **Prova: trust, tradições e DNA sobrevivem a
+  restart HTTP real (valor antes → reinício → valor mantido).**
 - **Estado honesto** do indicador via `/colony/state` (herdado, mantido).
 
 ## Prova (Playwright, headless)

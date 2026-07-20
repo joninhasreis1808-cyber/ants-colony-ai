@@ -57,3 +57,27 @@ class ColonyCulture:
 
     def count(self) -> int:
         return len(self._traditions)
+
+    def all_traditions(self) -> list[dict]:
+        """Tradições vigentes (para UI/observação), da mais forte à mais fraca."""
+        ts = sorted(self._traditions.values(), key=lambda t: t.strength,
+                    reverse=True)
+        return [{"id": t.id, "pattern": t.pattern, "strategy": t.strategy,
+                 "strength": t.strength, "challenges": t.challenges}
+                for t in ts]
+
+    # ---- Persistência (aditivo) — tradições sobrevivem a reinícios (§4.1) ----
+    def to_state(self) -> dict:
+        return {"seq": self._seq,
+                "traditions": [{"id": t.id, "pattern": t.pattern,
+                                "strategy": t.strategy, "strength": t.strength,
+                                "challenges": t.challenges}
+                               for t in self._traditions.values()]}
+
+    def load_state(self, state: dict) -> None:
+        self._seq = int((state or {}).get("seq", 0))
+        self._traditions = {}
+        for d in (state or {}).get("traditions", []):
+            self._traditions[d["id"]] = Tradition(
+                d["id"], d.get("pattern", ""), d.get("strategy", ""),
+                d.get("strength", 1.0), d.get("challenges", 0))

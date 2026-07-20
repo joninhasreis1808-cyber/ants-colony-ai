@@ -77,6 +77,13 @@ async def immune_analyze(body: ThreatIn) -> dict[str, Any]:
             "known": IMMUNE.is_known_threat(body.action)}
 
 
+@router.get("/trust")
+async def trust_scores() -> dict[str, Any]:
+    """Confiança conquistada por cada bot (durável, sobrevive a reinícios)."""
+    from backend.permissions.trust_store import get_trust
+    return {"bots": get_trust().snapshot()}
+
+
 @router.get("/observer")
 async def observer_findings() -> dict[str, Any]:
     """Achados reais do observador (consultivo, nunca age).

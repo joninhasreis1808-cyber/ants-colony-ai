@@ -47,3 +47,17 @@ class TrustBasedAutonomy:
         return {"bot_id": bot_id, "level": level,
                 "can_write": level >= 3, "can_execute": level >= 4,
                 "can_self_task": level >= 5}
+
+    def snapshot(self) -> dict:
+        """Trust + nível de autonomia de cada bot (para UI/observação)."""
+        return {b: {"trust": self.get_trust(b),
+                    "level": self.get_autonomy_level(b)}
+                for b in sorted(self._trust)}
+
+    # ---- Persistência (aditivo) — a confiança sobrevive a reinícios (§4.1) ----
+    def to_state(self) -> dict:
+        return {"trust": dict(self._trust)}
+
+    def load_state(self, state: dict) -> None:
+        self._trust = {k: float(v)
+                       for k, v in (state or {}).get("trust", {}).items()}

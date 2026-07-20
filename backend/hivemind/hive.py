@@ -140,6 +140,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
             self._pending_events.clear()
             task.touch(TaskStatus.DONE)
             self._remember_outcome(task)
+            self._record_trust(bots, success=True)  # confiança conquistada
             self.lifecycle.maintain()  # hiberna ociosos (poupa recursos)
         except Exception as exc:  # noqa: BLE001
             task.error = str(exc)
@@ -195,6 +196,21 @@ class Hivemind(MemoryMixin, SwarmMixin):
         if perception:
             result["perception"] = perception
         return result
+
+    def _record_trust(self, bots: list, success: bool) -> None:
+        """Registra confiança conquistada/perdida por bot (durável §4.1).
+
+        Aditivo e tolerante a falhas: nunca derruba o pipeline se o store
+        de confiança não estiver disponível.
+        """
+        try:
+            from backend.permissions.trust_store import get_trust, save_trust
+            t = get_trust()
+            for b in bots:
+                t.record_success(b.name) if success else t.record_failure(b.name)
+            save_trust()
+        except Exception:  # noqa: BLE001 - persistência é best-effort
+            pass
 
     def _cognitive_fallback(self, task_id: str) -> dict[str, Any] | None:
         """Aciona o cérebro próprio quando a busca externa nada trouxe.

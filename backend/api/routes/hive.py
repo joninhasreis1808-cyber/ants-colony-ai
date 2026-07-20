@@ -113,6 +113,20 @@ async def get_status(task_id: str) -> dict[str, Any]:
     return task
 
 
+@router.get("/recruitment/{task_id}")
+async def get_recruitment(task_id: str) -> dict[str, Any]:
+    """Cadeia real de recrutamento da tarefa: quem chamou quem, e por quê.
+
+    Lê o que a colmeia já gravou (context/resultado) — aditivo, sem tocar no
+    núcleo do pipeline. Vazio e honesto se a tarefa não existir/não registrou.
+    """
+    chain = MEMORY.get_context(task_id, "recruitment")
+    if not chain:
+        task = MEMORY.get_task(task_id)
+        chain = ((task or {}).get("result") or {}).get("recruitment") or []
+    return {"task_id": task_id, "recruitment": chain, "count": len(chain)}
+
+
 @router.websocket("/live/{task_id}")
 async def live(websocket: WebSocket, task_id: str) -> None:
     """Transmite eventos da colmeia em tempo real via WebSocket."""

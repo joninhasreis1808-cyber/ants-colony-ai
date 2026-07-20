@@ -115,3 +115,19 @@ FastAPI. Aí todo `fetch` falha e a interface mostra "colônia adormecida"
 
 Verifique: abra `https://SEU-APP.onrender.com/health` — deve retornar o JSON
 com `status: healthy` e 25 módulos. Se retornar a página HTML/404, é Static Site.
+
+---
+
+## Adendo 6.3 (verificado)
+
+- **Testes:** 378 passed, 5 skipped. **MD5 dos 4 JS legados inalterados.**
+- **Linha do Tempo unificada:** absorveu Console e Missões em 3 seções
+  (Fluxo/Missões · Registro Vivo · Console) via `web/js/timeline_hub.js` —
+  fonte única de eventos, sem polling duplicado. Abas Console/Missões removidas.
+- **UI Kernel** (`web/js/ui_kernel.js`): a IA modifica a interface por comandos
+  declarativos de um conjunto fechado e seguro (nunca HTML arbitrário).
+- **Endpoints novos:** `GET /hive/recruitment/{task_id}`, `GET /organism/trust`.
+- **Persistência:** DNA, tradições, feedback e **trust** sobrevivem a restart
+  (KV/SQLite) — provado via reinício HTTP real.
+- **Explicabilidade:** botão "Como cheguei nisso?" com motivo real.
+- Detalhes e provas: `ANTS_6.3_MUDANCAS.md` e `AUDITORIA_6.3.md`.

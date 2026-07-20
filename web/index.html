@@ -55,11 +55,9 @@
     <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
     <button class="nav-item" data-tab="environment"><svg class="ico"><use href="#i-globe"/></svg><span>Ambiente</span></button>
     <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
-    <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span><span class="badge" id="nav-mission-count"></span></button>
     <button class="nav-item" data-tab="resources"><svg class="ico"><use href="#i-gauge"/></svg><span>Recursos</span></button>
     <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
     <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
-    <button class="nav-item" data-tab="console"><svg class="ico"><use href="#i-terminal"/></svg><span>Console</span></button>
     <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     <div class="side-foot">
       <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">361</span> testes </span>
@@ -236,17 +234,49 @@
       <section class="tab" id="tab-timeline">
         <div class="wrap">
           <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-clock"/></svg></span> Linha do Tempo</h2>
-            <p>Cada ação que a colônia tomou, mais recente no topo.</p></div>
-          <div id="decision-timeline"></div>
-        </div>
-      </section>
+            <p>A história viva da colônia — quem fez o quê, quando e por quê. Missões, registro e diagnóstico, num só lugar.</p></div>
 
-      <!-- ═══ MISSÕES ═══ -->
-      <section class="tab" id="tab-missions">
-        <div class="wrap">
-          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-target"/></svg></span> Missões</h2>
-            <p>Projetos que a colônia está conduzindo, com subtarefas e progresso.</p></div>
-          <div id="missions-list"><div class="mono" style="color:var(--dim);font-size:12px">Carregando missões…</div></div>
+          <!-- Sub-abas internas (não são abas de topo) -->
+          <div class="th-tabs" id="th-tabs" role="tablist">
+            <button class="th-tab on" data-sec="missions" role="tab"><svg class="ico sm"><use href="#i-target"/></svg> Fluxo &amp; Missões</button>
+            <button class="th-tab" data-sec="registro" role="tab"><svg class="ico sm"><use href="#i-clock"/></svg> Registro Vivo</button>
+            <button class="th-tab" data-sec="console" role="tab"><svg class="ico sm"><use href="#i-terminal"/></svg> Console</button>
+          </div>
+
+          <!-- Seção 1 — Fluxo da Colônia (Missões) -->
+          <div class="th-sec is-active" id="th-sec-missions">
+            <div class="sub-h" style="margin-top:4px">Missão atual <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· acende etapa a etapa com eventos reais</span></div>
+            <div class="th-flow" id="th-flow"><div class="mono" style="color:var(--dim);font-size:12px">Envie um objetivo no Chat — o caminho da missão aparece aqui.</div></div>
+            <div class="sub-h">Missões permanentes <span class="badge" id="nav-mission-count"></span></div>
+            <div class="th-mform">
+              <div class="field" style="flex:1;min-width:200px"><svg class="ico sm" style="color:var(--dim)"><use href="#i-target"/></svg><input id="th-mission-desc" type="text" placeholder="Nova missão permanente (ex.: monitorar arquivos novos)…" autocomplete="off"/></div>
+              <button class="btn" id="th-mission-add"><svg class="ico sm"><use href="#i-check"/></svg> Criar</button>
+            </div>
+            <div id="missions-list"><div class="mono" style="color:var(--dim);font-size:12px">Carregando missões…</div></div>
+          </div>
+
+          <!-- Seção 2 — Registro Vivo (Timeline) -->
+          <div class="th-sec" id="th-sec-registro">
+            <div class="sub-h" style="margin-top:4px">Registro vivo <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· ação de cada integrante, com o motivo</span></div>
+            <div id="decision-timeline"></div>
+          </div>
+
+          <!-- Seção 3 — Console (Diagnóstico) -->
+          <div class="th-sec" id="th-sec-console">
+            <div class="console-bar" style="flex-wrap:wrap;gap:8px">
+              <span class="chip">stream ao vivo</span>
+              <div class="seg" id="console-filters" style="gap:4px">
+                <button class="on" data-f="all">Tudo</button>
+                <button data-f="err">Erros</button>
+                <button data-f="action">Ações</button>
+                <button data-f="memory">Memória</button>
+                <button data-f="security">Segurança</button>
+              </div>
+              <button class="btn ghost" id="console-export" style="min-height:38px">Exportar</button>
+              <button class="btn ghost" id="console-clear" style="min-height:38px">Limpar</button>
+            </div>
+            <div class="console" id="console-log"></div>
+          </div>
         </div>
       </section>
 
@@ -306,19 +336,6 @@
         </div>
       </section>
 
-      <!-- ═══ CONSOLE ═══ -->
-      <section class="tab" id="tab-console">
-        <div class="wrap">
-          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-terminal"/></svg></span> Console</h2>
-            <p>O fluxo de eventos cru da colônia — estilo DevTools.</p></div>
-          <div class="console-bar">
-            <span class="chip">stream ao vivo</span><span class="chip only-dev">nível: debug</span><span class="chip only-sci">nível: trace</span>
-            <button class="btn ghost" id="console-clear" style="min-height:38px;margin-left:auto">Limpar</button>
-          </div>
-          <div class="console" id="console-log"></div>
-        </div>
-      </section>
-
       <!-- ═══ AJUSTES ═══ -->
       <section class="tab" id="tab-settings">
         <div class="wrap">
@@ -349,7 +366,7 @@
       <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
       <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span></button>
       <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
-      <button class="nav-item" data-tab="missions"><svg class="ico"><use href="#i-target"/></svg><span>Missões</span></button>
+      <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
       <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
       <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     </nav>
@@ -403,5 +420,7 @@
 <script src="/js/live_panels.js"></script>
 <script src="/js/ants_bridge.js"></script>
 <script src="/js/controls.js"></script>
+<script src="/js/ui_kernel.js"></script>
+<script src="/js/timeline_hub.js"></script>
 </body>
 </html>

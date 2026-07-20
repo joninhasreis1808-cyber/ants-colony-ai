@@ -119,6 +119,8 @@
     // ---- UI → IA (event bus, alimentado por eventos REAIS) ------------
     on: function (evt, cb) { bus.addEventListener(evt, function (e) { cb(e.detail); }); return api; },
     emit: function (evt, detail) { emit(evt, detail); return api; },
+    // A IA modifica a interface por comandos declarativos seguros (UI Kernel).
+    ui: function (cmd) { if (window.AntsKernel) window.AntsKernel.apply(cmd); return api; },
   };
 
   function emit(evt, detail) { bus.dispatchEvent(new CustomEvent(evt, { detail: detail })); }

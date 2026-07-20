@@ -98,6 +98,12 @@
             : "a colônia trabalha…";
         }
       }
+      // Fonte ÚNICA de eventos (6.3): cada tick alimenta todas as seções
+      // (fluxo, registro, console) sem que elas façam polling próprio.
+      const pctNow = Math.round(i / (steps.length - 1) * 100);
+      document.dispatchEvent(new CustomEvent("ants:task-tick", {
+        detail: { taskId: taskId, pct: done ? 100 : pctNow, done: !!done, status: st || {} },
+      }));
       if (done) { i = steps.length - 1; paint(); if (pct) pct.textContent = "100%"; clearInterval(poll); document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st || {} })); return; }
       if (i < steps.length - 2) i++;
       paint();

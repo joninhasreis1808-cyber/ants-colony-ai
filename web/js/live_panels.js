@@ -173,32 +173,21 @@
     if (name === "colony" && window.AntDashboard) AntDashboard.mount("org-hierarchy", "colony-network");
     if (name === "cognitive") { if (window.AntCognitive) AntCognitive.mount("cognitive-center"); fillCognition(); }
     if (name === "resources") fillResources();
-    if (name === "timeline") fillTimeline();
-    if (name === "console") fillConsole();
     if (name === "queen") fillQueen();
-    if (name === "missions") fillMissions();
+    // timeline/console/missions agora são donos do timeline_hub.js (fusão 6.3):
+    // seus fills (fillTimeline/fillConsole/fillMissions) seguem definidos aqui
+    // como fallback, mas não são mais chamados daqui — evita polling duplicado.
   }
 
   document.addEventListener("ants:tab", (e) => onTab(e.detail));
-  document.addEventListener("ants:task-done", () => { fillTimeline(); if (document.querySelector('.tab.is-active#tab-cognitive')) fillCognition(); });
-  document.addEventListener("ants:netcall", (e) => {
-    const box = $("console-log"); if (!box || !document.querySelector("#tab-console.is-active, #tab-console.active")) return;
-    const d = e.detail, cls = d.status === "ERRO" || d.status >= 500 ? "err" : "info";
-    box.insertAdjacentHTML("beforeend", '<div class="ln ' + cls + '"><span class="lt">' + new Date().toLocaleTimeString() +
-      '</span><span class="lc">' + d.method + '</span><span class="lm">' + esc(d.path) + " → " + d.status + "</span></div>");
-    box.scrollTop = box.scrollHeight;
-  });
-  document.addEventListener("ants:online", (e) => { if (e.detail) { fillResources(); fillMissions(); } else setDormant(); });
+  document.addEventListener("ants:task-done", () => { if (document.querySelector('.tab.is-active#tab-cognitive')) fillCognition(); });
+  document.addEventListener("ants:online", (e) => { if (e.detail) { fillResources(); } else setDormant(); });
 
   document.addEventListener("DOMContentLoaded", () => {
-    fillResources(); fillMissions();
-    const clr = $("console-clear"); if (clr) clr.addEventListener("click", () => { if ($("console-log")) $("console-log").innerHTML = ""; });
+    fillResources();
     setInterval(() => {
       const act = document.querySelector(".tab.is-active, .tab.active");
-      if (!act) return;
-      if (act.id === "tab-console") fillConsole();
-      else if (act.id === "tab-resources") fillResources();
-      else if (act.id === "tab-timeline") fillTimeline();
+      if (act && act.id === "tab-resources") fillResources();
     }, 5000);
   });
 })();

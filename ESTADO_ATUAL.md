@@ -126,7 +126,7 @@ com `status: healthy` e 25 módulos. Se retornar a página HTML/404, é Static S
   fonte única de eventos, sem polling duplicado. Abas Console/Missões removidas.
 - **UI Kernel** (`web/js/ui_kernel.js`): a IA modifica a interface por comandos
   declarativos de um conjunto fechado e seguro (nunca HTML arbitrário).
-- **Endpoints novos:** `GET /hive/recruitment/{task_id}`, `GET /organism/trust`.
+- **Endpoints novos:** `GET /hive/recruitment/{task_id}`, `GET /organism/trust`, `GET /organism/traditions`.
 - **Persistência:** DNA, tradições, feedback e **trust** sobrevivem a restart
   (KV/SQLite) — provado via reinício HTTP real.
 - **Explicabilidade:** botão "Como cheguei nisso?" com motivo real.

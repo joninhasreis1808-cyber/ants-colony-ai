@@ -1,6 +1,6 @@
 # 🐜 Projeto Ant's — Colônia de Bots com Mente Colmeia
 
-![tests](https://img.shields.io/badge/tests-326%20passing-3ad29f)
+![tests](https://img.shields.io/badge/tests-382%20passing-3ad29f)
 ![python](https://img.shields.io/badge/python-3.11%2B-0f3460)
 ![pwa](https://img.shields.io/badge/PWA-instal%C3%A1vel-e94560)
 
@@ -10,6 +10,20 @@ aplicativos completos — tudo acessível por uma **interface web (PWA)** que
 funciona no computador e no celular.
 
 
+
+## 🆕 Novo na 6.3
+
+- **Cérebro 100% offline** — sem internet, a colônia responde pelo motor próprio
+  (ex.: "o que são feromônios?" → resposta útil com **confiança 0.727**), não "sem evidências".
+- **Linha do Tempo unificada** — absorveu as abas **Console** e **Missões** em 3 seções
+  (Fluxo & Missões · Registro Vivo · Console/Diagnóstico), sem perder nenhuma função.
+- **UI Kernel** — a IA modifica a interface por comandos declarativos de um conjunto
+  **fechado e seguro** (nunca HTML arbitrário).
+- **"Como cheguei nisso?"** — explicabilidade real de cada decisão (confiança, fontes, memória).
+- **Persistência evolutiva completa** — DNA + feedback + **trust** + **tradições** sobrevivem a
+  restart (`GET /organism/dna` · `/organism/trust` · `/organism/traditions`).
+- **`GET /hive/recruitment/{task_id}`** (quem chamou quem) · **`GET /ping`** (keep-alive).
+- **382 testes** · MD5 dos 4 JS legados intactos · zero mockup · zero emojis.
 
 ## ⚡ Evolução máxima (mente colmeia no ápice)
 

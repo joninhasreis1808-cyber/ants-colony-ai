@@ -195,7 +195,88 @@ class Hivemind(MemoryMixin, SwarmMixin):
             result["created_app"] = created
         if perception:
             result["perception"] = perception
+        # Proveniência (aditivo): de ONDE veio a resposta e qual o desfecho
+        # REAL da tentativa de busca externa. Nunca maquia — declara a fonte.
+        result["provenance"] = self._build_provenance(
+            task_id, result["sources"], cognition, created, answer
+        )
         return result
+
+    def _build_provenance(
+        self,
+        task_id: str,
+        sources: list,
+        cognition: dict[str, Any] | None,
+        created: Any,
+        answer: str | None = None,
+    ) -> dict[str, Any]:
+        """Classifica a origem da resposta e o status real da busca web.
+
+        Valores de `source`: web_search (URLs reais), memory (recordado do
+        grafo), seed_knowledge (inato), reasoning (inferência própria sem
+        conhecimento), none (não conseguiu). Aditivo e honesto: se a web foi
+        bloqueada (403) ou não trouxe nada, isso fica explícito em `web`.
+        """
+        web_report = self.memory.get_context(task_id, "web_report") or []
+        # ---- status real da tentativa externa ----
+        codes = [r.get("status") for r in web_report]
+        domains: list[str] = []
+        for s in sources:
+            url = (s or {}).get("url", "") if isinstance(s, dict) else ""
+            if "://" in url:
+                domains.append(url.split("://", 1)[1].split("/", 1)[0])
+        if sources:
+            web_status = "web: 200 ok"
+        elif not web_report:
+            web_status = "web: nao tentado"
+        elif any(isinstance(c, int) and 400 <= c < 500 for c in codes):
+            code = next(c for c in codes if isinstance(c, int) and 400 <= c < 500)
+            web_status = f"web: {code} bloqueado"
+        elif all(c == "sem_resultado" for c in codes):
+            web_status = "web: sem resultado"
+        else:
+            web_status = "web: erro/offline"
+        # ---- classificação da fonte ----
+        gaps: list = []
+        castes: list = ["rainha", "exploradoras"]
+        confidence = None
+        if sources:
+            source = "web_search"
+            confidence = 0.9
+        elif created:
+            source = "reasoning"  # app gerado por inferência própria
+        elif cognition:
+            confidence = cognition.get("confidence")
+            gaps = cognition.get("gaps", []) or []
+            castes = cognition.get("castes", castes)
+            mem = cognition.get("memory_used", 0)
+            seed = cognition.get("seed_used", 0)
+            if mem and not seed:
+                source = "memory"
+            elif seed and not mem:
+                source = "seed_knowledge"
+            elif seed and mem:
+                source = "seed_knowledge+memory"
+            else:
+                source = "reasoning"  # nenhum fato: pura inferência
+            # Confiança muito baixa e sem qualquer base: declarou limitação.
+            if not mem and not seed and (confidence or 0) < 0.35:
+                source = "none"
+            # Honestidade: se a resposta é o template de "sem evidências", a
+            # colônia declarou limitação, ainda que tenha juntado algum fato.
+            if answer and "Não tenho evidências suficientes" in answer:
+                source = "none"
+        else:
+            source = "none"
+        return {
+            "source": source,
+            "web": web_status,
+            "web_attempts": web_report,
+            "urls": domains,
+            "confidence": confidence,
+            "castes": castes,
+            "gaps": gaps,
+        }
 
     def _record_trust(self, bots: list, success: bool) -> None:
         """Registra confiança conquistada/perdida por bot (durável §4.1).

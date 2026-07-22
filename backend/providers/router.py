@@ -8,6 +8,7 @@ segurança final.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Optional
 
 from backend.core import SearchResult
@@ -31,6 +32,9 @@ class ProviderRouter:
             BraveProvider(),
             DuckDuckGoProvider(),
         ]
+        # Diagnóstico aditivo: registra o desfecho REAL de cada provider da
+        # última busca (status HTTP/erro), sem alterar a assinatura de search.
+        self.last_report: list[dict] = []
 
     @property
     def active_providers(self) -> list[str]:
@@ -46,6 +50,7 @@ class ProviderRouter:
         providers foram acionados — útil para telemetria e testes.
         """
         attempts: list[str] = []
+        self.last_report = []
         for provider in self._providers:
             if not provider.available:
                 continue
@@ -53,9 +58,32 @@ class ProviderRouter:
             try:
                 results = await provider.search(query, limit)
                 if results:
+                    self.last_report.append(
+                        {"provider": provider.name, "status": "ok",
+                         "results": len(results)}
+                    )
                     return results, attempts
+                self.last_report.append(
+                    {"provider": provider.name, "status": "sem_resultado"}
+                )
                 logger.info("Provider %s sem resultados", provider.name)
             except Exception as exc:  # noqa: BLE001 - fallback proposital
+                # Extrai o status HTTP real quando existe (403 bloqueado etc.).
+                # httpx.HTTPStatusError expõe .response.status_code; erros de
+                # proxy/conexão (ex.: 403 do proxy do sandbox) só trazem o
+                # código no texto — capturamos ambos, sem inventar nada.
+                code = getattr(
+                    getattr(exc, "response", None), "status_code", None
+                )
+                if code is None:
+                    m = re.search(r"\b([45]\d\d)\b", str(exc))
+                    if m:
+                        code = int(m.group(1))
+                self.last_report.append(
+                    {"provider": provider.name,
+                     "status": code if code is not None else "erro",
+                     "error": type(exc).__name__}
+                )
                 logger.warning("Provider %s falhou: %s", provider.name, exc)
                 continue
         return [], attempts

@@ -63,6 +63,12 @@ class CognitiveFallback:
         answer = result.answer
         if note:
             answer = f"{answer}\n\n{note}"
+        # Separa a origem do conhecimento usado: recordado (memória) vs inato
+        # (seed). Aditivo — alimenta o campo de proveniência sem custo extra.
+        prior_keys = {p.strip().lower() for p in (prior or []) if p}
+        memory_used = sum(
+            1 for k in knowledge if k.strip().lower() in prior_keys
+        )
         return {
             "answer": answer,
             "confidence": result.confidence,
@@ -72,6 +78,8 @@ class CognitiveFallback:
             "layers": list(_LAYERS),
             "castes": list(_CASTES),
             "knowledge_used": len(knowledge),
+            "memory_used": memory_used,
+            "seed_used": len(knowledge) - memory_used,
             "source": "cognitive_fallback",
             "critique_ok": result.critique_ok,
         }

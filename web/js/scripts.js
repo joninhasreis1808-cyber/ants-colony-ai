@@ -268,6 +268,10 @@
     // 4) Toast (😴 e afins) — texto puro, sem ícone.
     var toast = $("toast");
     if (toast) observe(toast, function () { if (HAS.test(toast.textContent || "")) toast.textContent = strip(toast.textContent); });
+    // Dispara os carregadores da aba ativa (Colônia é a inicial na 6.4).
+    var act = document.querySelector(".nav-item.active");
+    if (act && act.dataset.tab)
+      document.dispatchEvent(new CustomEvent("ants:tab", { detail: act.dataset.tab }));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

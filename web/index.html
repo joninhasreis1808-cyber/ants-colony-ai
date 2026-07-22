@@ -48,13 +48,11 @@
   <aside id="sidebar">
     <div class="side-brand">
       <span class="mark"><svg class="ico lg"><use href="#i-ant"/></svg></span>
-      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v6.3</div></div>
+      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v6.4</div></div>
     </div>
-    <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
-    <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count"></span></button>
+    <button class="nav-item active" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count"></span></button>
     <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
     <button class="nav-item" data-tab="environment"><svg class="ico"><use href="#i-globe"/></svg><span>Ambiente</span></button>
-    <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
     <button class="nav-item" data-tab="resources"><svg class="ico"><use href="#i-gauge"/></svg><span>Recursos</span></button>
     <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
     <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
@@ -80,8 +78,14 @@
     <main class="content">
 
       <!-- ═══ CHAT ═══ -->
-      <section class="tab is-active" id="tab-chat">
-        <div class="chat-wrap">
+      
+
+      <!-- ═══ COLÔNIA ═══ -->
+      <section class="tab is-active" id="tab-colony">
+        <div class="wrap colony-unified">
+          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-colony"/></svg></span> Colônia</h2>
+            <p>Converse com a colônia e veja-a pensar e agir, passo a passo — num só lugar.</p></div>
+          <div class="chat-wrap">
           <div id="chat-messages"><div id="messages" style="display:contents">
             <div class="msg bot">
               <div class="lead"><svg class="ico sm"><use href="#i-ant"/></svg> Colônia Ant's</div>
@@ -125,14 +129,51 @@
             <button id="chat-send" title="Enviar"><svg class="ico"><use href="#i-send"/></svg></button>
           </div>
         </div>
-      </section>
+          <div class="live-cell">
+            <div class="th-tabs" id="th-tabs" role="tablist">
+            <button class="th-tab on" data-sec="missions" role="tab"><svg class="ico sm"><use href="#i-target"/></svg> Fluxo &amp; Missões</button>
+            <button class="th-tab" data-sec="registro" role="tab"><svg class="ico sm"><use href="#i-clock"/></svg> Registro Vivo</button>
+            <button class="th-tab" data-sec="console" role="tab"><svg class="ico sm"><use href="#i-terminal"/></svg> Console</button>
+          </div>
 
-      <!-- ═══ COLÔNIA ═══ -->
-      <section class="tab" id="tab-colony">
-        <div class="wrap">
-          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-colony"/></svg></span> Colônia Viva</h2>
-            <p>Você está observando um organismo vivo. Cada nó é uma casta; as trilhas de feromônio mostram quem fala com quem agora.</p></div>
-          <div class="colony-layout">
+          <!-- Seção 1 — Fluxo da Colônia (Missões) -->
+          <div class="th-sec is-active" id="th-sec-missions">
+            <div class="sub-h" style="margin-top:4px">Missão atual <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· acende etapa a etapa com eventos reais</span></div>
+            <div class="th-flow" id="th-flow"><div class="mono" style="color:var(--dim);font-size:12px">Envie um objetivo no Chat — o caminho da missão aparece aqui.</div></div>
+            <div class="sub-h">Missões permanentes <span class="badge" id="nav-mission-count"></span></div>
+            <div class="th-mform">
+              <div class="field" style="flex:1;min-width:200px"><svg class="ico sm" style="color:var(--dim)"><use href="#i-target"/></svg><input id="th-mission-desc" type="text" placeholder="Nova missão permanente (ex.: monitorar arquivos novos)…" autocomplete="off"/></div>
+              <button class="btn" id="th-mission-add"><svg class="ico sm"><use href="#i-check"/></svg> Criar</button>
+            </div>
+            <div id="missions-list"><div class="mono" style="color:var(--dim);font-size:12px">Carregando missões…</div></div>
+          </div>
+
+          <!-- Seção 2 — Registro Vivo (Timeline) -->
+          <div class="th-sec" id="th-sec-registro">
+            <div class="sub-h" style="margin-top:4px">Registro vivo <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· ação de cada integrante, com o motivo</span></div>
+            <div id="decision-timeline"></div>
+          </div>
+
+          <!-- Seção 3 — Console (Diagnóstico) -->
+          <div class="th-sec" id="th-sec-console">
+            <div class="console-bar" style="flex-wrap:wrap;gap:8px">
+              <span class="chip">stream ao vivo</span>
+              <div class="seg" id="console-filters" style="gap:4px">
+                <button class="on" data-f="all">Tudo</button>
+                <button data-f="err">Erros</button>
+                <button data-f="action">Ações</button>
+                <button data-f="memory">Memória</button>
+                <button data-f="security">Segurança</button>
+              </div>
+              <button class="btn ghost" id="console-export" style="min-height:38px">Exportar</button>
+              <button class="btn ghost" id="console-clear" style="min-height:38px">Limpar</button>
+            </div>
+            <div class="console" id="console-log"></div>
+          </div>
+          </div>
+          <details class="colony-rede">
+            <summary><svg class="ico sm"><use href="#i-colony"/></svg> Rede viva da colônia</summary>
+            <div class="colony-layout">
             <div>
               <div class="net-stage" id="colony-network"></div>
               <div class="legend">
@@ -161,6 +202,7 @@
             <button class="btn" id="task-send"><svg class="ico sm"><use href="#i-send"/></svg> Recrutar</button>
           </div>
           <div id="org-hierarchy" style="display:none"></div><div id="bots-grid"><div class="bot-grid" id="bot-grid"></div></div><div id="bot-log" style="display:none"></div>
+          </details>
         </div>
       </section>
 
@@ -231,54 +273,7 @@
       </section>
 
       <!-- ═══ LINHA DO TEMPO ═══ -->
-      <section class="tab" id="tab-timeline">
-        <div class="wrap">
-          <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-clock"/></svg></span> Linha do Tempo</h2>
-            <p>A história viva da colônia — quem fez o quê, quando e por quê. Missões, registro e diagnóstico, num só lugar.</p></div>
-
-          <!-- Sub-abas internas (não são abas de topo) -->
-          <div class="th-tabs" id="th-tabs" role="tablist">
-            <button class="th-tab on" data-sec="missions" role="tab"><svg class="ico sm"><use href="#i-target"/></svg> Fluxo &amp; Missões</button>
-            <button class="th-tab" data-sec="registro" role="tab"><svg class="ico sm"><use href="#i-clock"/></svg> Registro Vivo</button>
-            <button class="th-tab" data-sec="console" role="tab"><svg class="ico sm"><use href="#i-terminal"/></svg> Console</button>
-          </div>
-
-          <!-- Seção 1 — Fluxo da Colônia (Missões) -->
-          <div class="th-sec is-active" id="th-sec-missions">
-            <div class="sub-h" style="margin-top:4px">Missão atual <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· acende etapa a etapa com eventos reais</span></div>
-            <div class="th-flow" id="th-flow"><div class="mono" style="color:var(--dim);font-size:12px">Envie um objetivo no Chat — o caminho da missão aparece aqui.</div></div>
-            <div class="sub-h">Missões permanentes <span class="badge" id="nav-mission-count"></span></div>
-            <div class="th-mform">
-              <div class="field" style="flex:1;min-width:200px"><svg class="ico sm" style="color:var(--dim)"><use href="#i-target"/></svg><input id="th-mission-desc" type="text" placeholder="Nova missão permanente (ex.: monitorar arquivos novos)…" autocomplete="off"/></div>
-              <button class="btn" id="th-mission-add"><svg class="ico sm"><use href="#i-check"/></svg> Criar</button>
-            </div>
-            <div id="missions-list"><div class="mono" style="color:var(--dim);font-size:12px">Carregando missões…</div></div>
-          </div>
-
-          <!-- Seção 2 — Registro Vivo (Timeline) -->
-          <div class="th-sec" id="th-sec-registro">
-            <div class="sub-h" style="margin-top:4px">Registro vivo <span style="color:var(--dim);letter-spacing:0;text-transform:none;font-size:11px">· ação de cada integrante, com o motivo</span></div>
-            <div id="decision-timeline"></div>
-          </div>
-
-          <!-- Seção 3 — Console (Diagnóstico) -->
-          <div class="th-sec" id="th-sec-console">
-            <div class="console-bar" style="flex-wrap:wrap;gap:8px">
-              <span class="chip">stream ao vivo</span>
-              <div class="seg" id="console-filters" style="gap:4px">
-                <button class="on" data-f="all">Tudo</button>
-                <button data-f="err">Erros</button>
-                <button data-f="action">Ações</button>
-                <button data-f="memory">Memória</button>
-                <button data-f="security">Segurança</button>
-              </div>
-              <button class="btn ghost" id="console-export" style="min-height:38px">Exportar</button>
-              <button class="btn ghost" id="console-clear" style="min-height:38px">Limpar</button>
-            </div>
-            <div class="console" id="console-log"></div>
-          </div>
-        </div>
-      </section>
+      
 
       <!-- ═══ RECURSOS ═══ -->
       <section class="tab" id="tab-resources">
@@ -355,7 +350,7 @@
             <span class="chip" style="color:var(--dim)"><svg class="ico sm"><use href="#i-x"/></svg> Enviar e-mails</span>
           </div>
           <div class="sub-h">Sistema</div>
-          <div class="chips"><span class="chip">versão 6.3.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">382 testes </span></div>
+          <div class="chips"><span class="chip">versão 6.4.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">382 testes </span></div>
           <div id="health-info" class="chips" style="margin-top:12px"></div><p class="mono" style="margin-top:18px;color:var(--dim);font-size:12px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
         </div>
       </section>
@@ -363,10 +358,8 @@
     </main>
 
     <nav class="bottomnav">
-      <button class="nav-item active" data-tab="chat"><svg class="ico"><use href="#i-chat"/></svg><span>Chat</span></button>
-      <button class="nav-item" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span></button>
+      <button class="nav-item active" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span></button>
       <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
-      <button class="nav-item" data-tab="timeline"><svg class="ico"><use href="#i-clock"/></svg><span>Linha do Tempo</span></button>
       <button class="nav-item" data-tab="queen"><svg class="ico"><use href="#i-crown"/></svg><span>Rainha</span></button>
       <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     </nav>

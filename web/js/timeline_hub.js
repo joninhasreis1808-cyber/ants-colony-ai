@@ -151,11 +151,12 @@
       new Date().toLocaleTimeString() + '</span><span class="lc">' + esc(d.method) + '</span><span class="lm">' + esc(d.path) + " → " + esc(String(d.status)) + "</span></div>");
     box.scrollTop = box.scrollHeight;
   });
-  document.addEventListener("ants:tab", function (e) { if (e.detail === "timeline") refresh(); });
+  // A Linha do Tempo agora vive DENTRO da Colônia (fusão 6.4).
+  document.addEventListener("ants:tab", function (e) { if (e.detail === "colony") refresh(); });
 
   function init() {
-    wireTabs(); wireMissionForm(); wireConsole();
-    setInterval(function () { if (document.querySelector("#tab-timeline.is-active, #tab-timeline.active")) loadEvents(); }, 5000);
+    wireTabs(); wireMissionForm(); wireConsole(); refresh();
+    setInterval(function () { if (document.querySelector("#tab-colony.is-active, #tab-colony.active")) loadEvents(); }, 5000);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

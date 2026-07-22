@@ -64,3 +64,25 @@ class FeedbackLearner:
 
     def get_preferences(self) -> list[str]:
         return list(self._preferences)
+
+    # ---- Persistência (aditivo) -----------------------------------------
+    def to_state(self) -> dict:
+        """Serializa pesos e preferências para persistir em disco."""
+        return {
+            "weights": {
+                s: {"weight": w.weight, "blocked": w.blocked,
+                    "is_tradition": w.is_tradition}
+                for s, w in self._weights.items()
+            },
+            "preferences": list(self._preferences),
+        }
+
+    def load_state(self, state: dict) -> None:
+        """Recarrega pesos/preferências salvos (sobrevive a reinícios)."""
+        for s, data in (state.get("weights") or {}).items():
+            self._weights[s] = StrategyWeight(
+                weight=data.get("weight", 1.0),
+                blocked=data.get("blocked", False),
+                is_tradition=data.get("is_tradition", False),
+            )
+        self._preferences = list(state.get("preferences") or [])

@@ -43,6 +43,23 @@ class CognitiveOrchestrator:
         self.specialist = Specialist()
         self.reasoner = ReasoningEngine()
 
+    def choose_strategy(self, candidates: list[str]) -> str | None:
+        """Escolhe uma estratégia consultando o aprendizado por feedback.
+
+        Fecha o ciclo do aprendizado: descarta estratégias que o usuário
+        proibiu (`forbid`) e ordena o resto pelo peso que o feedback ajustou
+        (`approve`/`default` sobem, `reject` desce). Sem opinião registrada,
+        preserva a ordem de entrada. Retorna None se tudo estiver bloqueado.
+        """
+        from backend.learning.feedback_store import get_feedback_learner
+        learner = get_feedback_learner()
+        allowed = [c for c in candidates if not learner.is_blocked(c)]
+        if not allowed:
+            return None
+        # Estável: só reordena por peso, mantendo empates na ordem original.
+        allowed.sort(key=lambda c: learner.weight_of(c), reverse=True)
+        return allowed[0]
+
     def think(
         self, question: str, knowledge: list[str] | None = None
     ) -> CognitiveResult:

@@ -53,3 +53,13 @@ class ColonyDNA:
 
     def genome_size(self) -> int:
         return len(self._genes)
+
+    # ---- Persistência (aditivo) — o genoma sobrevive a reinícios (§4.1) ----
+    def to_state(self) -> dict:
+        return {"genes": [{"category": g.category, "content": g.content,
+                           "strength": g.strength} for g in self._genes]}
+
+    def load_state(self, state: dict) -> None:
+        self._genes = [Gene(g.get("category", "rule"), g.get("content", ""),
+                            g.get("strength", 1.0))
+                       for g in (state or {}).get("genes", [])]

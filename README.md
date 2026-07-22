@@ -1,6 +1,6 @@
 # 🐜 Projeto Ant's — Colônia de Bots com Mente Colmeia
 
-![tests](https://img.shields.io/badge/tests-326%20passing-3ad29f)
+![tests](https://img.shields.io/badge/tests-382%20passing-3ad29f)
 ![python](https://img.shields.io/badge/python-3.11%2B-0f3460)
 ![pwa](https://img.shields.io/badge/PWA-instal%C3%A1vel-e94560)
 
@@ -10,6 +10,34 @@ aplicativos completos — tudo acessível por uma **interface web (PWA)** que
 funciona no computador e no celular.
 
 
+
+## 🆕 Novo na 6.4 — um só chat vivo
+
+A colônia agora tem **um único chat**, e ele mora **dentro da Colônia** (a tela
+inicial). As antigas abas "Chat" e "Linha do Tempo" deixaram de existir:
+
+- **Um chat só** (o `chat.js` original, intocado) — 1 `#messages`, 1 `#chat-input`
+  no projeto todo.
+- **Linha do Tempo virou célula viva DENTRO do chat**: o fluxo da missão acende
+  etapa a etapa (Pedido→…→Resposta) com eventos reais, o registro de quem-fez-o-quê
+  e o console de diagnóstico (com filtros e export) — tudo embutido, estilo
+  assistente ao vivo (Manus/Claude/Codex), em vanilla próprio.
+- **Missões permanentes** e **"Como cheguei nisso?"** acessíveis do mesmo painel.
+- Navegação enxuta (7 abas); a **Colônia é a tela inicial**.
+
+## 🆕 Novo na 6.3
+
+- **Cérebro 100% offline** — sem internet, a colônia responde pelo motor próprio
+  (ex.: "o que são feromônios?" → resposta útil com **confiança 0.727**), não "sem evidências".
+- **Linha do Tempo unificada** — absorveu as abas **Console** e **Missões** em 3 seções
+  (Fluxo & Missões · Registro Vivo · Console/Diagnóstico), sem perder nenhuma função.
+- **UI Kernel** — a IA modifica a interface por comandos declarativos de um conjunto
+  **fechado e seguro** (nunca HTML arbitrário).
+- **"Como cheguei nisso?"** — explicabilidade real de cada decisão (confiança, fontes, memória).
+- **Persistência evolutiva completa** — DNA + feedback + **trust** + **tradições** sobrevivem a
+  restart (`GET /organism/dna` · `/organism/trust` · `/organism/traditions`).
+- **`GET /hive/recruitment/{task_id}`** (quem chamou quem) · **`GET /ping`** (keep-alive).
+- **382 testes** · MD5 dos 4 JS legados intactos · zero mockup · zero emojis.
 
 ## ⚡ Evolução máxima (mente colmeia no ápice)
 
@@ -122,8 +150,13 @@ plano gratuito. `$PORT` é injetado pela plataforma; `/health` é o healthcheck.
 
 **Render (1 clique):**
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joninhasreis1808-cyber/ants-colony-ai)
-→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe. A URL sai
-como `https://ants.onrender.com`.
+→ autorize Render↔GitHub uma vez; ele lê o `render.yaml` e sobe.
+
+**Serviço público atual:** <https://ants-uoat.onrender.com> · saúde:
+<https://ants-uoat.onrender.com/health> (deve retornar JSON `status: healthy`
+com 25 módulos; no plano free o primeiro acesso após ociosidade leva ~30–50s).
+⚠️ O serviço precisa ser **Web Service (Docker)**, não Static Site — um Static
+Site não tem backend e a interface fica em "colônia adormecida".
 
 **Railway:** conecte o repo em <https://railway.app/new> (detecta o
 `railway.json`) e clique em *Deploy*. Depois *Settings → Networking →

@@ -60,6 +60,16 @@ app.include_router(evolution_routes.router)
 app.include_router(organism_routes.router)
 
 
+@app.get("/ping")
+async def ping() -> dict[str, str]:
+    """Keep-alive ultraleve: acorda o serviço sem tocar em módulo algum.
+
+    Ideal para monitores/uptime-robots no free tier (que hiberna): responde
+    em microssegundos, sem consultar memória, hive ou provedores.
+    """
+    return {"pong": "ok"}
+
+
 @app.get("/health")
 async def health() -> dict[str, Any]:
     """Saúde completa do serviço e status de cada módulo."""

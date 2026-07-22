@@ -64,6 +64,12 @@ class Hivemind(MemoryMixin, SwarmMixin):
         self.homeostasis = Homeostasis()
         self.culture = ColonyCulture()
         self.meta = MetaSupervisor()
+        # Rastreador de recrutamento: "quem chamou quem" (transparência §3.3).
+        from backend.hivemind.recruitment_tracker import RecruitmentTracker
+        self.recruitment = RecruitmentTracker()
+        # Fallback cognitivo (lazy) + fila de eventos a emitir ao vivo.
+        self._cog_fb: Any = None
+        self._pending_events: list[BotEvent] = []
         for bot in roster:
             self.lifecycle.register(bot.name)
             self.castes.register(bot.name, "worker")
@@ -91,6 +97,14 @@ class Hivemind(MemoryMixin, SwarmMixin):
             bot._emit = self._emit  # noqa: SLF001 - injeção interna proposital
 
         intent = self.recruiter.intent_of(task.goal)
+        # Registra quem chamou quem: a Rainha recruta cada casta (motivo=intenção)
+        # e cada bot passa o bastão ao próximo — a cadeia real da missão.
+        for b in bots:
+            self.recruitment.record("rainha", b.name, intent)
+        for a, b in zip(bots, bots[1:]):
+            self.recruitment.record(a.name, b.name, "passou o bastão")
+        self.memory.set_context(task.id, "recruitment",
+                                self.recruitment.get_chain())
         await self._announce(
             task.id,
             f"Colmeia leu a intenção '{intent}' e recrutou: "
@@ -121,8 +135,12 @@ class Hivemind(MemoryMixin, SwarmMixin):
                         f"{bot.name} não teve sucesso; colmeia prossegue",
                     )
             task.result = self._compile_result(task.id)
+            for ev in self._pending_events:  # emite anúncios do fallback
+                await self._emit(ev)
+            self._pending_events.clear()
             task.touch(TaskStatus.DONE)
             self._remember_outcome(task)
+            self._record_trust(bots, success=True)  # confiança conquistada
             self.lifecycle.maintain()  # hiberna ociosos (poupa recursos)
         except Exception as exc:  # noqa: BLE001
             task.error = str(exc)
@@ -146,7 +164,9 @@ class Hivemind(MemoryMixin, SwarmMixin):
         perception = self.memory.get_context(task_id, "perception")
 
         answer = decision.get("answer")
+        confidence = decision.get("confidence")
         _GENERIC = "Sem evidências suficientes"
+        cognition: dict[str, Any] | None = None
         if created and (not answer or _GENERIC in answer):
             summary = created.get("summary", {})
             answer = (
@@ -154,17 +174,72 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 f"({summary.get('files')} arquivos, "
                 f"{summary.get('tests')} testes)."
             )
+        elif not created and (not answer or _GENERIC in answer):
+            # Sem evidência externa e sem app: recorre ao cérebro próprio.
+            cognition = self._cognitive_fallback(task_id)
+            if cognition:
+                answer = cognition["answer"]
+                confidence = cognition["confidence"]
         result: dict[str, Any] = {
             "answer": answer,
-            "confidence": decision.get("confidence"),
+            "confidence": confidence,
             "sources": self.memory.get_context(task_id, "sources") or [],
             "learning": lesson,
         }
+        recruitment = self.memory.get_context(task_id, "recruitment")
+        if recruitment:
+            result["recruitment"] = recruitment   # quem chamou quem (§3.3)
+        if cognition:
+            result["cognition"] = cognition
         if created:
             result["created_app"] = created
         if perception:
             result["perception"] = perception
         return result
+
+    def _record_trust(self, bots: list, success: bool) -> None:
+        """Registra confiança conquistada/perdida por bot (durável §4.1).
+
+        Aditivo e tolerante a falhas: nunca derruba o pipeline se o store
+        de confiança não estiver disponível.
+        """
+        try:
+            from backend.permissions.trust_store import get_trust, save_trust
+            t = get_trust()
+            for b in bots:
+                t.record_success(b.name) if success else t.record_failure(b.name)
+            save_trust()
+        except Exception:  # noqa: BLE001 - persistência é best-effort
+            pass
+
+    def _cognitive_fallback(self, task_id: str) -> dict[str, Any] | None:
+        """Aciona o cérebro próprio quando a busca externa nada trouxe.
+
+        Reúne o conhecimento recordado + o inato e roda o pipeline das 9
+        camadas. Registra o evento na memória da tarefa (sync) e enfileira
+        um anúncio ao vivo, para o fluxo/console mostrarem o desvio real.
+        """
+        task = self.memory.get_task(task_id) or {}
+        goal = task.get("goal", "")
+        if not goal:
+            return None
+        if self._cog_fb is None:
+            from backend.hivemind.cognitive_fallback import CognitiveFallback
+            self._cog_fb = CognitiveFallback()
+        prior = self.memory.get_context(task_id, "prior_knowledge") or []
+        cognition = self._cog_fb.answer(goal, prior)
+        msg = (
+            "Busca externa sem evidências — colmeia recorreu ao próprio "
+            f"cérebro ({cognition['knowledge_used']} fatos, "
+            f"confiança {cognition['confidence']:.2f})"
+        )
+        event = BotEvent(
+            task_id=task_id, bot="hive", phase=Phase.ACT, message=msg,
+            data={"layers": cognition["layers"], "castes": cognition["castes"]},
+        )
+        self.memory.add_event(event)
+        self._pending_events.append(event)
+        return cognition
 
     async def _announce(self, task_id: str, message: str) -> None:
         """Emite um evento em nome da colmeia (não de um bot específico)."""

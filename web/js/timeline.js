@@ -2,16 +2,15 @@
    Visual e aditivo. Cada entrada mostra horário, ação, casta responsável. */
 (function () {
   "use strict";
-  const SAMPLE = [
-    { t: "agora", ico: "i-crown",   txt: "Rainha coordenou a tarefa",     caste: "caste-queen" },
-    { t: "-3s",   ico: "i-compass", txt: "Exploradoras buscaram fontes",  caste: "caste-explorer" },
-    { t: "-6s",   ico: "i-worker",  txt: "Operárias estruturaram dados",  caste: "caste-worker" },
-    { t: "-9s",   ico: "i-shield",  txt: "Verificação conferiu evidências", caste: "caste-soldier" },
-    { t: "-12s",  ico: "i-mem",     txt: "Aprendizado salvo na memória",  caste: "caste-nurse" },
-  ];
   function render(el, entries) {
     el.innerHTML = "";
-    (entries || SAMPLE).forEach((e) => {
+    // Sem eventos reais => estado adormecido. Nunca usar dados de exemplo.
+    if (!entries || !entries.length) {
+      el.innerHTML = '<div style="color:var(--ant-text-secondary);font-family:var(--mono);' +
+        'font-size:12px;padding:10px">Colônia adormecida — sem eventos ainda.</div>';
+      return;
+    }
+    entries.forEach((e) => {
       const row = document.createElement("div");
       row.className = e.caste;
       row.style.cssText = "display:flex;align-items:center;gap:10px;padding:9px 12px;" +

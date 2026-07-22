@@ -11,6 +11,20 @@ funciona no computador e no celular.
 
 
 
+## 🆕 Novo na 6.4 — um só chat vivo
+
+A colônia agora tem **um único chat**, e ele mora **dentro da Colônia** (a tela
+inicial). As antigas abas "Chat" e "Linha do Tempo" deixaram de existir:
+
+- **Um chat só** (o `chat.js` original, intocado) — 1 `#messages`, 1 `#chat-input`
+  no projeto todo.
+- **Linha do Tempo virou célula viva DENTRO do chat**: o fluxo da missão acende
+  etapa a etapa (Pedido→…→Resposta) com eventos reais, o registro de quem-fez-o-quê
+  e o console de diagnóstico (com filtros e export) — tudo embutido, estilo
+  assistente ao vivo (Manus/Claude/Codex), em vanilla próprio.
+- **Missões permanentes** e **"Como cheguei nisso?"** acessíveis do mesmo painel.
+- Navegação enxuta (7 abas); a **Colônia é a tela inicial**.
+
 ## 🆕 Novo na 6.3
 
 - **Cérebro 100% offline** — sem internet, a colônia responde pelo motor próprio

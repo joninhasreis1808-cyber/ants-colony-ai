@@ -131,3 +131,23 @@ com `status: healthy` e 25 módulos. Se retornar a página HTML/404, é Static S
   (KV/SQLite) — provado via reinício HTTP real.
 - **Explicabilidade:** botão "Como cheguei nisso?" com motivo real.
 - Detalhes e provas: `ANTS_6.3_MUDANCAS.md` e `AUDITORIA_6.3.md`.
+
+---
+
+## Adendo 6.4 — unificação (fatos verificados no Chromium)
+
+- **Um único chat**, dentro da aba **Colônia** (tela inicial). Abas "Chat" e
+  "Linha do Tempo" **removidas** da navegação. Contagem real: 1 `#messages`,
+  1 `#chat-input`, 1 `#chat-send` no projeto.
+- **Linha do Tempo = célula viva embutida no chat**: 3 seções fundidas
+  (Fluxo & Missões · Registro Vivo · Console) + missões permanentes +
+  "Como cheguei nisso?", alimentadas por uma fonte única de eventos
+  (`GET /hive/status/{id}` → `ants:task-tick`).
+- **IA↔interface real:** 3 perguntas → `POST /hive/task` real, o fluxo acende
+  etapa a etapa, resposta **offline** do cérebro próprio com **confiança 0.727**.
+- **Persistência por restart real:** trust, tradições e DNA idênticos após
+  reiniciar o servidor (2 processos, mesmo `ANTS_DB`).
+- **382 testes** · MD5 dos 4 JS legados inalterados · zero mockup funcional.
+- Interface: os únicos "emojis" em JS não-legado estão na TABELA de limpeza do
+  `scripts.js`, que **remove** os emojis emitidos pelo `chat.js` imutável — nunca
+  são renderizados.

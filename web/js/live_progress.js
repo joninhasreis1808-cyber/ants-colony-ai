@@ -62,14 +62,47 @@
     if (prov.web) bits.push(esc(prov.web));
     return '<button class="lp-summary" type="button">' +
       '<svg class="ico sm"><use href="#i-check"/></svg> ' +
-      esc(bits.join(" · ")) + ' — ver detalhes</button>';
+      esc(bits.join(" · ")) + ' — ver o trajeto</button>' + trace(r);
   }
 
-  // clique no resumo: alterna a visão compacta/detalhada
+  // Trajeto da missão: o que CADA bot fez, obstáculos e o que se aprendeu.
+  function trace(r) {
+    var t = r.trace; if (!t) return "";
+    var parts = ['<div class="lp-trace">'];
+    parts.push('<div class="lp-th">Trajeto da missão — o que cada bot fez</div>');
+    (t.bots || []).forEach(function (b) {
+      var did = (b.did || []).slice(-3).map(esc).join(" · ") || "atuou";
+      parts.push('<div class="lp-brow ' + (b.ok ? "" : "bad") + '">' +
+        '<svg class="ico sm"><use href="#' + (b.ok ? "i-check" : "i-x") + '"/></svg>' +
+        '<b>' + esc(b.bot) + '</b><span>' + did + '</span></div>');
+    });
+    if (t.errors && t.errors.length) {
+      parts.push('<div class="lp-th">Obstáculos reais no caminho</div>');
+      t.errors.forEach(function (e) {
+        parts.push('<div class="lp-brow bad"><svg class="ico sm"><use href="#i-x"/></svg>' +
+          '<b>' + esc(e.bot) + '</b><span>' + esc(e.detail) + '</span></div>');
+      });
+    }
+    if (t.learnings && t.learnings.length) {
+      parts.push('<div class="lp-th">O que a colônia aprendeu</div>');
+      t.learnings.forEach(function (l) {
+        parts.push('<div class="lp-brow"><svg class="ico sm"><use href="#i-book"/></svg>' +
+          '<span>' + esc(l) + '</span></div>');
+      });
+    }
+    if (t.conclusion) {
+      parts.push('<div class="lp-th">Conclusão enviada ao chat</div>' +
+        '<div class="lp-concl">' + esc(t.conclusion) + '</div>');
+    }
+    parts.push("</div>");
+    return parts.join("");
+  }
+
+  // clique no resumo: mostra/esconde o trajeto detalhado da missão
   document.addEventListener("click", function (e) {
     var btn = e.target.closest && e.target.closest(".lp-summary");
     if (!btn) return;
-    var b = box(); if (b) b.classList.toggle("collapsed");
+    var b = box(); if (b) b.classList.toggle("show-trace");
   });
 
   document.addEventListener("ants:task-tick", function (e) {

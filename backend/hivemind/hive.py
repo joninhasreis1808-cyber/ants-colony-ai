@@ -212,7 +212,78 @@ class Hivemind(MemoryMixin, SwarmMixin):
         result["provenance"] = self._build_provenance(
             task_id, result["sources"], cognition, created, answer, computation
         )
+        # Trajeto da missão (7.2): o que CADA bot fez, obstáculos reais e o
+        # que a colônia aprendeu — para o chat mostrar o caminho todo.
+        result["trace"] = self._compile_trace(task_id, result)
         return result
+
+    def _compile_trace(
+        self, task_id: str, result: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Monta o trajeto real da missão a partir dos eventos e do desfecho.
+
+        Nada inventado: agrupa os eventos por bot (o que cada um fez), coleta
+        os obstáculos reais (bot sem sucesso, web bloqueada) e o que a colônia
+        aprendeu (lacunas, memórias recordadas, fonte usada).
+        """
+        import re as _re
+        events = self.memory.get_events(task_id) or []
+        per_bot: dict[str, dict[str, Any]] = {}
+        order: list[str] = []
+        errors: list[dict[str, str]] = []
+
+        def _slot(name: str) -> dict[str, Any]:
+            name = "colônia" if name == "hive" else name
+            if name not in per_bot:
+                per_bot[name] = {"bot": name, "did": [], "ok": True}
+                order.append(name)
+            return per_bot[name]
+
+        for e in events:
+            bot = e.get("bot") or "colônia"
+            msg = e.get("message") or ""
+            slot = _slot(bot)
+            if msg:
+                slot["did"].append(msg)
+            low = msg.lower()
+            # "X não teve sucesso" é relatado pela colônia — atribui ao bot X.
+            m = _re.match(r"(\w+) não teve sucesso", msg)
+            if m:
+                failed = _slot(m.group(1))
+                failed["ok"] = False
+                errors.append({"bot": m.group(1), "detail": msg})
+            elif "falhou" in low or "erro:" in low:
+                slot["ok"] = False
+                errors.append({"bot": slot["bot"], "detail": msg})
+        prov = result.get("provenance") or {}
+        # Obstáculo real de rede (403/erro) entra no trajeto, com honestidade.
+        web = prov.get("web") or ""
+        if web and ("bloqueado" in web or "erro" in web):
+            errors.append({"bot": "exploradores",
+                           "detail": f"busca externa {web}"})
+        # O que a colônia aprendeu (sinais reais).
+        learnings: list[str] = []
+        lesson = result.get("learning") or {}
+        if isinstance(lesson, dict) and lesson.get("lesson"):
+            learnings.append(str(lesson["lesson"]))
+        cog = result.get("cognition") or {}
+        for gap in (cog.get("gaps") or [])[:3]:
+            learnings.append(f"lacuna identificada: {gap}")
+        src = prov.get("source")
+        if src == "computation":
+            learnings.append("resolvido por cálculo exato — sem precisar de fontes")
+        elif src == "none":
+            learnings.append("sem evidência suficiente offline — limitação declarada")
+        elif src in ("memory", "seed_knowledge", "seed_knowledge+memory"):
+            learnings.append(f"respondido a partir de {src}")
+        return {
+            "bots": [per_bot[b] for b in order],
+            "errors": errors,
+            "learnings": learnings,
+            "source": src,
+            "path_reason": result.get("recruitment") or [],
+            "conclusion": result.get("answer"),
+        }
 
     def _build_provenance(
         self,

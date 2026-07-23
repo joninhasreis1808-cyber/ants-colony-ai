@@ -58,6 +58,18 @@
   border: 1px solid var(--border2); border-radius: 16px; padding: 8px 14px;
   min-height: 40px; margin-top: 4px; }
 @keyframes lp-rot { to { transform: rotate(360deg); } }
+/* Trajeto da missão (expandível ao clicar no resumo) */
+.lp-trace { display: none; margin-top: 10px; border-top: 1px dashed var(--border2); padding-top: 10px; }
+.live-progress.show-trace .lp-trace { display: block; animation: rise .28s ease both; }
+.lp-th { font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--dim); margin: 10px 0 6px; }
+.lp-brow { display: flex; align-items: flex-start; gap: 8px; padding: 5px 8px; margin-bottom: 3px;
+  border-radius: 6px; background: var(--bg2); font-size: 12.5px; color: var(--text); }
+.lp-brow b { font-family: var(--mono); font-size: 11.5px; color: var(--honey); flex: 0 0 auto; }
+.lp-brow svg { flex: 0 0 auto; color: var(--leaf); margin-top: 1px; }
+.lp-brow.bad svg { color: var(--soldier, #d67a6a); }
+.lp-concl { background: var(--surface2, var(--bg2)); border-left: 2px solid var(--leaf);
+  border-radius: 0 8px 8px 0; padding: 8px 12px; font-size: 13px; color: var(--text); }
 
 @media (prefers-reduced-motion: reduce) {
   .tab.active, .tab.is-active { animation: none !important; }

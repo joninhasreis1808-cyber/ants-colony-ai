@@ -58,7 +58,7 @@
     <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
     <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     <div class="side-foot">
-      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">385</span> testes </span>
+      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">407</span> testes </span>
     </div>
   </aside>
 
@@ -121,6 +121,9 @@
             </div>
             <div class="flow-narr" id="flow-narr">a colônia aguarda um objetivo…</div>
           </div>
+
+          <!-- Progresso vivo do chat (7.2 · A): etapas reais, passo a passo. -->
+          <div class="live-progress" id="live-progress" aria-live="polite"></div>
 
           <div class="composer">
             <button class="icon-btn" title="Anexar"><svg class="ico"><use href="#i-clip"/></svg></button>
@@ -284,7 +287,7 @@
             <div class="stat"><div class="sv" id="stat-bots">—</div><div class="sl">Bots vivos</div></div>
             <div class="stat"><div class="sv" id="stat-tasks">—</div><div class="sl">Tarefas ativas</div></div>
             <div class="stat"><div class="sv" id="stat-uptime">—</div><div class="sl">Tempo ativo</div></div>
-            <div class="stat"><div class="sv" id="stat-tests">385</div><div class="sl">Testes </div></div>
+            <div class="stat"><div class="sv" id="stat-tests">407</div><div class="sl">Testes </div></div>
           </div>
           <div class="grid g2">
             <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Sistema</div><div id="resource-center"></div></div>
@@ -350,7 +353,7 @@
             <span class="chip" style="color:var(--dim)"><svg class="ico sm"><use href="#i-x"/></svg> Enviar e-mails</span>
           </div>
           <div class="sub-h">Sistema</div>
-          <div class="chips"><span class="chip">versão 6.4.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">385 testes </span></div>
+          <div class="chips"><span class="chip">versão 6.4.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">407 testes </span></div>
           <div id="health-info" class="chips" style="margin-top:12px"></div><p class="mono" style="margin-top:18px;color:var(--dim);font-size:12px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
         </div>
       </section>
@@ -415,5 +418,6 @@
 <script src="/js/controls.js"></script>
 <script src="/js/ui_kernel.js"></script>
 <script src="/js/timeline_hub.js"></script>
+<script src="/js/live_progress.js"></script>
 </body>
 </html>

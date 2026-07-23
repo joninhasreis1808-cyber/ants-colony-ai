@@ -1,5 +1,5 @@
 /* Ant's Service Worker — cache offline (PWA). */
-const CACHE = "ants-v11";
+const CACHE = "ants-v12";
 const ASSETS = [
   "/", "/index.html", "/acesso.html", "/manifest.json",
   "/css/style.css", "/css/design_system.css", "/css/cloud.css",
@@ -7,6 +7,7 @@ const ASSETS = [
   "/js/notifications.js", "/js/device_permissions.js", "/js/context_engine.js", "/js/live_dashboard.js", "/js/cognitive_center.js", "/js/resource_center.js", "/js/timeline.js",
   "/js/awaken.js", "/js/health_footer.js", "/js/onboarding.js",
   "/js/heatmap.js", "/js/replay.js", "/js/lab_mode.js", "/js/live_panels.js", "/js/api_bridge.js",
+  "/js/timeline_hub.js", "/js/live_progress.js",
 ];
 
 self.addEventListener("install", (e) => {

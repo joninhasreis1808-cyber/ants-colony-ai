@@ -69,6 +69,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
         self.recruitment = RecruitmentTracker()
         # Fallback cognitivo (lazy) + fila de eventos a emitir ao vivo.
         self._cog_fb: Any = None
+        # Córtex determinístico (lazy): cálculo exato ANTES da busca (7.2).
+        self._cortex: Any = None
         self._pending_events: list[BotEvent] = []
         for bot in roster:
             self.lifecycle.register(bot.name)
@@ -163,11 +165,19 @@ class Hivemind(MemoryMixin, SwarmMixin):
         created = self.memory.get_context(task_id, "created_app")
         perception = self.memory.get_context(task_id, "perception")
 
+        # Córtex determinístico (7.2): se a pergunta é calculável, o cálculo
+        # EXATO é autoritativo — vence web/memória/seed e nunca solta frase
+        # inata irrelevante. Roteado à frente das demais fontes.
+        computation = self._deterministic(task_id)
+
         answer = decision.get("answer")
         confidence = decision.get("confidence")
         _GENERIC = "Sem evidências suficientes"
         cognition: dict[str, Any] | None = None
-        if created and (not answer or _GENERIC in answer):
+        if computation:
+            answer = computation["answer_text"]
+            confidence = computation["confidence"]
+        elif created and (not answer or _GENERIC in answer):
             summary = created.get("summary", {})
             answer = (
                 f"App criado: {summary.get('type')} "
@@ -189,6 +199,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
         recruitment = self.memory.get_context(task_id, "recruitment")
         if recruitment:
             result["recruitment"] = recruitment   # quem chamou quem (§3.3)
+        if computation:
+            result["computation"] = computation
         if cognition:
             result["cognition"] = cognition
         if created:
@@ -198,7 +210,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # Proveniência (aditivo): de ONDE veio a resposta e qual o desfecho
         # REAL da tentativa de busca externa. Nunca maquia — declara a fonte.
         result["provenance"] = self._build_provenance(
-            task_id, result["sources"], cognition, created, answer
+            task_id, result["sources"], cognition, created, answer, computation
         )
         return result
 
@@ -209,6 +221,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         cognition: dict[str, Any] | None,
         created: Any,
         answer: str | None = None,
+        computation: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Classifica a origem da resposta e o status real da busca web.
 
@@ -240,6 +253,19 @@ class Hivemind(MemoryMixin, SwarmMixin):
         gaps: list = []
         castes: list = ["rainha", "exploradoras"]
         confidence = None
+        if computation:
+            # Cálculo exato e autoritativo — não precisou de web/inato.
+            return {
+                "source": "computation",
+                "web": "web: nao necessario",
+                "web_attempts": web_report,
+                "urls": [],
+                "confidence": computation.get("confidence", 1.0),
+                "castes": ["rainha", "operarias"],
+                "gaps": [],
+                "steps": computation.get("steps", []),
+                "kind": computation.get("kind"),
+            }
         if sources:
             source = "web_search"
             confidence = 0.9
@@ -292,6 +318,35 @@ class Hivemind(MemoryMixin, SwarmMixin):
             save_trust()
         except Exception:  # noqa: BLE001 - persistência é best-effort
             pass
+
+    def _deterministic(self, task_id: str) -> dict[str, Any] | None:
+        """Córtex determinístico: resolve cálculos exatos antes da busca.
+
+        Se o objetivo é calculável (raiz, aritmética, %, potência), devolve o
+        resultado exato + passos e enfileira um evento real para a timeline
+        viva. Caso contrário, `None` — e o pipeline segue normalmente.
+        """
+        task = self.memory.get_task(task_id) or {}
+        goal = task.get("goal", "")
+        if not goal:
+            return None
+        if self._cortex is None:
+            from backend.reasoning.deterministic import DeterministicCortex
+            self._cortex = DeterministicCortex()
+        comp = self._cortex.solve(goal)
+        if not comp:
+            return None
+        data = comp.to_dict()
+        data["answer_text"] = f"Resultado (cálculo exato): {comp.answer}"
+        event = BotEvent(
+            task_id=task_id, bot="hive", phase=Phase.ACT,
+            message=(f"Córtex resolveu por cálculo exato ({comp.kind}): "
+                     f"{comp.answer}"),
+            data={"steps": comp.steps, "kind": comp.kind},
+        )
+        self.memory.add_event(event)
+        self._pending_events.append(event)
+        return data
 
     def _cognitive_fallback(self, task_id: str) -> dict[str, Any] | None:
         """Aciona o cérebro próprio quando a busca externa nada trouxe.

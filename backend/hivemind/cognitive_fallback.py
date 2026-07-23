@@ -34,6 +34,8 @@ class CognitiveFallback:
         self._brain = CognitiveOrchestrator()
         self._seed = SeedKnowledge()
         self._limits = Limitations()
+        from backend.cognitive.relevance_gate import RelevanceGate
+        self._gate = RelevanceGate()
 
     def gather_knowledge(
         self, goal: str, prior: list[str] | None = None
@@ -56,7 +58,11 @@ class CognitiveFallback:
         self, goal: str, prior: list[str] | None = None
     ) -> dict[str, Any]:
         """Produz a resposta do cérebro próprio para o objetivo dado."""
-        knowledge = self.gather_knowledge(goal, prior)
+        gathered = self.gather_knowledge(goal, prior)
+        # Porta de relevância (7.2 · D.2): descarta seed irrelevante e, em
+        # perguntas de dado atual/externo sem web, força a declaração honesta.
+        verdict = self._gate.verdict(goal, gathered)
+        knowledge = [] if verdict["declare_limitation"] else verdict["kept"]
         result = self._brain.think(goal, knowledge)
         low = result.confidence < 0.5
         note = self._honesty_note(goal) if low else ""
@@ -69,12 +75,15 @@ class CognitiveFallback:
         memory_used = sum(
             1 for k in knowledge if k.strip().lower() in prior_keys
         )
+        gaps = list(result.gaps)
+        if verdict["declare_limitation"] and verdict["reason"]:
+            gaps = [verdict["reason"]] + gaps
         return {
             "answer": answer,
             "confidence": result.confidence,
             "domain": result.domain,
             "hypotheses": result.hypotheses,
-            "gaps": result.gaps,
+            "gaps": gaps,
             "layers": list(_LAYERS),
             "castes": list(_CASTES),
             "knowledge_used": len(knowledge),

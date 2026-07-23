@@ -169,6 +169,9 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # EXATO é autoritativo — vence web/memória/seed e nunca solta frase
         # inata irrelevante. Roteado à frente das demais fontes.
         computation = self._deterministic(task_id)
+        # Planejador (raciocínio puro): pedidos de "plano/N passos" viram um
+        # plano raciocinado real — não precisa de web nem de fato inato.
+        plan = None if computation else self._planner(task_id)
 
         answer = decision.get("answer")
         confidence = decision.get("confidence")
@@ -177,6 +180,9 @@ class Hivemind(MemoryMixin, SwarmMixin):
         if computation:
             answer = computation["answer_text"]
             confidence = computation["confidence"]
+        elif plan:
+            answer = plan["answer_text"]
+            confidence = plan["confidence"]
         elif created and (not answer or _GENERIC in answer):
             summary = created.get("summary", {})
             answer = (
@@ -201,6 +207,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
             result["recruitment"] = recruitment   # quem chamou quem (§3.3)
         if computation:
             result["computation"] = computation
+        if plan:
+            result["plan"] = plan
         if cognition:
             result["cognition"] = cognition
         if created:
@@ -210,7 +218,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # Proveniência (aditivo): de ONDE veio a resposta e qual o desfecho
         # REAL da tentativa de busca externa. Nunca maquia — declara a fonte.
         result["provenance"] = self._build_provenance(
-            task_id, result["sources"], cognition, created, answer, computation
+            task_id, result["sources"], cognition, created, answer,
+            computation, plan
         )
         # Trajeto da missão (7.2): o que CADA bot fez, obstáculos reais e o
         # que a colônia aprendeu — para o chat mostrar o caminho todo.
@@ -293,6 +302,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         created: Any,
         answer: str | None = None,
         computation: dict[str, Any] | None = None,
+        plan: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Classifica a origem da resposta e o status real da busca web.
 
@@ -336,6 +346,19 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 "gaps": [],
                 "steps": computation.get("steps", []),
                 "kind": computation.get("kind"),
+            }
+        if plan:
+            # Raciocínio próprio (plano) — sem fonte externa, honesto.
+            return {
+                "source": "reasoning",
+                "web": "web: nao necessario",
+                "web_attempts": web_report,
+                "urls": [],
+                "confidence": plan.get("confidence", 0.6),
+                "castes": ["rainha", "exploradoras"],
+                "gaps": [],
+                "steps": plan.get("steps", []),
+                "kind": "plan",
             }
         if sources:
             source = "web_search"
@@ -414,6 +437,30 @@ class Hivemind(MemoryMixin, SwarmMixin):
             message=(f"Córtex resolveu por cálculo exato ({comp.kind}): "
                      f"{comp.answer}"),
             data={"steps": comp.steps, "kind": comp.kind},
+        )
+        self.memory.add_event(event)
+        self._pending_events.append(event)
+        return data
+
+    def _planner(self, task_id: str) -> dict[str, Any] | None:
+        """Planejador: transforma 'faça um plano/N passos' em plano raciocinado."""
+        task = self.memory.get_task(task_id) or {}
+        goal = task.get("goal", "")
+        if not goal:
+            return None
+        if getattr(self, "_task_planner", None) is None:
+            from backend.reasoning.planner import TaskPlanner
+            self._task_planner = TaskPlanner()
+        plan = self._task_planner.plan(goal)
+        if not plan:
+            return None
+        data = plan.to_dict()
+        data["answer_text"] = plan.answer
+        event = BotEvent(
+            task_id=task_id, bot="hive", phase=Phase.ACT,
+            message=(f"Planejador raciocinou um plano de {len(plan.steps)} "
+                     "passos (sem fontes externas)"),
+            data={"steps": plan.steps},
         )
         self.memory.add_event(event)
         self._pending_events.append(event)

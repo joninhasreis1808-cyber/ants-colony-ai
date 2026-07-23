@@ -1,6 +1,6 @@
 # 🐜 Projeto Ant's — Colônia de Bots com Mente Colmeia
 
-![tests](https://img.shields.io/badge/tests-382%20passing-3ad29f)
+![tests](https://img.shields.io/badge/tests-418%20passing-3ad29f)
 ![python](https://img.shields.io/badge/python-3.11%2B-0f3460)
 ![pwa](https://img.shields.io/badge/PWA-instal%C3%A1vel-e94560)
 
@@ -37,7 +37,7 @@ inicial). As antigas abas "Chat" e "Linha do Tempo" deixaram de existir:
 - **Persistência evolutiva completa** — DNA + feedback + **trust** + **tradições** sobrevivem a
   restart (`GET /organism/dna` · `/organism/trust` · `/organism/traditions`).
 - **`GET /hive/recruitment/{task_id}`** (quem chamou quem) · **`GET /ping`** (keep-alive).
-- **382 testes** · MD5 dos 4 JS legados intactos · zero mockup · zero emojis.
+- **418 testes** · MD5 dos 4 JS legados intactos · zero mockup · zero emojis.
 
 ## ⚡ Evolução máxima (mente colmeia no ápice)
 

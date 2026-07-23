@@ -69,6 +69,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
         self.recruitment = RecruitmentTracker()
         # Fallback cognitivo (lazy) + fila de eventos a emitir ao vivo.
         self._cog_fb: Any = None
+        # Córtex determinístico (lazy): cálculo exato ANTES da busca (7.2).
+        self._cortex: Any = None
         self._pending_events: list[BotEvent] = []
         for bot in roster:
             self.lifecycle.register(bot.name)
@@ -163,11 +165,25 @@ class Hivemind(MemoryMixin, SwarmMixin):
         created = self.memory.get_context(task_id, "created_app")
         perception = self.memory.get_context(task_id, "perception")
 
+        # Córtex determinístico (7.2): se a pergunta é calculável, o cálculo
+        # EXATO é autoritativo — vence web/memória/seed e nunca solta frase
+        # inata irrelevante. Roteado à frente das demais fontes.
+        computation = self._deterministic(task_id)
+        # Planejador (raciocínio puro): pedidos de "plano/N passos" viram um
+        # plano raciocinado real — não precisa de web nem de fato inato.
+        plan = None if computation else self._planner(task_id)
+
         answer = decision.get("answer")
         confidence = decision.get("confidence")
         _GENERIC = "Sem evidências suficientes"
         cognition: dict[str, Any] | None = None
-        if created and (not answer or _GENERIC in answer):
+        if computation:
+            answer = computation["answer_text"]
+            confidence = computation["confidence"]
+        elif plan:
+            answer = plan["answer_text"]
+            confidence = plan["confidence"]
+        elif created and (not answer or _GENERIC in answer):
             summary = created.get("summary", {})
             answer = (
                 f"App criado: {summary.get('type')} "
@@ -189,13 +205,198 @@ class Hivemind(MemoryMixin, SwarmMixin):
         recruitment = self.memory.get_context(task_id, "recruitment")
         if recruitment:
             result["recruitment"] = recruitment   # quem chamou quem (§3.3)
+        if computation:
+            result["computation"] = computation
+        if plan:
+            result["plan"] = plan
         if cognition:
             result["cognition"] = cognition
         if created:
             result["created_app"] = created
         if perception:
             result["perception"] = perception
+        # Proveniência (aditivo): de ONDE veio a resposta e qual o desfecho
+        # REAL da tentativa de busca externa. Nunca maquia — declara a fonte.
+        result["provenance"] = self._build_provenance(
+            task_id, result["sources"], cognition, created, answer,
+            computation, plan
+        )
+        # Trajeto da missão (7.2): o que CADA bot fez, obstáculos reais e o
+        # que a colônia aprendeu — para o chat mostrar o caminho todo.
+        result["trace"] = self._compile_trace(task_id, result)
         return result
+
+    def _compile_trace(
+        self, task_id: str, result: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Monta o trajeto real da missão a partir dos eventos e do desfecho.
+
+        Nada inventado: agrupa os eventos por bot (o que cada um fez), coleta
+        os obstáculos reais (bot sem sucesso, web bloqueada) e o que a colônia
+        aprendeu (lacunas, memórias recordadas, fonte usada).
+        """
+        import re as _re
+        events = self.memory.get_events(task_id) or []
+        per_bot: dict[str, dict[str, Any]] = {}
+        order: list[str] = []
+        errors: list[dict[str, str]] = []
+
+        def _slot(name: str) -> dict[str, Any]:
+            name = "colônia" if name == "hive" else name
+            if name not in per_bot:
+                per_bot[name] = {"bot": name, "did": [], "ok": True}
+                order.append(name)
+            return per_bot[name]
+
+        for e in events:
+            bot = e.get("bot") or "colônia"
+            msg = e.get("message") or ""
+            slot = _slot(bot)
+            if msg:
+                slot["did"].append(msg)
+            low = msg.lower()
+            # "X não teve sucesso" é relatado pela colônia — atribui ao bot X.
+            m = _re.match(r"(\w+) não teve sucesso", msg)
+            if m:
+                failed = _slot(m.group(1))
+                failed["ok"] = False
+                errors.append({"bot": m.group(1), "detail": msg})
+            elif "falhou" in low or "erro:" in low:
+                slot["ok"] = False
+                errors.append({"bot": slot["bot"], "detail": msg})
+        prov = result.get("provenance") or {}
+        # Obstáculo real de rede (403/erro) entra no trajeto, com honestidade.
+        web = prov.get("web") or ""
+        if web and ("bloqueado" in web or "erro" in web):
+            errors.append({"bot": "exploradores",
+                           "detail": f"busca externa {web}"})
+        # O que a colônia aprendeu (sinais reais).
+        learnings: list[str] = []
+        lesson = result.get("learning") or {}
+        if isinstance(lesson, dict) and lesson.get("lesson"):
+            learnings.append(str(lesson["lesson"]))
+        cog = result.get("cognition") or {}
+        for gap in (cog.get("gaps") or [])[:3]:
+            learnings.append(f"lacuna identificada: {gap}")
+        src = prov.get("source")
+        if src == "computation":
+            learnings.append("resolvido por cálculo exato — sem precisar de fontes")
+        elif src == "none":
+            learnings.append("sem evidência suficiente offline — limitação declarada")
+        elif src in ("memory", "seed_knowledge", "seed_knowledge+memory"):
+            learnings.append(f"respondido a partir de {src}")
+        return {
+            "bots": [per_bot[b] for b in order],
+            "errors": errors,
+            "learnings": learnings,
+            "source": src,
+            "path_reason": result.get("recruitment") or [],
+            "conclusion": result.get("answer"),
+        }
+
+    def _build_provenance(
+        self,
+        task_id: str,
+        sources: list,
+        cognition: dict[str, Any] | None,
+        created: Any,
+        answer: str | None = None,
+        computation: dict[str, Any] | None = None,
+        plan: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Classifica a origem da resposta e o status real da busca web.
+
+        Valores de `source`: web_search (URLs reais), memory (recordado do
+        grafo), seed_knowledge (inato), reasoning (inferência própria sem
+        conhecimento), none (não conseguiu). Aditivo e honesto: se a web foi
+        bloqueada (403) ou não trouxe nada, isso fica explícito em `web`.
+        """
+        web_report = self.memory.get_context(task_id, "web_report") or []
+        # ---- status real da tentativa externa ----
+        codes = [r.get("status") for r in web_report]
+        domains: list[str] = []
+        for s in sources:
+            url = (s or {}).get("url", "") if isinstance(s, dict) else ""
+            if "://" in url:
+                domains.append(url.split("://", 1)[1].split("/", 1)[0])
+        if sources:
+            web_status = "web: 200 ok"
+        elif not web_report:
+            web_status = "web: nao tentado"
+        elif any(isinstance(c, int) and 400 <= c < 500 for c in codes):
+            code = next(c for c in codes if isinstance(c, int) and 400 <= c < 500)
+            web_status = f"web: {code} bloqueado"
+        elif all(c == "sem_resultado" for c in codes):
+            web_status = "web: sem resultado"
+        else:
+            web_status = "web: erro/offline"
+        # ---- classificação da fonte ----
+        gaps: list = []
+        castes: list = ["rainha", "exploradoras"]
+        confidence = None
+        if computation:
+            # Cálculo exato e autoritativo — não precisou de web/inato.
+            return {
+                "source": "computation",
+                "web": "web: nao necessario",
+                "web_attempts": web_report,
+                "urls": [],
+                "confidence": computation.get("confidence", 1.0),
+                "castes": ["rainha", "operarias"],
+                "gaps": [],
+                "steps": computation.get("steps", []),
+                "kind": computation.get("kind"),
+            }
+        if plan:
+            # Raciocínio próprio (plano) — sem fonte externa, honesto.
+            return {
+                "source": "reasoning",
+                "web": "web: nao necessario",
+                "web_attempts": web_report,
+                "urls": [],
+                "confidence": plan.get("confidence", 0.6),
+                "castes": ["rainha", "exploradoras"],
+                "gaps": [],
+                "steps": plan.get("steps", []),
+                "kind": "plan",
+            }
+        if sources:
+            source = "web_search"
+            confidence = 0.9
+        elif created:
+            source = "reasoning"  # app gerado por inferência própria
+        elif cognition:
+            confidence = cognition.get("confidence")
+            gaps = cognition.get("gaps", []) or []
+            castes = cognition.get("castes", castes)
+            mem = cognition.get("memory_used", 0)
+            seed = cognition.get("seed_used", 0)
+            if mem and not seed:
+                source = "memory"
+            elif seed and not mem:
+                source = "seed_knowledge"
+            elif seed and mem:
+                source = "seed_knowledge+memory"
+            else:
+                source = "reasoning"  # nenhum fato: pura inferência
+            # Confiança muito baixa e sem qualquer base: declarou limitação.
+            if not mem and not seed and (confidence or 0) < 0.35:
+                source = "none"
+            # Honestidade: se a resposta é o template de "sem evidências", a
+            # colônia declarou limitação, ainda que tenha juntado algum fato.
+            if answer and "Não tenho evidências suficientes" in answer:
+                source = "none"
+        else:
+            source = "none"
+        return {
+            "source": source,
+            "web": web_status,
+            "web_attempts": web_report,
+            "urls": domains,
+            "confidence": confidence,
+            "castes": castes,
+            "gaps": gaps,
+        }
 
     def _record_trust(self, bots: list, success: bool) -> None:
         """Registra confiança conquistada/perdida por bot (durável §4.1).
@@ -211,6 +412,59 @@ class Hivemind(MemoryMixin, SwarmMixin):
             save_trust()
         except Exception:  # noqa: BLE001 - persistência é best-effort
             pass
+
+    def _deterministic(self, task_id: str) -> dict[str, Any] | None:
+        """Córtex determinístico: resolve cálculos exatos antes da busca.
+
+        Se o objetivo é calculável (raiz, aritmética, %, potência), devolve o
+        resultado exato + passos e enfileira um evento real para a timeline
+        viva. Caso contrário, `None` — e o pipeline segue normalmente.
+        """
+        task = self.memory.get_task(task_id) or {}
+        goal = task.get("goal", "")
+        if not goal:
+            return None
+        if self._cortex is None:
+            from backend.reasoning.deterministic import DeterministicCortex
+            self._cortex = DeterministicCortex()
+        comp = self._cortex.solve(goal)
+        if not comp:
+            return None
+        data = comp.to_dict()
+        data["answer_text"] = f"Resultado (cálculo exato): {comp.answer}"
+        event = BotEvent(
+            task_id=task_id, bot="hive", phase=Phase.ACT,
+            message=(f"Córtex resolveu por cálculo exato ({comp.kind}): "
+                     f"{comp.answer}"),
+            data={"steps": comp.steps, "kind": comp.kind},
+        )
+        self.memory.add_event(event)
+        self._pending_events.append(event)
+        return data
+
+    def _planner(self, task_id: str) -> dict[str, Any] | None:
+        """Planejador: transforma 'faça um plano/N passos' em plano raciocinado."""
+        task = self.memory.get_task(task_id) or {}
+        goal = task.get("goal", "")
+        if not goal:
+            return None
+        if getattr(self, "_task_planner", None) is None:
+            from backend.reasoning.planner import TaskPlanner
+            self._task_planner = TaskPlanner()
+        plan = self._task_planner.plan(goal)
+        if not plan:
+            return None
+        data = plan.to_dict()
+        data["answer_text"] = plan.answer
+        event = BotEvent(
+            task_id=task_id, bot="hive", phase=Phase.ACT,
+            message=(f"Planejador raciocinou um plano de {len(plan.steps)} "
+                     "passos (sem fontes externas)"),
+            data={"steps": plan.steps},
+        )
+        self.memory.add_event(event)
+        self._pending_events.append(event)
+        return data
 
     def _cognitive_fallback(self, task_id: str) -> dict[str, Any] | None:
         """Aciona o cérebro próprio quando a busca externa nada trouxe.

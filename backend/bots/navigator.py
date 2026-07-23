@@ -40,6 +40,10 @@ class NavigatorBot(Bot):
         results, attempts = await self._router.search(
             plan["query"], plan["limit"]
         )
+        # Diagnóstico aditivo: guarda o desfecho REAL da tentativa web
+        # (status HTTP/erro por provider) para o campo de proveniência.
+        report = list(getattr(self._router, "last_report", []))
+        self.memory.set_context(task_id, "web_report", report)
         await self.emit(
             task_id, Phase.DO,
             f"Providers tentados: {', '.join(attempts) or 'nenhum'}",

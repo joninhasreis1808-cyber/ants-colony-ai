@@ -7,7 +7,7 @@ const ASSETS = [
   "/js/notifications.js", "/js/device_permissions.js", "/js/context_engine.js", "/js/live_dashboard.js", "/js/cognitive_center.js", "/js/resource_center.js", "/js/timeline.js",
   "/js/awaken.js", "/js/health_footer.js", "/js/onboarding.js",
   "/js/heatmap.js", "/js/replay.js", "/js/lab_mode.js", "/js/live_panels.js", "/js/api_bridge.js",
-  "/js/timeline_hub.js", "/js/live_progress.js",
+  "/js/timeline_hub.js", "/js/live_progress.js", "/js/formations_panel.js",
 ];
 
 self.addEventListener("install", (e) => {

@@ -64,7 +64,35 @@
   .live-progress.show, .lp-row { animation: none !important; }
   .lp-spin { animation: none !important; border-top-color: var(--border2); }
   .th-step.on .th-dot { animation: none !important; }
+  .fm-card { animation: none !important; }
 }
+
+/* ═══ Painel de Formações da Rainha (7.2 · Bloco C) ═══ */
+.formations-panel { display: grid; gap: 14px; }
+.fm-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+  padding: 14px; animation: rise .3s ease both; }
+.fm-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fm-name { font-family: var(--mono); font-size: 13px; color: var(--honey); }
+.fm-goal { color: var(--dim); font-size: 12px; margin: 2px 0 10px; }
+.fm-x { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  border-radius: 8px; border: 1px solid var(--border2); background: var(--bg2); color: var(--muted); cursor: pointer; }
+.fm-x:hover { border-color: var(--soldier, #d66); color: #e88; }
+.fm-bots { display: grid; gap: 5px; margin-bottom: 10px; }
+.fm-bot { display: flex; align-items: center; gap: 9px; padding: 6px 10px; border-radius: 0 8px 8px 0;
+  border-left: 2px solid var(--caste, var(--amber)); background: var(--bg2); }
+.fm-bot.exploradores { --caste: var(--explorer, #6ab7c9); }
+.fm-bot.soldados { --caste: var(--soldier, #d67a6a); }
+.fm-bot.construtores, .fm-bot.operarias { --caste: var(--worker, #d4a017); }
+.fm-bot.coletores, .fm-bot.costureiros { --caste: var(--nurse, #b48ad4); }
+.fm-handle { font-family: var(--mono); font-size: 11.5px; color: var(--honey); }
+.fm-doing { font-size: 12.5px; color: var(--text); }
+.fm-ctls { display: grid; gap: 6px; }
+.fm-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fm-caste { font-family: var(--mono); font-size: 11.5px; color: var(--muted); min-width: 120px; }
+.fm-ctl .btn { min-height: 38px; padding: 7px 12px; font-size: 11.5px; }
+.fm-ctl .btn[disabled] { opacity: .45; cursor: not-allowed; }
+.fm-done { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+  font-family: var(--mono); font-size: 12px; color: var(--leaf); }
 
 /* ═══ Linha do Tempo unificada (fusão 6.3) ═══ */
 .th-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px}

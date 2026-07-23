@@ -87,6 +87,12 @@ async def capabilities() -> dict[str, Any]:
              "available": False, "where": "native",
              "note": "plano é gerado no server; execução roda no app nativo"},
         ],
+        "runtime_note": (
+            "Keep-alive em GET /ping. Em hospedagem free tier a colônia "
+            "hiberna após inatividade e a memória em RAM zera no restart "
+            "(por isso memories_stored pode voltar a 0); o que é durável "
+            "(confiança, cultura, DNA) sobrevive em SQLite."
+        ),
     }
 
 

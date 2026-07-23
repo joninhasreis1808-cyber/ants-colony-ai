@@ -180,6 +180,32 @@ class CasteBody(BaseModel):
     caste: str
 
 
+class SearchRequest(BaseModel):
+    """Corpo do POST /hive/search."""
+
+    query: str
+    limit: int = 5
+
+
+# Busca em cascata compartilhada (aprende entre chamadas — cache com TTL).
+_CASCADE: dict = {}
+
+
+@router.post("/search")
+async def cascade_search(req: SearchRequest) -> dict[str, Any]:
+    """Busca em cascata (memória→seed→Wikipedia→web→raciocínio), honesta.
+
+    Aprende: a 2ª busca da mesma pergunta volta `cached: true`. Fontes
+    externas são opcionais — se bloqueadas (403), degrada declarando.
+    """
+    if not req.query.strip():
+        raise HTTPException(400, "query não pode ser vazia")
+    if "cs" not in _CASCADE:
+        from backend.search.cascade import CascadeSearch
+        _CASCADE["cs"] = CascadeSearch(router=ROUTER)
+    return await _CASCADE["cs"].search(req.query, req.limit)
+
+
 @router.get("/formations")
 async def list_formations() -> dict[str, Any]:
     """Formações ativas (nome, castas, nome de cada bot e o que faz)."""

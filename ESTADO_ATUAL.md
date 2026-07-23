@@ -147,7 +147,7 @@ com `status: healthy` e 25 módulos. Se retornar a página HTML/404, é Static S
   etapa a etapa, resposta **offline** do cérebro próprio com **confiança 0.727**.
 - **Persistência por restart real:** trust, tradições e DNA idênticos após
   reiniciar o servidor (2 processos, mesmo `ANTS_DB`).
-- **407 testes** · MD5 dos 4 JS legados inalterados · zero mockup funcional.
+- **415 testes** · MD5 dos 4 JS legados inalterados · zero mockup funcional.
 - Interface: os únicos "emojis" em JS não-legado estão na TABELA de limpeza do
   `scripts.js`, que **remove** os emojis emitidos pelo `chat.js` imutável — nunca
   são renderizados.

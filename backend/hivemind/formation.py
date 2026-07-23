@@ -11,10 +11,30 @@ from __future__ import annotations
 
 import itertools
 from dataclasses import asdict, dataclass, field
+from typing import Optional
 
 from backend.hivemind.castes_base import BASES, name_for, specialize
 
 _IDS = itertools.count(1)
+
+
+# Bot representativo de cada casta-base no histórico de confiança (E.2).
+_REP_BOT = {
+    "exploradores": "navigator", "construtores": "creator",
+    "coletores": "learner", "costureiros": "interpreter",
+    "operarias": "extractor", "soldados": "decider",
+}
+
+
+def caste_reputation() -> dict[str, float]:
+    """Reputação por casta a partir da confiança durável (feromônio §E.2)."""
+    try:
+        from backend.permissions.trust_store import get_trust
+        snap = get_trust().snapshot()
+    except Exception:  # noqa: BLE001 - reputação é best-effort
+        snap = {}
+    return {c: round(float(snap.get(b, {}).get("trust", 1.0)), 3)
+            for c, b in _REP_BOT.items()}
 
 
 @dataclass
@@ -25,6 +45,7 @@ class FormationBot:
     caste: str
     doing: str = "aguardando"
     icon: str = ""
+    reputation: float = 1.0
 
 
 @dataclass
@@ -79,6 +100,7 @@ class Queen:
         plan = _plan_for(goal, paths)
         fid = f"form_{next(_IDS)}"
         name = self._name(goal)
+        reps = caste_reputation()   # a Rainha considera a reputação (§E.2)
         f = Formation(id=fid, goal=goal, name=name, status="running")
         for caste in self._ORDER:
             for i in range(plan.get(caste, 0)):
@@ -86,8 +108,16 @@ class Queen:
                 doing = self._doing(caste, spec, i)
                 f.bots.append(FormationBot(
                     handle=name_for(caste, i), caste=caste,
-                    doing=doing, icon=BASES[caste].icon))
+                    doing=doing, icon=BASES[caste].icon,
+                    reputation=reps.get(caste, 1.0)))
         return f
+
+    def preferred_caste(self, castes: list[str]) -> Optional[str]:
+        """Casta de maior reputação entre as dadas — a Rainha reforça essa."""
+        if not castes:
+            return None
+        reps = caste_reputation()
+        return max(castes, key=lambda c: reps.get(c, 1.0))
 
     def reinforce(self, formation: Formation, caste: str) -> FormationBot:
         """+1 bot daquele tipo (acelera). A Rainha envia reforço nomeado."""

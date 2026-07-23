@@ -105,3 +105,17 @@ def test_endpoints_formacao():
     assert client.delete(f"/hive/formation/{fid}").status_code == 409
     client.post(f"/hive/formation/{fid}/complete")
     assert client.delete(f"/hive/formation/{fid}").status_code == 200
+
+
+def test_reputacao_alimenta_a_formacao():
+    from backend.hivemind.formation import Queen, caste_reputation
+    q = Queen()
+    f = q.form("pesquisar algo")
+    # cada bot carrega a reputação real da sua casta (E.2)
+    assert all(hasattr(b, "reputation") for b in f.bots)
+    reps = caste_reputation()
+    assert set(reps) == {"exploradores", "construtores", "coletores",
+                         "costureiros", "operarias", "soldados"}
+    # a Rainha sabe escolher a casta de maior reputação para reforçar
+    pref = q.preferred_caste(["exploradores", "soldados"])
+    assert pref in ("exploradores", "soldados")

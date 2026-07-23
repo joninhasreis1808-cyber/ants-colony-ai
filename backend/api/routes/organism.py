@@ -53,6 +53,43 @@ class SnapshotIn(BaseModel):
     update_available: bool = False
 
 
+@router.get("/capabilities")
+async def capabilities() -> dict[str, Any]:
+    """Lista honesta do que a colônia faz offline vs. o que depende de web.
+
+    Cria expectativa correta no primeiro uso (7.2 · E.1): nada de prometer o
+    que não roda. Cada item declara `available` e `where` (server | native).
+    """
+    from backend.api.deps import OCR
+    return {
+        "offline": [
+            {"name": "cálculo exato (raiz, aritmética, %, potência)",
+             "available": True, "where": "server", "source": "computation"},
+            {"name": "conhecimento inato do domínio (colônia/formigas)",
+             "available": True, "where": "server", "source": "seed_knowledge"},
+            {"name": "memória do que já aprendeu",
+             "available": True, "where": "server", "source": "memory"},
+            {"name": "raciocínio próprio (9 camadas) + honestidade",
+             "available": True, "where": "server", "source": "reasoning"},
+            {"name": "ler/entender tela por DOM (elementos, texto, plano)",
+             "available": True, "where": "server", "source": "screen_dom"},
+            {"name": "ler tela por OCR (Tesseract)",
+             "available": bool(OCR.available), "where": "server",
+             "source": "screen_ocr"},
+        ],
+        "needs_web": [
+            {"name": "dados atuais (cotação, notícias, CEP, resultados)",
+             "available": False, "where": "server",
+             "note": "requer busca web; bloqueada por 403 neste ambiente"},
+        ],
+        "declared_native": [
+            {"name": "executar ação no dispositivo (clicar, digitar)",
+             "available": False, "where": "native",
+             "note": "plano é gerado no server; execução roda no app nativo"},
+        ],
+    }
+
+
 @router.get("/vitals")
 async def vitals(hour: int = 12) -> dict[str, Any]:
     """Sinais do organismo: hormônios, fase circadiana e imunidade."""

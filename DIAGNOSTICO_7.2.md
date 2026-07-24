@@ -74,3 +74,38 @@ ou com chave Tavily/Brave, uma pergunta atual viraria `web_search` com fonte.
 - **407 testes** passando (base 385 + 22 novos), `pytest -q` verde.
 - MD5 dos 4 JS legados **idênticos**: chat/bots/memory/factory.
 - Zero emojis (só SVG), zero mockup, offline-first, aditivo.
+
+---
+
+## Fechamento — IA ligada ao aprendizado no fluxo real
+
+O aprendizado deixou de viver só num endpoint isolado: agora vale nas perguntas
+reais do chat. `backend/memory/answer_cache.py` guarda respostas confiáveis por
+pergunta (TTL). No `POST /hive/task`, a colônia:
+- **consulta a memória aprendida ANTES** de rodar o pipeline — se já respondeu
+  aquilo com confiança, recupera da memória (`provenance.cached: true`, fonte
+  `memory`) e publica um trajeto honesto e curto ("recuperei da memória —
+  aprendido antes, sem repetir o esforço");
+- ao concluir uma missão confiável (fonte ≠ `none`, confiança ≥ 0.5),
+  **aprende** a resposta.
+
+Prova (servidor real): a 2ª pergunta idêntica volta `cached: true` (para cálculo
+e para seed); respostas `none` (limitação) **nunca** são cacheadas.
+
+## Matriz de capacidades da IA (7.2) — honesta
+
+| Capacidade | Estado | Onde |
+|-----------|--------|------|
+| Cálculo exato (raiz, aritmética, %, potência) | real | server (`computation`) |
+| Planejamento (N passos) | real | server (`reasoning`) |
+| Conhecimento inato do domínio | real | server (`seed_knowledge`) |
+| Memória / aprendizado (cached na repetição) | real | server (`memory`) |
+| Raciocínio 9 camadas + honestidade | real | server (`reasoning`/`none`) |
+| Ler/entender a tela (DOM) + plano de ação | real | server (`/perceive/screen/dom`) |
+| Ler a tela por OCR | real (se Tesseract) | server (`/perceive/screen/image`) |
+| Formações de castas (Rainha, reforço, sacrifício) | real | server (`/hive/formation*`) |
+| Trajeto da missão no chat (o que cada bot fez, erros, aprendizado) | real | UI |
+| Busca web (Wikipedia/DuckDuckGo/Tavily/Brave) | implementada; **403 no sandbox** | server (degrada declarando) |
+| Executar clique/digitação no dispositivo | **capacidade declarada** | app nativo |
+
+**Total de testes:** ver o selo na interface (atualizado a cada bloco).

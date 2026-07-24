@@ -7,7 +7,7 @@
 
 ```
 python -m pytest tests/ -q
-=> 347 passed, 5 skipped   (total 352)
+=> 421 passed, 5 skipped   (total 426)  # Ant's 7.2
 ```
 
 Os 5 `skipped` dependem de bibliotecas opcionais pesadas não instaladas

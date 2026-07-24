@@ -20,7 +20,9 @@ hiddenimports = (
 block_cipher = None
 
 a = Analysis(
-    [os.path.join(ROOT, "backend", "api", "main.py")],
+    # Entrypoint 8.0: o sidecar marca runtime nativo, aponta a persistência
+    # para o diretório de dados do app e usa a porta dinâmica (ANTS_PORT).
+    [os.path.join(ROOT, "backend", "api", "sidecar.py")],
     pathex=[ROOT],
     binaries=[],
     datas=datas,

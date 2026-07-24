@@ -1,6 +1,6 @@
 # 🐜 Projeto Ant's — Colônia de Bots com Mente Colmeia
 
-![tests](https://img.shields.io/badge/tests-421%20passing-3ad29f)
+![tests](https://img.shields.io/badge/tests-457%20passing-3ad29f)
 ![python](https://img.shields.io/badge/python-3.11%2B-0f3460)
 ![pwa](https://img.shields.io/badge/PWA-instal%C3%A1vel-e94560)
 

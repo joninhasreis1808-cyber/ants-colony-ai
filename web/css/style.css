@@ -79,6 +79,22 @@
   .fm-card { animation: none !important; }
 }
 
+/* ═══ Controle de dispositivo + botão de pânico (8.0 · D.2) ═══ */
+#panic-button { position: fixed; right: 18px; bottom: 84px; z-index: 9999;
+  display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px;
+  border-radius: 24px; border: 1.5px solid #d67a6a; background: #2a1512;
+  color: #f0a89a; font-family: var(--mono); font-size: 13px; font-weight: 600;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.4); min-height: 48px; }
+#panic-button:hover { background: #3a1c17; border-color: #e88; }
+#panic-button.engaged { background: #d67a6a; color: #1a0e0b; border-color: #f0a89a;
+  animation: panic-pulse 1s ease-in-out infinite; }
+@keyframes panic-pulse { 50% { box-shadow: 0 0 0 6px rgba(214,122,106,.25); } }
+.device-scopes .set-row { border-bottom: 1px solid var(--border); }
+.dev-paths { margin-top: 8px; }
+.dev-path-rm { color: var(--soldier, #d67a6a); text-decoration: none; font-size: 11px; }
+#device-audit { border: 1px solid var(--border); border-radius: 10px; padding: 6px; overflow-y: auto; }
+@media (prefers-reduced-motion: reduce) { #panic-button.engaged { animation: none !important; } }
+
 /* ═══ Painel de Formações da Rainha (7.2 · Bloco C) ═══ */
 .formations-panel { display: grid; gap: 14px; }
 .fm-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface);

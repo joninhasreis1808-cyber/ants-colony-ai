@@ -62,16 +62,15 @@ roda offline vs. o que depende de web vs. o que é declarado.
 | 7 | notícias | none | `none` | honesto |
 | 8 | colônia sem chefe | seed | `seed_knowledge` | mantém (correto) |
 | 9 | **CEP Paulista** | seed irrelevante | **`none` (declara)** | ✔ corrigido |
-| 10 | plano downloads | none | `none` | honesto (ver nota) |
+| 10 | plano downloads | none | **`reasoning` (plano de 4 passos)** | ✔ corrigido |
 
-**Nota honesta:** a pergunta 10 (planejamento puro) ainda declara limitação —
-o córtex determinístico cobre cálculo, não planejamento genérico; preferimos
-declarar a inventar. A busca web continua **existente e implementada, mas
+**Nota honesta:** a pergunta 10 agora recebe um plano raciocinado real (o
+planejador determinístico). A busca web continua **existente e implementada, mas
 bloqueada por 403** neste ambiente (o proxy barra o egresso). Fora do sandbox
 ou com chave Tavily/Brave, uma pergunta atual viraria `web_search` com fonte.
 
 ## Contrato
-- **407 testes** passando (base 385 + 22 novos), `pytest -q` verde.
+- **421 testes** passando (base 385 + 36 novos), `pytest -q` verde.
 - MD5 dos 4 JS legados **idênticos**: chat/bots/memory/factory.
 - Zero emojis (só SVG), zero mockup, offline-first, aditivo.
 

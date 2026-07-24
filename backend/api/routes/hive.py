@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from backend.core import Task
+from backend.core import Task, TaskStatus
 from backend.hivemind.factory import build_hive
 from backend.hivemind.lifecycle import ColonyLifecycle
 from backend.hivemind.stigmergy import PheromoneField
@@ -72,6 +72,11 @@ def _preview(goal: str) -> tuple[str, list[str]]:
 
 async def _run_task(task: Task) -> None:
     """Executa a colmeia para uma tarefa em background."""
+    # Aprendizado no fluxo real: se a colônia já respondeu isto com confiança,
+    # recupera da memória (cached) — não repete o esforço.
+    if await _answer_from_memory(task):
+        _complete_formation(task.id)
+        return
     hive, _ = build_hive(
         bus=BUS, router=ROUTER, pheromones=PHEROMONES, lifecycle=LIFECYCLE
     )
@@ -80,9 +85,73 @@ async def _run_task(task: Task) -> None:
         bot.memory = MEMORY
     _LAST_HIVE["hive"] = hive
     await hive.solve(task)
+    _learn_answer(task)          # guarda respostas confiáveis (aprende)
+    _complete_formation(task.id)
+
+
+def _complete_formation(task_id: str) -> None:
+    """Coletores compilam e enviam à Mente Colmeia; formação conclui (7.2 B)."""
+    fid = _TASK_FORMATION.pop(task_id, None)
+    if fid:
+        from backend.hivemind.formation import REGISTRY
+        f = REGISTRY.get(fid)
+        if f:
+            REGISTRY.queen.compile_and_send(f)
+
+
+def _learn_answer(task: Task) -> None:
+    """Guarda no cache a resposta confiável desta missão (aprendizado real)."""
+    from backend.memory.answer_cache import get_answer_cache
+    r = task.result or {}
+    prov = r.get("provenance") or {}
+    src = prov.get("source")
+    ans = r.get("answer")
+    conf = r.get("confidence") or 0
+    if ans and src and src != "none" and conf >= 0.5:
+        get_answer_cache().put(task.goal, {
+            "answer": ans, "confidence": conf, "source": src,
+        })
+
+
+async def _answer_from_memory(task: Task) -> bool:
+    """Responde da memória aprendida, publicando um trajeto honesto e curto."""
+    from backend.core import BotEvent, Phase
+    from backend.memory.answer_cache import get_answer_cache
+    hit = get_answer_cache().get(task.goal)
+    if not hit:
+        return False
+    msg = ("Reconheci a pergunta — recuperei da memória (aprendido antes), "
+           "sem repetir o esforço")
+    ev = BotEvent(task_id=task.id, bot="hive", phase=Phase.ACT, message=msg)
+    MEMORY.add_event(ev)
+    if BUS is not None:
+        await BUS.publish(task.id, ev.to_dict())
+    task.result = {
+        "answer": hit["answer"],
+        "confidence": hit["confidence"],
+        "sources": [],
+        "learning": {},
+        "provenance": {
+            "source": hit["source"], "cached": True,
+            "web": "web: nao necessario", "web_attempts": [], "urls": [],
+            "confidence": hit["confidence"], "castes": ["rainha"], "gaps": [],
+        },
+        "trace": {
+            "bots": [{"bot": "colônia", "ok": True, "did": [msg]}],
+            "errors": [], "learnings": ["reuso de resposta aprendida (cached)"],
+            "source": hit["source"], "conclusion": hit["answer"],
+        },
+    }
+    task.touch(TaskStatus.DONE)
+    MEMORY.save_task(task)
+    if BUS is not None:
+        await BUS.close(task.id)
+    return True
 
 
 _LAST_HIVE: dict = {}
+# Mapa tarefa → formação, para concluir a formação quando a tarefa termina.
+_TASK_FORMATION: dict[str, str] = {}
 
 
 @router.post("/task", response_model=TaskResponse)
@@ -94,6 +163,10 @@ async def create_task(req: TaskRequest) -> TaskResponse:
     MEMORY.save_task(task)
     _TASK_COUNT["n"] += 1
     intent, castes = _preview(req.goal)
+    # A Rainha monta uma formação real para a missão (visível na Cognição).
+    from backend.hivemind.formation import REGISTRY
+    formation = REGISTRY.create(req.goal)
+    _TASK_FORMATION[task.id] = formation.id
     asyncio.create_task(_run_task(task))
     echo = (
         f"Recebi — recrutando {len(castes)} casta(s): "
@@ -152,6 +225,106 @@ def stats() -> dict[str, Any]:
         "uptime_seconds": round(time.time() - STARTED_AT, 1),
         "providers": ROUTER.active_providers,
     }
+
+
+class FormationRequest(BaseModel):
+    """Corpo do POST /hive/formation."""
+
+    goal: str
+    paths: int = 1
+
+
+class CasteBody(BaseModel):
+    """Corpo de reinforce/release: qual casta-base."""
+
+    caste: str
+
+
+class SearchRequest(BaseModel):
+    """Corpo do POST /hive/search."""
+
+    query: str
+    limit: int = 5
+
+
+# Busca em cascata compartilhada (aprende entre chamadas — cache com TTL).
+_CASCADE: dict = {}
+
+
+@router.post("/search")
+async def cascade_search(req: SearchRequest) -> dict[str, Any]:
+    """Busca em cascata (memória→seed→Wikipedia→web→raciocínio), honesta.
+
+    Aprende: a 2ª busca da mesma pergunta volta `cached: true`. Fontes
+    externas são opcionais — se bloqueadas (403), degrada declarando.
+    """
+    if not req.query.strip():
+        raise HTTPException(400, "query não pode ser vazia")
+    if "cs" not in _CASCADE:
+        from backend.search.cascade import CascadeSearch
+        _CASCADE["cs"] = CascadeSearch(router=ROUTER)
+    return await _CASCADE["cs"].search(req.query, req.limit)
+
+
+@router.get("/formations")
+async def list_formations() -> dict[str, Any]:
+    """Formações ativas (nome, castas, nome de cada bot e o que faz)."""
+    from backend.hivemind.formation import REGISTRY
+    return {"formations": [f.to_dict() for f in REGISTRY.all()]}
+
+
+@router.post("/formation")
+async def create_formation(req: FormationRequest) -> dict[str, Any]:
+    """A Rainha monta uma formação para a missão (aditivo, para UI/testes)."""
+    from backend.hivemind.formation import REGISTRY
+    f = REGISTRY.create(req.goal, req.paths)
+    return f.to_dict()
+
+
+@router.post("/formation/{fid}/reinforce")
+async def reinforce_formation(fid: str, body: CasteBody) -> dict[str, Any]:
+    """Recrutar +1 daquele tipo (a Rainha envia reforço nomeado)."""
+    from backend.hivemind.formation import REGISTRY
+    f = REGISTRY.get(fid)
+    if not f:
+        raise HTTPException(404, "formação não encontrada")
+    try:
+        bot = REGISTRY.queen.reinforce(f, body.caste)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"added": bot.handle, "formation": f.to_dict()}
+
+
+@router.post("/formation/{fid}/release")
+async def release_formation(fid: str, body: CasteBody) -> dict[str, Any]:
+    """Dispensar −1 daquele tipo — NUNCA abaixo de 1 por tipo."""
+    from backend.hivemind.formation import REGISTRY
+    f = REGISTRY.get(fid)
+    if not f:
+        raise HTTPException(404, "formação não encontrada")
+    ok = REGISTRY.queen.release(f, body.caste)
+    return {"released": ok, "at_minimum": not ok, "formation": f.to_dict()}
+
+
+@router.post("/formation/{fid}/complete")
+async def complete_formation(fid: str) -> dict[str, Any]:
+    """Coletores compilam e enviam à Mente Colmeia; missão concluída."""
+    from backend.hivemind.formation import REGISTRY
+    f = REGISTRY.get(fid)
+    if not f:
+        raise HTTPException(404, "formação não encontrada")
+    REGISTRY.queen.compile_and_send(f)
+    return f.to_dict()
+
+
+@router.delete("/formation/{fid}")
+async def discard_formation(fid: str) -> dict[str, Any]:
+    """Descarta a formação — só depois de concluída (coletores já enviaram)."""
+    from backend.hivemind.formation import REGISTRY
+    ok = REGISTRY.discard(fid)
+    if not ok:
+        raise HTTPException(409, "só é possível descartar após a conclusão")
+    return {"discarded": fid}
 
 
 @router.get("/swarm")

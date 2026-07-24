@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.api.deps import DOCS, EQUATIONS, IMAGE, OCR, TEXT
+from backend.api.deps import DOCS, EQUATIONS, IMAGE, OCR, SCREEN, TEXT
 
 router = APIRouter(prefix="/perceive", tags=["perception"])
 
@@ -22,6 +22,17 @@ class PathIn(BaseModel):
 
 class EquationIn(BaseModel):
     equation: str
+
+
+class DomIn(BaseModel):
+    html: str
+    goal: str = ""
+
+
+class ScreenshotIn(BaseModel):
+    path: str
+    goal: str = ""
+    lang: str = "por"
 
 
 @router.post("/text")
@@ -63,3 +74,36 @@ async def perceive_ocr(body: PathIn) -> dict[str, Any]:
     if not OCR.available:
         raise HTTPException(503, "OCR indisponível no ambiente")
     return {"text": OCR.extract_text(body.path)}
+
+
+@router.post("/screen/dom")
+async def perceive_screen_dom(body: DomIn) -> dict[str, Any]:
+    """Lê e ENTENDE uma tela pelo seu HTML/DOM: elementos, texto, ação.
+
+    Real e offline: localiza botões/campos/links, compreende o texto e, se
+    um objetivo for dado, propõe o plano de ação (execução no app nativo).
+    """
+    reading = SCREEN.read_dom(body.html)
+    out = reading.to_dict()
+    out["comprehension"] = SCREEN.comprehend(reading)
+    if body.goal:
+        out["action_plan"] = SCREEN.plan_actions(reading, body.goal)
+    return out
+
+
+@router.post("/screen/image")
+async def perceive_screen_image(body: ScreenshotIn) -> dict[str, Any]:
+    """Lê e VÊ uma captura de tela: OCR do texto + descrição visual.
+
+    OCR real quando o Tesseract está presente; caso contrário, declara a
+    limitação (`ocr_available: false`) em vez de inventar texto.
+    """
+    if not Path(body.path).exists():
+        raise HTTPException(404, "captura não encontrada")
+    reading = SCREEN.read_screenshot(body.path, lang=body.lang)
+    out = reading.to_dict()
+    out["ocr_available"] = OCR.available
+    out["comprehension"] = SCREEN.comprehend(reading)
+    if body.goal:
+        out["action_plan"] = SCREEN.plan_actions(reading, body.goal)
+    return out

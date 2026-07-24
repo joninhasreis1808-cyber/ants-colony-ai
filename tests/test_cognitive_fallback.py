@@ -61,3 +61,38 @@ async def test_hive_keeps_external_answer_when_sources_exist():
     task = await hive.solve(Task(goal="o que é uma colmeia"))
     assert task.result["sources"]
     assert "cognition" not in task.result
+
+
+@pytest.mark.asyncio
+async def test_provenance_marks_web_search_when_sources_exist():
+    # Instrumento de proveniência (aditivo): com fontes reais → web_search.
+    hive, _ = build_hive(db_path=":memory:", router=ProviderRouter([FakeProvider()]))
+    task = await hive.solve(Task(goal="o que é uma colmeia"))
+    prov = task.result["provenance"]
+    assert prov["source"] == "web_search"
+    assert prov["web"] == "web: 200 ok"
+
+
+@pytest.mark.asyncio
+async def test_provenance_reports_seed_when_web_empty():
+    # Sem fontes externas, a proveniência declara a origem interna (seed/none)
+    # e o status real da web tentada (sem_resultado do FakeProvider vazio).
+    empty_router = ProviderRouter([FakeProvider(results=[])])
+    hive, _ = build_hive(db_path=":memory:", router=empty_router)
+    task = await hive.solve(Task(goal="o que são feromônios?"))
+    prov = task.result["provenance"]
+    assert prov["source"] in {"seed_knowledge", "memory",
+                              "seed_knowledge+memory", "reasoning", "none"}
+    assert prov["source"] != "web_search"
+    assert prov["web"] == "web: sem resultado"
+    assert "confidence" in prov and "gaps" in prov
+
+
+@pytest.mark.asyncio
+async def test_provider_router_records_real_web_status():
+    # O router registra o desfecho REAL de cada provider (código/erro).
+    router = ProviderRouter([FakeProvider(fail=True)])
+    results, attempts = await router.search("qualquer")
+    assert results == [] and attempts == ["fake"]
+    assert router.last_report and router.last_report[0]["provider"] == "fake"
+    assert router.last_report[0]["status"] in ("erro", 403, 500)

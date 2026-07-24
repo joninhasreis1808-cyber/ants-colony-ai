@@ -7,7 +7,7 @@
 
 ```
 python -m pytest tests/ -q
-=> 347 passed, 5 skipped   (total 352)
+=> 421 passed, 5 skipped   (total 426)  # Ant's 7.2
 ```
 
 Os 5 `skipped` dependem de bibliotecas opcionais pesadas não instaladas
@@ -147,7 +147,7 @@ com `status: healthy` e 25 módulos. Se retornar a página HTML/404, é Static S
   etapa a etapa, resposta **offline** do cérebro próprio com **confiança 0.727**.
 - **Persistência por restart real:** trust, tradições e DNA idênticos após
   reiniciar o servidor (2 processos, mesmo `ANTS_DB`).
-- **382 testes** · MD5 dos 4 JS legados inalterados · zero mockup funcional.
+- **421 testes** · MD5 dos 4 JS legados inalterados · zero mockup funcional.
 - Interface: os únicos "emojis" em JS não-legado estão na TABELA de limpeza do
   `scripts.js`, que **remove** os emojis emitidos pelo `chat.js` imutável — nunca
   são renderizados.

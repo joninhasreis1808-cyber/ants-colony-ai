@@ -9,6 +9,7 @@ from backend.perception.document_reader import DocumentReader
 from backend.perception.equation_solver import EquationSolver
 from backend.perception.image_analyzer import ImageAnalyzer
 from backend.perception.ocr_engine import OCREngine
+from backend.perception.screen_reader import ScreenReader
 from backend.perception.text_interpreter import TextInterpreter
 from backend.permissions.audit_logger import AuditLogger
 from backend.permissions.permission_manager import PermissionManager
@@ -22,3 +23,5 @@ IMAGE = ImageAnalyzer()
 DOCS = DocumentReader()
 EQUATIONS = EquationSolver()
 OCR = OCREngine()
+# Percepção de tela: ler/ver/entender a tela (DOM + OCR) e planejar ação.
+SCREEN = ScreenReader(ocr=OCR, image=IMAGE, text=TEXT)

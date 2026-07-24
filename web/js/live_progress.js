@@ -59,6 +59,7 @@
                 Object.keys(castes).length + " castas"];
     if (r.confidence != null) bits.push("confiança " + r.confidence);
     if (prov.source) bits.push("fonte: " + esc(prov.source));
+    if (prov.cached) bits.push("aprendido (memória)");
     if (prov.web) bits.push(esc(prov.web));
     return '<button class="lp-summary" type="button">' +
       '<svg class="ico sm"><use href="#i-check"/></svg> ' +
@@ -105,8 +106,14 @@
     var b = box(); if (b) b.classList.toggle("show-trace");
   });
 
+  var lastTask = null;
   document.addEventListener("ants:task-tick", function (e) {
     var d = e.detail || {}; var st = d.status || {};
+    // Nova missão: limpa o painel para não misturar com a anterior.
+    if (d.taskId && d.taskId !== lastTask) {
+      lastTask = d.taskId;
+      var b = box(); if (b) { b.classList.remove("collapsed", "show-trace"); b.innerHTML = ""; }
+    }
     render(st.events || [], !!d.done, st.result || {});
   });
   document.addEventListener("ants:task-done", function (e) {

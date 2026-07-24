@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
-from backend.core import Task
+from backend.core import Task, TaskStatus
 from backend.hivemind.factory import build_hive
 from backend.hivemind.lifecycle import ColonyLifecycle
 from backend.hivemind.stigmergy import PheromoneField
@@ -72,6 +72,11 @@ def _preview(goal: str) -> tuple[str, list[str]]:
 
 async def _run_task(task: Task) -> None:
     """Executa a colmeia para uma tarefa em background."""
+    # Aprendizado no fluxo real: se a colônia já respondeu isto com confiança,
+    # recupera da memória (cached) — não repete o esforço.
+    if await _answer_from_memory(task):
+        _complete_formation(task.id)
+        return
     hive, _ = build_hive(
         bus=BUS, router=ROUTER, pheromones=PHEROMONES, lifecycle=LIFECYCLE
     )
@@ -80,13 +85,68 @@ async def _run_task(task: Task) -> None:
         bot.memory = MEMORY
     _LAST_HIVE["hive"] = hive
     await hive.solve(task)
-    # Coletores compilam e enviam à Mente Colmeia; formação conclui (7.2 B).
-    fid = _TASK_FORMATION.pop(task.id, None)
+    _learn_answer(task)          # guarda respostas confiáveis (aprende)
+    _complete_formation(task.id)
+
+
+def _complete_formation(task_id: str) -> None:
+    """Coletores compilam e enviam à Mente Colmeia; formação conclui (7.2 B)."""
+    fid = _TASK_FORMATION.pop(task_id, None)
     if fid:
         from backend.hivemind.formation import REGISTRY
         f = REGISTRY.get(fid)
         if f:
             REGISTRY.queen.compile_and_send(f)
+
+
+def _learn_answer(task: Task) -> None:
+    """Guarda no cache a resposta confiável desta missão (aprendizado real)."""
+    from backend.memory.answer_cache import get_answer_cache
+    r = task.result or {}
+    prov = r.get("provenance") or {}
+    src = prov.get("source")
+    ans = r.get("answer")
+    conf = r.get("confidence") or 0
+    if ans and src and src != "none" and conf >= 0.5:
+        get_answer_cache().put(task.goal, {
+            "answer": ans, "confidence": conf, "source": src,
+        })
+
+
+async def _answer_from_memory(task: Task) -> bool:
+    """Responde da memória aprendida, publicando um trajeto honesto e curto."""
+    from backend.core import BotEvent, Phase
+    from backend.memory.answer_cache import get_answer_cache
+    hit = get_answer_cache().get(task.goal)
+    if not hit:
+        return False
+    msg = ("Reconheci a pergunta — recuperei da memória (aprendido antes), "
+           "sem repetir o esforço")
+    ev = BotEvent(task_id=task.id, bot="hive", phase=Phase.ACT, message=msg)
+    MEMORY.add_event(ev)
+    if BUS is not None:
+        await BUS.publish(task.id, ev.to_dict())
+    task.result = {
+        "answer": hit["answer"],
+        "confidence": hit["confidence"],
+        "sources": [],
+        "learning": {},
+        "provenance": {
+            "source": hit["source"], "cached": True,
+            "web": "web: nao necessario", "web_attempts": [], "urls": [],
+            "confidence": hit["confidence"], "castes": ["rainha"], "gaps": [],
+        },
+        "trace": {
+            "bots": [{"bot": "colônia", "ok": True, "did": [msg]}],
+            "errors": [], "learnings": ["reuso de resposta aprendida (cached)"],
+            "source": hit["source"], "conclusion": hit["answer"],
+        },
+    }
+    task.touch(TaskStatus.DONE)
+    MEMORY.save_task(task)
+    if BUS is not None:
+        await BUS.close(task.id)
+    return True
 
 
 _LAST_HIVE: dict = {}

@@ -45,9 +45,12 @@ class FakeProvider(SearchProvider):
 @pytest.fixture(autouse=True)
 def reset_learner():
     """Zera o estado global de aprendizado antes de cada teste."""
+    from backend.memory.answer_cache import get_answer_cache
     LearnerBot.reset()
+    get_answer_cache().clear()   # isolamento: cache de respostas aprendidas
     yield
     LearnerBot.reset()
+    get_answer_cache().clear()
 
 
 @pytest.fixture

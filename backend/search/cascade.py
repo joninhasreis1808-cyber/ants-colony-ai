@@ -70,10 +70,12 @@ class CascadeSearch:
     async def _wikipedia(self, query: str) -> Optional[CascadeResult]:
         try:
             import httpx
+
+            from backend.search.user_agents import honest
             url = ("https://pt.wikipedia.org/api/rest_v1/page/summary/"
                    + query.strip().replace(" ", "_"))
             async with httpx.AsyncClient(timeout=6.0) as client:
-                r = await client.get(url, headers={"User-Agent": "AntsColony/7.2"})
+                r = await client.get(url, headers={"User-Agent": honest()})
                 r.raise_for_status()
                 data = r.json()
             extract = (data.get("extract") or "").strip()
@@ -84,6 +86,32 @@ class CascadeSearch:
                           .get("page", "https://pt.wikipedia.org")],
                     steps=["Consultei o resumo da Wikipedia (API REST)."])
         except Exception:  # noqa: BLE001 - fonte externa é opcional/tolerante
+            return None
+        return None
+
+    # ---- SearXNG próprio do usuário (externa opcional, via env) ----
+    async def _searxng(self, query: str, limit: int) -> Optional[CascadeResult]:
+        import os
+        base = os.environ.get("ANTS_SEARXNG_URL")
+        if not base:
+            return None
+        try:
+            import httpx
+
+            from backend.search.user_agents import honest
+            async with httpx.AsyncClient(timeout=6.0) as client:
+                r = await client.get(base.rstrip("/") + "/search",
+                                     params={"q": query, "format": "json"},
+                                     headers={"User-Agent": honest()})
+                r.raise_for_status()
+                items = (r.json() or {}).get("results", [])[:limit]
+            if items:
+                return CascadeResult(
+                    answer=items[0].get("content") or items[0].get("title", ""),
+                    source="web", confidence=0.8,
+                    urls=[i.get("url", "") for i in items],
+                    steps=["Consultei o SearXNG próprio (env)."])
+        except Exception:  # noqa: BLE001 - opcional/tolerante
             return None
         return None
 
@@ -127,6 +155,13 @@ class CascadeSearch:
             wiki.steps = steps + wiki.steps
             res = wiki.to_dict()
             self.remember(query, res)      # aprende
+            return res
+        # 3b) SearXNG próprio (se ANTS_SEARXNG_URL em env — externa opcional)
+        searx = await self._searxng(query, limit)
+        if searx:
+            searx.steps = steps + searx.steps
+            res = searx.to_dict()
+            self.remember(query, res)
             return res
         # 4) web via router (externa opcional)
         web = await self._web(query, limit)

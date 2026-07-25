@@ -8,14 +8,13 @@ use std::time::Duration;
 
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
-const PORT: u16 = 8765;
 // Usado apenas no build mobile (não há sidecar Python no celular).
 #[cfg_attr(desktop, allow(dead_code))]
 const REMOTE_URL: &str = "http://localhost:8765";
 
 #[cfg(desktop)]
 mod backend {
-    use std::net::TcpStream;
+    use std::net::{TcpListener, TcpStream};
     use std::sync::Mutex;
     use std::time::{Duration, Instant};
 
@@ -24,6 +23,14 @@ mod backend {
     use tauri_plugin_shell::ShellExt;
 
     pub struct Backend(pub Mutex<Option<CommandChild>>);
+
+    /// Encontra uma porta livre (8.0: não fixa 8765 — evita conflito).
+    pub fn free_port() -> u16 {
+        TcpListener::bind("127.0.0.1:0")
+            .and_then(|l| l.local_addr())
+            .map(|a| a.port())
+            .unwrap_or(8765)
+    }
 
     /// Espera a porta do backend aceitar conexões (colônia acordada).
     pub fn wait_ready(port: u16, timeout: Duration) {
@@ -37,9 +44,14 @@ mod backend {
         }
     }
 
-    /// Sobe o sidecar Python e o guarda para encerrar ao fechar o app.
-    pub fn spawn(app: &App) -> Result<(), Box<dyn std::error::Error>> {
-        let sidecar = app.shell().sidecar("ants_backend")?;
+    /// Sobe o sidecar Python (porta dinâmica + runtime nativo) e o guarda
+    /// para encerrar ao fechar o app.
+    pub fn spawn(app: &App, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+        let sidecar = app
+            .shell()
+            .sidecar("ants_backend")?
+            .env("ANTS_PORT", port.to_string())
+            .env("ANTS_RUNTIME", "native");
         let (_rx, child) = sidecar.spawn()?;
         app.manage(Backend(Mutex::new(Some(child))));
         Ok(())
@@ -63,9 +75,10 @@ pub fn run() {
         .setup(|app| {
             #[cfg(desktop)]
             {
-                backend::spawn(app)?;
-                backend::wait_ready(PORT, Duration::from_secs(20));
-                open_window(app, &format!("http://localhost:{PORT}"))?;
+                let port = backend::free_port();     // porta dinâmica (8.0)
+                backend::spawn(app, port)?;
+                backend::wait_ready(port, Duration::from_secs(20));
+                open_window(app, &format!("http://localhost:{port}"))?;
             }
             #[cfg(not(desktop))]
             {

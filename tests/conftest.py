@@ -44,13 +44,31 @@ class FakeProvider(SearchProvider):
 
 @pytest.fixture(autouse=True)
 def reset_learner():
-    """Zera o estado global de aprendizado antes de cada teste."""
+    """Zera o estado global de aprendizado/segurança antes de cada teste."""
     from backend.memory.answer_cache import get_answer_cache
+
+    def _reset_device():
+        try:
+            from backend.action.command_guard import get_command_guard
+            from backend.monitoring.device_audit import get_device_audit
+            from backend.permissions.device_scopes import get_device_scopes
+            from backend.permissions.path_guard import get_path_guard
+            from backend.security.panic import get_panic
+            get_device_scopes().revoke_all()
+            get_path_guard().clear()
+            get_panic().reset()
+            get_device_audit().clear()
+            get_command_guard()  # garante singleton limpo
+        except Exception:  # noqa: BLE001
+            pass
+
     LearnerBot.reset()
     get_answer_cache().clear()   # isolamento: cache de respostas aprendidas
+    _reset_device()              # isolamento: escopos/paths/pânico/auditoria
     yield
     LearnerBot.reset()
     get_answer_cache().clear()
+    _reset_device()
 
 
 @pytest.fixture

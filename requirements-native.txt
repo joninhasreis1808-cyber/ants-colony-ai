@@ -1,0 +1,17 @@
+# Dependências do app NATIVO (8.0). Separadas das de nuvem (requirements-cloud).
+# O núcleo roda offline; libs de device são OPCIONAIS (try/except no código):
+# ausência = capacidade declarada indisponível, nunca quebra.
+-r requirements-cloud.txt
+
+# --- Device / automação (opcionais, por plataforma) ---
+# Linux X11:
+pyautogui>=0.9.54 ; sys_platform == "linux"
+# Processos e recursos do sistema (multiplataforma):
+psutil>=5.9
+# Windows:
+pywinauto>=0.6.8 ; sys_platform == "win32"
+# macOS: pyobjc é grande — instale sob demanda:
+# pyobjc-framework-Quartz>=10.0 ; sys_platform == "darwin"
+
+# --- Índice vetorial opcional (Parte F) ---
+# lancedb>=0.6 ; python_version >= "3.9"

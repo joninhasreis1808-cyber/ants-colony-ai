@@ -10,6 +10,7 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from backend.core import Task, TaskStatus
@@ -184,6 +185,36 @@ async def get_status(task_id: str) -> dict[str, Any]:
         raise HTTPException(404, "tarefa não encontrada")
     task["events"] = MEMORY.get_events(task_id)
     return task
+
+
+@router.get("/status/{task_id}/stream")
+async def status_stream(task_id: str) -> StreamingResponse:
+    """SSE aditivo (8.0 · D.1): eventos ao vivo com fallback pro polling.
+
+    Emite o estado da tarefa como Server-Sent Events até concluir. Se o
+    cliente não suportar SSE, o `sse.js` cai automaticamente para o polling
+    de `/hive/status/{id}` — nada quebra.
+    """
+    async def _gen():
+        import json
+        last = -1
+        for _ in range(600):  # ~60s de teto
+            task = MEMORY.get_task(task_id)
+            if task is None:
+                yield "event: error\ndata: {\"error\":\"nao encontrada\"}\n\n"
+                return
+            task["events"] = MEMORY.get_events(task_id)
+            n = len(task["events"])
+            if n != last or task.get("status") in ("done", "failed"):
+                last = n
+                yield f"data: {json.dumps(task, default=str)}\n\n"
+            if task.get("status") in ("done", "failed"):
+                yield "event: end\ndata: {}\n\n"
+                return
+            await asyncio.sleep(0.1)
+    return StreamingResponse(_gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache",
+                                      "X-Accel-Buffering": "no"})
 
 
 @router.get("/recruitment/{task_id}")

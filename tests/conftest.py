@@ -59,6 +59,8 @@ def reset_learner():
             get_panic().reset()
             get_device_audit().clear()
             get_command_guard()  # garante singleton limpo
+            import backend.action.action_flow as _af
+            _af._PENDING.clear()
         except Exception:  # noqa: BLE001
             pass
 

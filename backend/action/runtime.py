@@ -38,6 +38,7 @@ def runtime_info() -> dict:
         "can_execute_device_actions": native,
         "platform": platform.system().lower(),
         "display_server": display_server(),
-        "label": ("modo nativo — pode agir no dispositivo" if native
-                  else "modo web — apenas planeja (execução no app nativo)"),
+        "label": ("modo local — posso abrir apps e ler pastas autorizadas; "
+                  "controle de mouse/teclado exige o app nativo" if native
+                  else "modo web — apenas planeja (execução no app nativo/local)"),
     }

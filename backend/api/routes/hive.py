@@ -73,6 +73,11 @@ def _preview(goal: str) -> tuple[str, list[str]]:
 
 async def _run_task(task: Task) -> None:
     """Executa a colmeia para uma tarefa em background."""
+    # Roteador de intenção (8.1): comandos de AÇÃO e perguntas de CAPACIDADE
+    # não vão para o Q&A — vão para o fluxo certo (Operárias / capabilities).
+    if await _route_intent(task):
+        _complete_formation(task.id)
+        return
     # Aprendizado no fluxo real: se a colônia já respondeu isto com confiança,
     # recupera da memória (cached) — não repete o esforço.
     if await _answer_from_memory(task):
@@ -88,6 +93,69 @@ async def _run_task(task: Task) -> None:
     await hive.solve(task)
     _learn_answer(task)          # guarda respostas confiáveis (aprende)
     _complete_formation(task.id)
+
+
+def _finish(task: Task, answer: str, provenance: dict, trace: dict) -> None:
+    """Fecha uma tarefa curta (ação/capacidade) com resultado + proveniência."""
+    task.result = {"answer": answer, "confidence": provenance.get("confidence", 0.9),
+                   "sources": [], "provenance": provenance, "trace": trace}
+    task.touch(TaskStatus.DONE)
+    MEMORY.save_task(task)
+
+
+async def _route_intent(task: Task) -> bool:
+    """Roteia por intenção (8.1). True se tratou aqui (ação/capacidade)."""
+    from backend.core import BotEvent, Phase
+    from backend.cognitive.intent_router import get_intent_router
+    intent = get_intent_router().classify(task.goal)
+    if intent.intent not in ("action_device", "capability_query"):
+        return False   # computation/question seguem o pipeline normal
+
+    async def _emit(msg: str, data: dict | None = None) -> None:
+        ev = BotEvent(task_id=task.id, bot="rainha", phase=Phase.PLAN,
+                      message=msg, data=data or {})
+        MEMORY.add_event(ev)
+        if BUS is not None:
+            await BUS.publish(task.id, ev.to_dict())
+
+    if intent.intent == "capability_query":
+        from backend.api.routes.organism import capabilities
+        caps = await capabilities()
+        from backend.action.runtime import runtime_info
+        offline = "; ".join(c["name"] for c in caps["offline"])
+        answer = ("Posso, agora (modo " + runtime_info()["mode"] + "): " + offline +
+                  ". Ações no dispositivo exigem conceder o escopo em Ajustes.")
+        await _emit("Colônia listou as próprias capacidades reais")
+        _finish(task, answer,
+                {"source": "capability", "intent": "capability_query",
+                 "confidence": 1.0, "capabilities": caps, "runtime": runtime_info()},
+                {"bots": [{"bot": "rainha", "ok": True,
+                           "did": ["consultou /organism/capabilities"]}],
+                 "errors": [], "learnings": [], "conclusion": answer})
+        if BUS is not None:
+            await BUS.close(task.id)
+        return True
+
+    # action_device → interpreta e gera o plano (Observar→Aprovar→Executar).
+    from backend.action.action_flow import get_action_flow
+    plan = get_action_flow().plan(task.goal)
+    await _emit("Colônia reconheceu um COMANDO DE AÇÃO e montou o plano",
+                {"intent": plan.get("intent")})
+    prov = {"source": "action", "intent": "action_device",
+            "action": plan.get("intent"), "confidence": 0.9,
+            "needs_permission": plan.get("needs_permission", False),
+            "needs_approval": plan.get("needs_approval", False),
+            "plan_id": plan.get("plan_id"),
+            "grant_scope": plan.get("grant_scope"),
+            "grant_path": plan.get("grant_path")}
+    _finish(task, plan["answer"], prov,
+            {"bots": [{"bot": "rainha", "ok": True,
+                       "did": ["interpretou o comando", "gerou o plano"]}],
+             "errors": [], "learnings": [], "steps": plan.get("steps", []),
+             "conclusion": plan["answer"]})
+    if BUS is not None:
+        await BUS.close(task.id)
+    return True
 
 
 def _complete_formation(task_id: str) -> None:
@@ -295,6 +363,25 @@ async def cascade_search(req: SearchRequest) -> dict[str, Any]:
         from backend.search.cascade import CascadeSearch
         _CASCADE["cs"] = CascadeSearch(router=ROUTER)
     return await _CASCADE["cs"].search(req.query, req.limit)
+
+
+class ApproveBody(BaseModel):
+    """Corpo do POST /hive/action/approve."""
+
+    plan_id: str
+
+
+@router.post("/action/approve")
+async def approve_action(body: ApproveBody) -> dict[str, Any]:
+    """Executa um plano de ação aprovado (8.1) — via as Operárias do 8.0."""
+    from backend.action.action_flow import get_action_flow
+    return get_action_flow().execute(body.plan_id)
+
+
+@router.post("/action/cancel")
+async def cancel_action(body: ApproveBody) -> dict[str, Any]:
+    from backend.action.action_flow import get_action_flow
+    return get_action_flow().cancel(body.plan_id)
 
 
 @router.get("/formations")

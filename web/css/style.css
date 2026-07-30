@@ -79,6 +79,18 @@
   .fm-card { animation: none !important; }
 }
 
+/* ═══ Plano de ação no chat (8.1 · C) ═══ */
+.act-panel { margin-top: 10px; border-top: 1px dashed var(--border2); padding-top: 10px; }
+.act-need { font-size: 13px; color: var(--honey); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.act-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+.act-panel .btn { min-height: 42px; padding: 9px 16px; font-size: 13px; }
+.act-approve { background: #14301c; border-color: var(--leaf); color: #a9e0bd; }
+.act-grant { background: #2a2112; border-color: var(--amber); color: var(--honey); }
+.act-result { margin-top: 8px; }
+.act-done { display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; border-radius: 8px;
+  background: var(--bg2); border-left: 2px solid var(--leaf); font-size: 13px; color: var(--text); }
+.act-done.err { border-left-color: var(--soldier, #d67a6a); }
+
 /* ═══ Controle de dispositivo + botão de pânico (8.0 · D.2) ═══ */
 #panic-button { position: fixed; right: 18px; bottom: 84px; z-index: 9999;
   display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px;

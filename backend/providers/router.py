@@ -16,6 +16,7 @@ from backend.providers.base import SearchProvider
 from backend.providers.brave import BraveProvider
 from backend.providers.duckduckgo import DuckDuckGoProvider
 from backend.providers.tavily import TavilyProvider
+from backend.providers.wikipedia import WikipediaProvider
 
 logger = logging.getLogger("ants.router")
 
@@ -26,8 +27,10 @@ class ProviderRouter:
     def __init__(
         self, providers: Optional[list[SearchProvider]] = None
     ) -> None:
-        # Ordem de preferência: Tavily > Brave > DuckDuckGo.
+        # Ordem (9.0): Wikipedia primeiro (grátis/autoritativa p/ conhecimento),
+        # depois pagos se houver chave, e DuckDuckGo como rede de segurança.
         self._providers = providers or [
+            WikipediaProvider(),
             TavilyProvider(),
             BraveProvider(),
             DuckDuckGoProvider(),

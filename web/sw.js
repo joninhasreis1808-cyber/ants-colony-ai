@@ -1,5 +1,5 @@
 /* Ant's Service Worker — cache offline (PWA). */
-const CACHE = "ants-v16";
+const CACHE = "ants-v17";
 const ASSETS = [
   "/", "/index.html", "/acesso.html", "/manifest.json",
   "/css/style.css", "/css/design_system.css", "/css/cloud.css",

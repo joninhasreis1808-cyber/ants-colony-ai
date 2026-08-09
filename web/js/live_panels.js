@@ -40,7 +40,11 @@
     const ci = $("connection-indicator"); if (ci) { ci.textContent = "Conectado"; ci.classList.remove("offline"); }
     set("stat-bots", h.bots_active); set("stat-tasks", h.tasks_submitted); set("nav-bot-count", h.bots_active);
     const s = Math.floor(h.uptime_seconds || 0);
-    set("stat-uptime", String((s / 60) | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"));
+    const up = String((s / 60) | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+    set("stat-uptime", up);
+    // Métricas reais do "ciclo de inferência" (9.0 · honestidade): nada fixo.
+    set("cog-tasks", h.tasks_submitted); set("cog-uptime", up);
+    var provs = (h.providers || []); set("cog-providers", provs.length ? provs.join(", ") : "—");
   }
 
   async function fillResources() {

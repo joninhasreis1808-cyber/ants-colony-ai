@@ -177,9 +177,10 @@ def _learn_answer(task: Task) -> None:
     ans = r.get("answer")
     conf = r.get("confidence") or 0
     if ans and src and src != "none" and conf >= 0.5:
+        from backend.search.learner import validity_ttl
         get_answer_cache().put(task.goal, {
             "answer": ans, "confidence": conf, "source": src,
-        })
+        }, ttl=validity_ttl(task.goal))   # volátil 1d · estável 365d (9.0)
 
 
 async def _answer_from_memory(task: Task) -> bool:

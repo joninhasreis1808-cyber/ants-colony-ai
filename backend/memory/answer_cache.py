@@ -29,14 +29,18 @@ class AnswerCache:
         item = self._d.get(self._key(goal))
         if not item:
             return None
-        if time.time() - item["ts"] > self._ttl:
+        ttl = item.get("ttl", self._ttl)
+        if time.time() - item["ts"] > ttl:
             self._d.pop(self._key(goal), None)   # expirou → esquece
             return None
         return item["val"]
 
-    def put(self, goal: str, value: dict[str, Any]) -> None:
+    def put(self, goal: str, value: dict[str, Any],
+            ttl: Optional[int] = None) -> None:
+        """Guarda com validade opcional por item (volátil vs. estável, 9.0)."""
         if goal and value:
-            self._d[self._key(goal)] = {"val": value, "ts": time.time()}
+            self._d[self._key(goal)] = {"val": value, "ts": time.time(),
+                                        "ttl": ttl if ttl else self._ttl}
 
     def clear(self) -> None:
         self._d.clear()

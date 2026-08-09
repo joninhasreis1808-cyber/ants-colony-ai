@@ -33,6 +33,8 @@ class AnswerCache:
         if time.time() - item["ts"] > ttl:
             self._d.pop(self._key(goal), None)   # expirou → esquece
             return None
+        # Consolidação por frequência (9.1 · D.1): o usado com frequência sobe.
+        item["hits"] = item.get("hits", 0) + 1
         return item["val"]
 
     def put(self, goal: str, value: dict[str, Any],
@@ -40,7 +42,17 @@ class AnswerCache:
         """Guarda com validade opcional por item (volátil vs. estável, 9.0)."""
         if goal and value:
             self._d[self._key(goal)] = {"val": value, "ts": time.time(),
-                                        "ttl": ttl if ttl else self._ttl}
+                                        "ttl": ttl if ttl else self._ttl,
+                                        "hits": 0}
+
+    def frequency(self, goal: str) -> int:
+        """Quantas vezes esta resposta foi reusada (importância, 9.1)."""
+        return self._d.get(self._key(goal), {}).get("hits", 0)
+
+    def most_frequent(self, top: int = 5) -> list[tuple[str, int]]:
+        """Perguntas mais reusadas — as que a colônia mais 'sabe' de cor."""
+        items = [(k, v.get("hits", 0)) for k, v in self._d.items()]
+        return sorted(items, key=lambda x: x[1], reverse=True)[:top]
 
     def clear(self) -> None:
         self._d.clear()

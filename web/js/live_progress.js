@@ -70,6 +70,15 @@
   function trace(r) {
     var t = r.trace; if (!t) return "";
     var parts = ['<div class="lp-trace">'];
+    // Cadeia de raciocínio (9.1 · E): passos revelados quando existem.
+    var chain = (r.provenance || {}).chain;
+    if (chain && chain.steps && chain.steps.length) {
+      parts.push('<div class="lp-th">Como cheguei nisso (raciocínio)</div>');
+      chain.steps.forEach(function (s) {
+        parts.push('<div class="lp-brow"><svg class="ico sm"><use href="#i-compass"/></svg>' +
+          '<span>' + esc(s) + '</span></div>');
+      });
+    }
     parts.push('<div class="lp-th">Trajeto da missão — o que cada bot fez</div>');
     (t.bots || []).forEach(function (b) {
       var did = (b.did || []).slice(-3).map(esc).join(" · ") || "atuou";
@@ -95,9 +104,26 @@
       parts.push('<div class="lp-th">Conclusão enviada ao chat</div>' +
         '<div class="lp-concl">' + esc(t.conclusion) + '</div>');
     }
+    // "Aprender isto" (9.1 · D.2): consolida respostas boas da web/raciocínio.
+    var src = (r.provenance || {}).source;
+    if ((src === "web_search" || src === "reasoning") && t.conclusion) {
+      parts.push('<button class="lp-learn" data-a="' + esc(t.conclusion) + '">' +
+        '<svg class="ico sm"><use href="#i-book"/></svg> Aprender isto</button>');
+    }
     parts.push("</div>");
     return parts.join("");
   }
+
+  // "Aprender isto": consolida a resposta como memória (responde na hora depois)
+  document.addEventListener("click", function (e) {
+    var lb = e.target.closest && e.target.closest(".lp-learn");
+    if (!lb || !window.AntAPI) return;
+    var q = window.__antLastQuestion || "";
+    window.AntAPI.post("/hive/learn", { question: q, answer: lb.dataset.a })
+      .then(function () {
+        lb.outerHTML = '<span class="lp-learned"><svg class="ico sm"><use href="#i-check"/></svg> Aprendido</span>';
+      }).catch(function () {});
+  });
 
   // clique no resumo: mostra/esconde o trajeto detalhado da missão
   document.addEventListener("click", function (e) {

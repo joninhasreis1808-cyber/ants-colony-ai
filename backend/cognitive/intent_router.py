@@ -63,7 +63,13 @@ class IntentRouter:
     """Classifica a mensagem antes do Q&A."""
 
     def classify(self, message: str) -> Intent:
-        low = _norm(message)
+        # Normaliza formas de pergunta (9.1): "me explique X"/"defina X" viram
+        # "o que e X" — variações caem na mesma intenção.
+        try:
+            from backend.nlp.synonyms import canonical_question
+            low = canonical_question(message)
+        except Exception:  # noqa: BLE001
+            low = _norm(message)
         if not low:
             return Intent("question", reason="vazio")
         # 1) pergunta sobre capacidade/permissão

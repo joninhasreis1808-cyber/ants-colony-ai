@@ -103,13 +103,48 @@ def _finish(task: Task, answer: str, provenance: dict, trace: dict) -> None:
     MEMORY.save_task(task)
 
 
+async def _answer_from_knowledge(task: Task, emit) -> bool:
+    """Base de conhecimento estruturada (9.1): fato/regra → resposta fluente."""
+    from backend.cognitive.chain_of_thought import ChainOfThought
+    from backend.cognitive.response_composer import get_composer
+    from backend.knowledge.facts_base import get_facts_base
+    fb = get_facts_base()
+    fact = fb.lookup(task.goal)
+    rule = None if fact else fb.apply_rules(task.goal)
+    if not fact and not rule:
+        return False
+    composer = get_composer()
+    if fact:
+        rels = fact.get("relations") or {}
+        extra = "; ".join(f"{k}: {v}" for k, v in rels.items())
+        answer = composer.definition(fact["entity"], fact["definition"],
+                                     extra, source="knowledge_base")
+        evidence = [fact["definition"]] + [f"{k}: {v}" for k, v in
+                                           (fact.get("attributes") or {}).items()]
+        source = "knowledge_base"
+    else:
+        answer = composer.compose("definition",
+                                  {"term": "", "definition": rule,
+                                   "source": "knowledge_base"})
+        evidence, source = [rule], "knowledge_base"
+    chain = ChainOfThought().build(task.goal, evidence,
+                                   fact["definition"] if fact else rule, source)
+    await emit("Colônia respondeu da base de conhecimento própria",
+               {"source": source})
+    _finish(task, answer,
+            {"source": source, "intent": "question", "confidence": 0.9,
+             "chain": chain.to_dict()},
+            {"bots": [{"bot": "rainha", "ok": True,
+                       "did": ["consultou a base de conhecimento estruturada"]}],
+             "errors": [], "learnings": [], "conclusion": answer})
+    return True
+
+
 async def _route_intent(task: Task) -> bool:
     """Roteia por intenção (8.1). True se tratou aqui (ação/capacidade)."""
     from backend.core import BotEvent, Phase
     from backend.cognitive.intent_router import get_intent_router
     intent = get_intent_router().classify(task.goal)
-    if intent.intent not in ("action_device", "capability_query"):
-        return False   # computation/question seguem o pipeline normal
 
     async def _emit(msg: str, data: dict | None = None) -> None:
         ev = BotEvent(task_id=task.id, bot="rainha", phase=Phase.PLAN,
@@ -117,6 +152,15 @@ async def _route_intent(task: Task) -> bool:
         MEMORY.add_event(ev)
         if BUS is not None:
             await BUS.publish(task.id, ev.to_dict())
+
+    # Pergunta: consulta a base de conhecimento estruturada ANTES da web (9.1).
+    # Resposta instantânea e fluente para o básico; senão, segue o pipeline.
+    if intent.intent == "question" and await _answer_from_knowledge(task, _emit):
+        if BUS is not None:
+            await BUS.close(task.id)
+        return True
+    if intent.intent not in ("action_device", "capability_query"):
+        return False   # computation/question seguem o pipeline normal
 
     if intent.intent == "capability_query":
         from backend.api.routes.organism import capabilities
@@ -383,6 +427,25 @@ async def approve_action(body: ApproveBody) -> dict[str, Any]:
 async def cancel_action(body: ApproveBody) -> dict[str, Any]:
     from backend.action.action_flow import get_action_flow
     return get_action_flow().cancel(body.plan_id)
+
+
+class LearnBody(BaseModel):
+    """Corpo do POST /hive/learn — 'Aprender isto' (9.1 · D.2)."""
+
+    question: str
+    answer: str
+
+
+@router.post("/learn")
+async def learn_this(body: LearnBody) -> dict[str, Any]:
+    """Consolida uma resposta boa como memória local (responde na hora depois)."""
+    if not body.question.strip() or not body.answer.strip():
+        raise HTTPException(400, "pergunta e resposta são obrigatórias")
+    from backend.search.learner import learn
+    ttl = learn(body.question, {"answer": body.answer, "confidence": 0.9,
+                                "source": "memory"})
+    return {"learned": True, "ttl_days": round(ttl / 86400),
+            "message": "Aprendido — vou responder na hora da próxima vez."}
 
 
 @router.get("/formations")

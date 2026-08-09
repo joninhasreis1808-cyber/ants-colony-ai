@@ -70,6 +70,12 @@
 .lp-brow.bad svg { color: var(--soldier, #d67a6a); }
 .lp-concl { background: var(--surface2, var(--bg2)); border-left: 2px solid var(--leaf);
   border-radius: 0 8px 8px 0; padding: 8px 12px; font-size: 13px; color: var(--text); }
+.lp-learn { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; margin-top: 10px;
+  font-family: var(--mono); font-size: 12px; color: var(--honey); background: var(--bg2);
+  border: 1px solid var(--border2); border-radius: 16px; padding: 8px 14px; min-height: 40px; }
+.lp-learn:hover { border-color: var(--amber); }
+.lp-learned { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  font-family: var(--mono); font-size: 12px; color: var(--leaf); }
 
 @media (prefers-reduced-motion: reduce) {
   .tab.active, .tab.is-active { animation: none !important; }

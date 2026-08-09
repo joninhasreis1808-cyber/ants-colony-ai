@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "agua": {
+      "aliases": ["água", "h2o"],
+      "definition": "A água é uma substância formada por hidrogênio e oxigênio (H2O), essencial para a vida.",
+      "attributes": {"formula": "H2O", "estados": "sólido, líquido e gasoso"},
+      "relations": {"essencial para": "a vida"}
+    },
+    "sol": {
+      "aliases": ["o sol"],
+      "definition": "O Sol é a estrela central do Sistema Solar; sua energia sustenta a vida na Terra.",
+      "attributes": {"tipo": "estrela", "composicao": "hidrogênio e hélio"},
+      "relations": {"fonte de": "luz e calor"}
+    },
+    "internet": {
+      "aliases": ["a internet", "rede mundial"],
+      "definition": "A internet é a rede global que conecta computadores e permite trocar informação por protocolos comuns.",
+      "attributes": {"protocolo": "TCP/IP"},
+      "relations": {"permite": "comunicação e acesso a informação"}
+    },
+    "fotossintese": {
+      "aliases": ["fotossíntese"],
+      "definition": "Fotossíntese é o processo pelo qual plantas convertem luz, água e CO2 em energia (glicose) e oxigênio.",
+      "attributes": {"produz": "glicose e oxigênio", "precisa de": "luz, água, CO2"},
+      "relations": {"causa": "produção de oxigênio"}
+    },
+    "gravidade": {
+      "aliases": ["a gravidade", "força da gravidade"],
+      "definition": "Gravidade é a força de atração entre corpos com massa; na Terra, puxa tudo para o centro do planeta.",
+      "attributes": {"efeito": "atração entre massas"},
+      "relations": {"causa": "queda dos objetos"}
+    },
+    "algoritmo": {
+      "aliases": ["um algoritmo"],
+      "definition": "Um algoritmo é uma sequência finita e ordenada de passos para resolver um problema.",
+      "attributes": {"propriedades": "finito, definido, eficaz"},
+      "relations": {"usado em": "computação e matemática"}
+    },
+    "inteligencia artificial": {
+      "aliases": ["ia", "inteligência artificial"],
+      "definition": "Inteligência artificial é a área que faz máquinas executarem tarefas que exigiriam inteligência humana.",
+      "attributes": {"exemplos": "busca, raciocínio, percepção"},
+      "relations": {"inclui": "aprendizado e raciocínio"}
+    },
+    "colonia de formigas": {
+      "aliases": ["colônia de formigas", "formigueiro"],
+      "definition": "Uma colônia de formigas é um superorganismo descentralizado onde castas cooperam por sinais químicos.",
+      "attributes": {"coordenacao": "feromônios e estigmergia"},
+      "relations": {"exemplo de": "inteligência coletiva"}
+    }
+  },
+  "rules": [
+    {"if": ["chuva", "molhado"], "then": "Se chove, o chão fica molhado (relação de causa e efeito simples)."},
+    {"if": ["sem energia", "desliga"], "then": "Sem energia elétrica, aparelhos eletrônicos desligam."},
+    {"if": ["planta", "sem agua"], "then": "Uma planta sem água tende a murchar, pois depende dela para a fotossíntese."}
+  ]
+}

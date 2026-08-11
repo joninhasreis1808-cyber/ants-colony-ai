@@ -196,10 +196,26 @@ class Hivemind(MemoryMixin, SwarmMixin):
             if cognition:
                 answer = cognition["answer"]
                 confidence = cognition["confidence"]
+        sources_list = self.memory.get_context(task_id, "sources") or []
+        # Clareza da busca (9.2 · Bloco D): a resposta da web passa pelo
+        # compositor — síntese limpa + selo de proveniência + fontes — em vez
+        # do despejo cru do decisor (a "confusão" que o dono relatou). Só
+        # quando a resposta veio da web (há fontes e não foi cálculo/plano).
+        if sources_list and not computation and not plan and answer \
+                and _GENERIC not in answer:
+            from backend.cognitive.response_composer import get_composer
+            domains = []
+            for s in sources_list:
+                url = (s or {}).get("url", "") if isinstance(s, dict) else ""
+                if "://" in url:
+                    dom = url.split("://", 1)[1].split("/", 1)[0]
+                    if dom not in domains:
+                        domains.append(dom)
+            answer = get_composer().web(answer, len(sources_list), domains)
         result: dict[str, Any] = {
             "answer": answer,
             "confidence": confidence,
-            "sources": self.memory.get_context(task_id, "sources") or [],
+            "sources": sources_list,
             "learning": lesson,
         }
         recruitment = self.memory.get_context(task_id, "recruitment")

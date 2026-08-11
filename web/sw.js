@@ -1,5 +1,5 @@
 /* Ant's Service Worker — cache offline (PWA). */
-const CACHE = "ants-v18";
+const CACHE = "ants-v19";
 const ASSETS = [
   "/", "/index.html", "/acesso.html", "/manifest.json",
   "/css/style.css", "/css/design_system.css", "/css/cloud.css",
@@ -7,7 +7,7 @@ const ASSETS = [
   "/js/notifications.js", "/js/device_permissions.js", "/js/context_engine.js", "/js/live_dashboard.js", "/js/cognitive_center.js", "/js/resource_center.js", "/js/timeline.js",
   "/js/awaken.js", "/js/health_footer.js", "/js/onboarding.js",
   "/js/heatmap.js", "/js/replay.js", "/js/lab_mode.js", "/js/live_panels.js", "/js/api_bridge.js",
-  "/js/timeline_hub.js", "/js/live_progress.js", "/js/formations_panel.js", "/js/sse.js", "/js/device_panel.js", "/js/action_ui.js",
+  "/js/timeline_hub.js", "/js/live_progress.js", "/js/formations_panel.js", "/js/device_panel.js", "/js/action_ui.js",
 ];
 
 self.addEventListener("install", (e) => {
@@ -25,13 +25,29 @@ self.addEventListener("activate", (e) => {
 });
 
 self.addEventListener("fetch", (e) => {
+  if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
   // API: network-first (dados frescos), com fallback ao cache.
-  if (["/hive", "/memory", "/factory", "/perceive", "/action", "/bio", "/mind", "/colony", "/health"]
+  if (["/hive", "/memory", "/factory", "/perceive", "/action", "/bio", "/mind",
+       "/colony", "/organism", "/device", "/events", "/health"]
       .some((p) => url.pathname.startsWith(p))) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
-  // Assets: cache-first.
-  e.respondWith(caches.match(e.request).then((r) => r || fetch(e.request)));
+  // Assets (JS/CSS/HTML): STALE-WHILE-REVALIDATE (9.2) — serve o cache na hora
+  // E busca a versão nova em segundo plano, atualizando para o próximo load.
+  // Assim um merge NUNCA mais serve código velho (fim da regressão de animação).
+  e.respondWith(
+    caches.open(CACHE).then((cache) =>
+      cache.match(e.request).then((cached) => {
+        const fresh = fetch(e.request).then((res) => {
+          if (res && res.status === 200 && url.origin === self.location.origin) {
+            cache.put(e.request, res.clone());
+          }
+          return res;
+        }).catch(() => cached);
+        return cached || fresh;
+      })
+    )
+  );
 });

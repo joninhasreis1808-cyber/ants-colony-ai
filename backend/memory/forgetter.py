@@ -85,9 +85,11 @@ class AdaptiveForgetter:
             "total": len(mems), "strong": strong,
             "medium": len(mems) - strong - weak, "weak": weak,
         }
+        avg = round(sum(m.strength for m in mems) / len(mems), 3) if mems else 0.0
         report.extra = {
             "overload_risk": len(mems) > _OVERLOAD * 0.8,
             "capacity_used": round(len(mems) / _OVERLOAD, 4),
+            "avg_strength": avg,
         }
         return report
 

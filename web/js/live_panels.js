@@ -22,9 +22,8 @@
     const app = $("app"); if (app) app.setAttribute("data-colony-state", "dormant");
     if ($("state-ind")) $("state-ind").textContent = "Adormecida";
     const ci = $("connection-indicator"); if (ci) { ci.textContent = "Adormecida"; ci.classList.add("offline"); }
-    ["stat-bots", "stat-tasks", "stat-uptime", "nav-bot-count", "env-reqs", "env-nodes",
-     "memory-strength", "env-files", "env-procs", "env-domains", "env-verified",
-     "env-relations", "env-confidence", "env-mem-short", "env-mem-consolidated"].forEach((id) => set(id, "—"));
+    ["stat-bots", "stat-tasks", "stat-uptime", "nav-bot-count", "env-reqs",
+     "memory-strength", "env-mem-total", "env-mem-consolidated"].forEach((id) => set(id, "—"));
     ["missions-list", "queen-decisions", "resource-center", "network-center", "cognition-hypotheses"].forEach((id) => { if ($(id)) $(id).innerHTML = dorm; });
     if ($("console-log")) $("console-log").innerHTML = '<div class="ln warn"><span class="lc">OFFLINE</span><span class="lm">colônia adormecida — sem backend</span></div>';
     if (window.AntTimeline) AntTimeline.mount("decision-timeline", null);
@@ -63,7 +62,16 @@
       if (nc) nc.innerHTML = Object.entries(su.by_type || {}).map(([k, n]) => bar(k, Math.min(100, n * 4))).join("") || dorm;
     } catch (e) { if (nc) nc.innerHTML = dorm; }
     try { const st = await A().get("/colony/state"); setState(st.state); } catch (e) {}
-    try { const m = await A().get("/memory/health"); set("env-mem-short", m.short_term ?? m.count ?? "—"); set("memory-strength", m.avg_strength ?? "—"); } catch (e) {}
+    // Memória com DADOS REAIS (9.2 · Bloco E): /memory/health devolve
+    // counts.{total,strong} e extra.avg_strength — antes lia chaves inexistentes
+    // (short_term/avg_strength na raiz) e ficava sempre "—".
+    try {
+      const m = await A().get("/memory/health");
+      const c = m.counts || {}, ex = m.extra || {};
+      set("env-mem-total", c.total ?? "—");
+      set("env-mem-consolidated", c.strong ?? "—");
+      set("memory-strength", ex.avg_strength ?? "—");
+    } catch (e) {}
   }
 
   const STATE_PT = {

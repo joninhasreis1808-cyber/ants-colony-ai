@@ -48,7 +48,7 @@
   <aside id="sidebar">
     <div class="side-brand">
       <span class="mark"><svg class="ico lg"><use href="#i-ant"/></svg></span>
-      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v9.1</div></div>
+      <div><div class="wm">ANT'S</div><div class="ver">superorganismo · v9.2</div></div>
     </div>
     <button class="nav-item active" data-tab="colony"><svg class="ico"><use href="#i-colony"/></svg><span>Colônia</span><span class="badge" id="nav-bot-count"></span></button>
     <button class="nav-item" data-tab="cognitive"><svg class="ico"><use href="#i-brain"/></svg><span>Cognição</span></button>
@@ -58,7 +58,7 @@
     <button class="nav-item" data-tab="factory"><svg class="ico"><use href="#i-factory"/></svg><span>Factory</span></button>
     <button class="nav-item" data-tab="settings"><svg class="ico"><use href="#i-settings"/></svg><span>Ajustes</span></button>
     <div class="side-foot">
-      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">513</span> testes </span>
+      <span class="chip"><svg class="ico sm" style="color:var(--leaf)"><use href="#i-zap"/></svg><span id="test-count">520</span> testes </span>
     </div>
   </aside>
 
@@ -254,24 +254,12 @@
           <div class="page-head"><h2><span class="ph-ico"><svg class="ico"><use href="#i-globe"/></svg></span> Mapa do Ambiente</h2>
             <p>O corpo estendido da colônia: o dispositivo, a internet e o conhecimento que ela cultivou.</p></div>
           <div class="env-grid">
-            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-cpu"/></svg><h4>Dispositivo</h4><span class="tag">acesso concedido</span></div>
-              <div class="env-item"><span>Sistema de arquivos</span><span class="ev" id="env-files">—</span></div>
-              <div class="env-item"><span>Processos observados</span><span class="ev" id="env-procs">—</span></div>
-              <div class="env-item"><span>Sensores</span><span class="ev">bateria · rede · relógio</span></div>
-            </div>
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-globe"/></svg><h4>Internet</h4><span class="tag">acesso concedido</span></div>
               <div class="env-item"><span>Requisições nesta sessão</span><span class="ev" id="env-reqs">—</span></div>
-              <div class="env-item"><span>Domínios visitados</span><span class="ev" id="env-domains">—</span></div>
-              <div class="env-item"><span>Fontes verificadas</span><span class="ev" id="env-verified">—</span></div>
-            </div>
-            <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-book"/></svg><h4>Conhecimento</h4><span class="tag">cultivado</span></div>
-              <div class="env-item"><span>Nós no grafo</span><span class="ev" id="env-nodes">—</span></div>
-              <div class="env-item"><span>Relações</span><span class="ev" id="env-relations">—</span></div>
-              <div class="env-item"><span>Confiança média</span><span class="ev" id="env-confidence">—</span></div>
             </div>
             <div class="env-node"><div class="en-h"><svg class="ico"><use href="#i-brain"/></svg><h4>Memória</h4><span class="tag">viva</span></div>
-              <div class="env-item"><span>Memórias (curto prazo)</span><span class="ev" id="env-mem-short">—</span></div>
-              <div class="env-item"><span>Consolidadas (sono)</span><span class="ev" id="env-mem-consolidated">—</span></div>
+              <div class="env-item"><span>Memórias (total)</span><span class="ev" id="env-mem-total">—</span></div>
+              <div class="env-item"><span>Consolidadas (fortes)</span><span class="ev" id="env-mem-consolidated">—</span></div>
               <div class="env-item"><span>Força média</span><span class="ev" id="memory-strength">—</span></div>
             </div>
           </div>
@@ -296,7 +284,7 @@
             <div class="stat"><div class="sv" id="stat-bots">—</div><div class="sl">Bots vivos</div></div>
             <div class="stat"><div class="sv" id="stat-tasks">—</div><div class="sl">Tarefas ativas</div></div>
             <div class="stat"><div class="sv" id="stat-uptime">—</div><div class="sl">Tempo ativo</div></div>
-            <div class="stat"><div class="sv" id="stat-tests">513</div><div class="sl">Testes </div></div>
+            <div class="stat"><div class="sv" id="stat-tests">520</div><div class="sl">Testes </div></div>
           </div>
           <div class="grid g2">
             <div class="card" style="padding:18px"><div class="sub-h" style="margin-top:0">Sistema</div><div id="resource-center"></div></div>
@@ -379,7 +367,7 @@
           <div id="device-audit" class="console" style="max-height:180px"></div>
 
           <div class="sub-h">Sistema</div>
-          <div class="chips"><span class="chip">versão 9.1.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">513 testes </span></div>
+          <div class="chips"><span class="chip">versão 9.2.0</span><span class="chip">6 castas</span><span class="chip">9 camadas cognitivas</span><span class="chip">520 testes </span></div>
           <div id="health-info" class="chips" style="margin-top:12px"></div><p class="mono" style="margin-top:18px;color:var(--dim);font-size:12px">Ant's Superorganismo — colônia de castas com mente colmeia.</p>
         </div>
       </section>
@@ -448,7 +436,6 @@
 <script src="/js/controls.js"></script>
 <script src="/js/ui_kernel.js"></script>
 <script src="/js/timeline_hub.js"></script>
-<script src="/js/sse.js"></script>
 <script src="/js/live_progress.js"></script>
 <script src="/js/formations_panel.js"></script>
 <script src="/js/device_panel.js"></script>

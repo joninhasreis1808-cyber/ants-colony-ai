@@ -52,36 +52,50 @@
     try { const b = JSON.parse((init && init.body) || "{}"); if (b.goal) window.__antLastQuestion = b.goal; } catch (e) {}
   }
 
+  // Progresso dirigido por EVENTOS REAIS (9.2 · Bloco C): a fase do último
+  // evento do backend (plan→do→check→act) mapeia para a etapa do fluxo. Nada
+  // de contador por tempo — o % reflete o andamento verdadeiro.
+  const ORDER = ["plan", "do", "check", "act"];
+  const FLOOR = { plan: 2, do: 4, check: 6, act: 7 };
+  function stepFromEvents(evs, lastStep) {
+    if (!evs || !evs.length) return 1;                 // Rainha recebeu
+    const last = evs[evs.length - 1];
+    const base = FLOOR[last.phase];
+    if (base == null) return lastStep;
+    const idx = ORDER.indexOf(last.phase);
+    const nextFloor = idx < ORDER.length - 1 ? FLOOR[ORDER[idx + 1]] : 8;
+    const same = evs.filter((e) => e.phase === last.phase).length;
+    return Math.min(base + Math.max(0, same - 1), nextFloor - 1);
+  }
+
   function startFlow(taskId, echo) {
     const flow = document.getElementById("research-flow");
     if (!flow) return;
     flow.classList.add("show");
     const steps = [].slice.call(flow.querySelectorAll(".flow-step"));
     const arms = [].slice.call(flow.querySelectorAll(".flow-arm"));
+    const last = steps.length - 1;
     const pct = document.getElementById("flow-pct"), narr = document.getElementById("flow-narr");
+    const esc = (s) => String(s == null ? "" : s).replace(/[&<>]/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     // Eco imediato (<300ms): mostra o que a colônia recrutou antes do pipeline.
-    if (narr && echo) narr.innerHTML = "<b>" + String(echo).replace(/[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])) + "</b>";
-    let i = 0;
+    if (narr && echo) narr.innerHTML = "<b>" + esc(echo) + "</b>";
+    let i = 0;                                          // reset limpo por missão
     const paint = () => {
       steps.forEach((s, k) => { s.classList.toggle("on", k === i); s.classList.toggle("done", k < i); });
       arms.forEach((a, k) => a.classList.toggle("lit", k < i));
-      if (pct) pct.textContent = Math.round(i / (steps.length - 1) * 100) + "%";
+      if (pct) pct.textContent = Math.round(i / last * 100) + "%";
     };
     paint();
-    const esc = (s) => String(s == null ? "" : s).replace(/[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-    const poll = setInterval(async () => {
+    const tick = async () => {
       let st = null;
       try { st = await AntAPI.get("/hive/status/" + taskId); } catch (e) {}
       const done = st && ["done", "completed", "failed"].includes(st.status);
-      // Narração a partir dos EVENTOS REAIS emitidos pelo backend
-      // (recrutamento "quem chamou quem", desvio p/ o cérebro próprio, etc.).
+      // Narração a partir dos EVENTOS REAIS emitidos pelo backend.
       if (st && narr) {
         const r = st.result || {};
         if (done) {
-          // Explicabilidade (§4.7): toda conclusão traz o MOTIVO real —
-          // confiança, nº de fontes externas e fatos do próprio cérebro.
+          // Explicabilidade (§4.7): toda conclusão traz o MOTIVO real.
           var motivo = [];
           if (r.confidence != null) motivo.push("confiança " + r.confidence);
           var nsrc = (r.sources || []).length;
@@ -92,22 +106,27 @@
             "</b>" + (motivo.length ? ' <span style="color:var(--dim)">· ' + esc(motivo.join(" · ")) + "</span>" : "");
         } else {
           const evs = st.events || [];
-          const last = evs.length ? evs[evs.length - 1] : null;
-          narr.innerHTML = last
-            ? "<b>" + esc(last.bot) + "</b> · " + esc(last.message)
+          const ev = evs.length ? evs[evs.length - 1] : null;
+          narr.innerHTML = ev
+            ? "<b>" + esc(ev.bot) + "</b> · " + esc(ev.message)
             : "a colônia trabalha…";
         }
       }
-      // Fonte ÚNICA de eventos (6.3): cada tick alimenta todas as seções
-      // (fluxo, registro, console) sem que elas façam polling próprio.
-      const pctNow = Math.round(i / (steps.length - 1) * 100);
-      document.dispatchEvent(new CustomEvent("ants:task-tick", {
-        detail: { taskId: taskId, pct: done ? 100 : pctNow, done: !!done, status: st || {} },
-      }));
-      if (done) { i = steps.length - 1; paint(); if (pct) pct.textContent = "100%"; clearInterval(poll); document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st || {} })); return; }
-      if (i < steps.length - 2) i++;
+      // % derivado dos eventos reais, sempre monotônico (nunca recua).
+      const target = done ? last : stepFromEvents(st && st.events, i);
+      if (target > i) i = target;
       paint();
-    }, 600);
+      // Fonte ÚNICA de eventos (6.3): cada tick alimenta todas as seções.
+      document.dispatchEvent(new CustomEvent("ants:task-tick", {
+        detail: { taskId: taskId, pct: Math.round(i / last * 100), done: !!done, status: st || {} },
+      }));
+      if (done) {
+        clearInterval(poll);
+        document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st || {} }));
+      }
+    };
+    tick();                                             // 1º pulso imediato
+    const poll = setInterval(tick, 600);
     setTimeout(() => clearInterval(poll), 30000);
   }
 })();

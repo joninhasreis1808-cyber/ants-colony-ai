@@ -26,6 +26,7 @@ from backend.api.routes import perception as perception_routes
 from backend.api.routes import permissions as permission_routes
 from backend.api.routes import device as device_routes
 from backend.api.routes import nervous as nervous_routes
+from backend.api.security import auth_posture
 from backend.events.audit import EventAuditor
 from backend.events.middleware import EventBusMiddleware
 
@@ -115,6 +116,9 @@ async def health() -> dict[str, Any]:
         "tasks_submitted": hive_stats["tasks_submitted"],
         "providers": hive_stats["providers"],
         "uptime_seconds": round(time.time() - _STARTED, 1),
+        # Postura de autenticação (9.3 · C-2): confere o modo sem revelar o token.
+        # No Render: "mode" tem que ser "token" e "publico" true.
+        "auth": auth_posture(),
     }
 
 

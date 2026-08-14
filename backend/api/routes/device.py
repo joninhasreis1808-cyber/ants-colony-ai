@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from backend.action.action_gate import get_action_gate
+from backend.api.security import require_owner
 from backend.action.runtime import runtime_info
 from backend.monitoring.device_audit import get_device_audit
 from backend.permissions.device_scopes import SCOPES, get_device_scopes
@@ -53,7 +54,7 @@ async def scopes() -> dict[str, Any]:
     return {"scopes": get_device_scopes().granted(), "all": list(SCOPES)}
 
 
-@router.post("/scopes/grant")
+@router.post("/scopes/grant", dependencies=[Depends(require_owner)])
 async def grant_scope(body: ScopeBody) -> dict[str, Any]:
     """Concede um escopo (opcionalmente por tempo limitado)."""
     try:
@@ -63,13 +64,13 @@ async def grant_scope(body: ScopeBody) -> dict[str, Any]:
     return {"scopes": get_device_scopes().granted()}
 
 
-@router.post("/scopes/revoke")
+@router.post("/scopes/revoke", dependencies=[Depends(require_owner)])
 async def revoke_scope(body: ScopeBody) -> dict[str, Any]:
     get_device_scopes().revoke(body.scope)
     return {"scopes": get_device_scopes().granted()}
 
 
-@router.post("/scopes/revoke_all")
+@router.post("/scopes/revoke_all", dependencies=[Depends(require_owner)])
 async def revoke_all() -> dict[str, Any]:
     """Revoga tudo (o 'revogar tudo' do painel)."""
     get_device_scopes().revoke_all()
@@ -81,7 +82,7 @@ async def paths() -> dict[str, Any]:
     return {"allowed": get_path_guard().allowed_dirs()}
 
 
-@router.post("/paths/allow")
+@router.post("/paths/allow", dependencies=[Depends(require_owner)])
 async def allow_path(body: PathBody) -> dict[str, Any]:
     """Autoriza uma pasta — recusa se for caminho crítico (blacklist)."""
     ok = get_path_guard().allow(body.path)
@@ -89,7 +90,7 @@ async def allow_path(body: PathBody) -> dict[str, Any]:
             "dirs": get_path_guard().allowed_dirs()}
 
 
-@router.post("/paths/disallow")
+@router.post("/paths/disallow", dependencies=[Depends(require_owner)])
 async def disallow_path(body: PathBody) -> dict[str, Any]:
     get_path_guard().disallow(body.path)
     return {"dirs": get_path_guard().allowed_dirs()}
@@ -100,13 +101,13 @@ async def panic_status() -> dict[str, Any]:
     return get_panic().status()
 
 
-@router.post("/panic")
+@router.post("/panic", dependencies=[Depends(require_owner)])
 async def panic_engage(body: PanicBody) -> dict[str, Any]:
     """Botão de pânico: congela a colônia e revoga escopos."""
     return get_panic().engage(body.reason)
 
 
-@router.post("/panic/reset")
+@router.post("/panic/reset", dependencies=[Depends(require_owner)])
 async def panic_reset() -> dict[str, Any]:
     return get_panic().reset()
 

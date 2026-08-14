@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from backend.api.deps import PERMISSIONS
+from backend.api.security import require_owner
 
 router = APIRouter(prefix="/permissions", tags=["permissions"])
 
@@ -27,14 +28,14 @@ async def list_permissions(user_id: str) -> dict[str, Any]:
     return {"user_id": user_id, "level": PERMISSIONS.get_level(user_id)}
 
 
-@router.post("/grant")
+@router.post("/grant", dependencies=[Depends(require_owner)])
 async def grant(body: GrantIn) -> dict[str, Any]:
-    """Concede um nível de permissão a um usuário."""
+    """Concede um nível de permissão a um usuário (exige o dono em modo público)."""
     PERMISSIONS.grant(body.user_id, body.level)
     return {"user_id": body.user_id, "level": body.level, "status": "granted"}
 
 
-@router.post("/revoke")
+@router.post("/revoke", dependencies=[Depends(require_owner)])
 async def revoke(body: RevokeIn) -> dict[str, Any]:
     """Revoga uma permissão específica de um usuário."""
     PERMISSIONS.revoke(body.user_id, body.permission)

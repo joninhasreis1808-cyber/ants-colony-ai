@@ -20,6 +20,15 @@ class AnswerCache:
     def __init__(self, ttl: int = 1800) -> None:
         self._d: dict[str, dict[str, Any]] = {}
         self._ttl = ttl
+        self._auto_recalls = 0   # missões respondidas da memória (auto, 9.4)
+
+    def mark_auto_recall(self) -> None:
+        """Registra que a colônia respondeu uma missão pela memória (auto)."""
+        self._auto_recalls += 1
+
+    def stats(self) -> dict[str, int]:
+        """Telemetria honesta da automação de memória (para o card do 9.4)."""
+        return {"entries": len(self._d), "auto_recalls": self._auto_recalls}
 
     @staticmethod
     def _key(goal: str) -> str:

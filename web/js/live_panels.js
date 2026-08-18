@@ -67,10 +67,17 @@
     // (short_term/avg_strength na raiz) e ficava sempre "—".
     try {
       const m = await A().get("/memory/health");
-      const c = m.counts || {}, ex = m.extra || {};
+      const c = m.counts || {}, ex = m.extra || {}, au = m.automation || {};
       set("env-mem-total", c.total ?? "—");
       set("env-mem-consolidated", c.strong ?? "—");
       set("memory-strength", ex.avg_strength ?? "—");
+      // Card 'Memória automática' (9.4 · T-B) — dado real; ausente = "—".
+      set("am-total", c.total ?? "—");
+      set("am-strong", c.strong ?? "—");
+      set("am-recalls", au.auto_recalls ?? "—");
+      set("am-sleep", au.last_sleep_ts
+        ? new Date(au.last_sleep_ts * 1000).toLocaleTimeString().slice(0, 5)
+        : "—");
     } catch (e) {}
   }
 

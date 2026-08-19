@@ -9,6 +9,14 @@ percebem o mundo, agem sobre ele, lembram do que aprendem e criam
 aplicativos completos — tudo acessível por uma **interface web (PWA)** que
 funciona no computador e no celular.
 
+> **Trabalhando neste repositório?** Leia primeiro o
+> [`PROTOCOLO_COWORK.md`](PROTOCOLO_COWORK.md) — o contrato de trabalho (6
+> regras: diagnóstico antes de correção, prova executável, testes só sobem,
+> um commit por tarefa, declarar o não-verificado, interface nunca inventa).
+> Contexto técnico: [`RELATORIO_PARA_CLAUDE_CODE.md`](RELATORIO_PARA_CLAUDE_CODE.md)
+> (ordem de serviço) e [`MAPA_BOTOES_PARA_DESIGN.md`](MAPA_BOTOES_PARA_DESIGN.md)
+> (contrato de telas/botões → endpoints).
+
 
 
 ## 🆕 Novo na 6.4 — um só chat vivo

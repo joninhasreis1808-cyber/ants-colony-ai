@@ -38,6 +38,11 @@
   function onHealth(h) {
     const ci = $("connection-indicator"); if (ci) { ci.textContent = "Conectado"; ci.classList.remove("offline"); }
     set("stat-bots", h.bots_active); set("stat-tasks", h.tasks_submitted); set("nav-bot-count", h.bots_active);
+    // Contador de testes REAL (9.4 · T8): vem do /health; 0 → "—" (honesto).
+    var tc = h.tests ? h.tests : "—";
+    ["test-count", "stat-tests", "chip-tests"].forEach(function (id) {
+      var e = $(id); if (e) e.textContent = (id === "chip-tests" ? tc + " testes" : tc);
+    });
     const s = Math.floor(h.uptime_seconds || 0);
     const up = String((s / 60) | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     set("stat-uptime", up);

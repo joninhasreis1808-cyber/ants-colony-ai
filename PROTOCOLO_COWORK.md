@@ -119,23 +119,35 @@ funcionalidade ou mude arquitetura. Ajuste de texto não conta.
 
 | Item | Valor |
 |---|---|
-| Versão | 9.4 em desenvolvimento (base 9.3, commit `f94edf8`) |
-| Testes | 534 passando |
+| Versão | 9.4 em desenvolvimento (branch `ants-9.4-refino`, base 9.3 `f94edf8`) |
+| Testes | **549 passando** (base 9.3 era 529 no `main`; +20 no 9.4) |
 | Serviço oficial no Render | **`ants-yeys`** (roda o commit `d0b5510`, versão 9.2) |
 | Serviços duplicados | 7 outros, mesmo repositório, plano gratuito |
 | Objetivo principal do dono | **usar o projeto no computador** |
+
+### Entregue no 9.4 (branch `ants-9.4-refino`)
+
+T0 protocolo versionado · T-A sidebar fixa · T1/T-C responsivo (390: 98→0 cortes) ·
+T-B memória automática (auto-recall + auto-sono; busca manual oculta, IDs legados
+preservados) · T2 Câmera ao Vivo (bot_camera.js/css; 5 bots reais em ordem; fim do
+modal de texto fixo) · T3 selo de proveniência + "buscar de novo" (fim do cache
+invisível) · T4 as 7 abas no celular · T5 WebSocket primário + polling fallback
+(fim do polling de 600ms) · T6 saúde numa fonte só · T7 LocalProvider sem urllib ·
+T8 contador de testes real · T9 zero emoji no JS editável (legados via noEmojiLayer) ·
+FASE 4 SW bump por release.
 
 ### Pendências abertas
 
 1. **Tela branca no `ants-7ylk`** — sem diagnóstico. O servidor responde `200 OK`, o mesmo
    commit roda perfeitamente em ambiente local. A causa é do lado do navegador. Falta o
-   console do aparelho afetado.
-2. **Token de segurança não configurado** — a guarda escrita no 9.3 só age com
-   `ANTS_PUBLIC=1` e `ANTS_API_TOKEN` definidos. Hoje o `/health` responde
-   `"mode": "open", "token_configurado": false`, com `ipAllowList: 0.0.0.0/0`.
-3. **Cache de respostas invisível ao usuário** — pergunta repetida é respondida da memória
-   sem recrutar bot algum. A colônia parece parada. Precisa de aviso na interface.
-4. **Sem servidor MCP** — não há implementação do protocolo no repositório.
+   console do aparelho afetado. (Teste barato ainda não feito: abrir em aba anônima do
+   celular — se funcionar, é SW com cache velho; o bump do 9.4 tende a resolver.)
+2. **Token de segurança não configurado** — a guarda do 9.3 só age com `ANTS_PUBLIC=1` e
+   `ANTS_API_TOKEN` definidos. Hoje o `/health` responde `"mode": "open"`. Ação do dono.
+3. ~~Cache de respostas invisível~~ — **RESOLVIDO no 9.4 (T3)**: o selo declara "da memória
+   (repetida)" e oferece "buscar de novo" (força o pipeline, ignorando o cache).
+4. **Sem servidor MCP** — não há implementação do protocolo no repositório. (Recomendação
+   futura no RELATORIO_PARA_CHATGPT; adaptador opcional, sem tornar o Ant's dependente.)
 
 ---
 

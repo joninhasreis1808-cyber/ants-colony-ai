@@ -358,6 +358,20 @@ select.field{padding:0 12px;cursor:pointer}
   *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+/* ── CELULAR (≤639px): topbar sem cortes (9.4 T1/T-C) ──
+   Diagnóstico real (Playwright @390px): a topbar era um flex de linha única
+   (brand + estado + espaçador + mode-switch + conexão) sem regra p/ tela
+   pequena → 98 elementos ultrapassavam a viewport (cortados). Aqui ela
+   quebra em 2 linhas e nada é cortado (medido: 98 → 0). */
+@media(max-width:639px){
+  .topbar{flex-wrap:wrap;gap:8px 10px;padding:9px 12px;min-height:0}
+  .topbar .spacer{flex-basis:100%;height:0}      /* quebra p/ a 2ª linha */
+  .mode-switch{margin-left:0}
+  .mode-switch button{padding:6px 10px;font-size:10.5px}
+  .content{overflow-x:hidden;padding:16px 14px 26px}  /* trava corte lateral */
+  .wrap{max-width:100%}
+}
+
 /* ── TABLET ── */
 @media(min-width:640px){
   .g2{grid-template-columns:1fr 1fr}
@@ -368,8 +382,13 @@ select.field{padding:0 12px;cursor:pointer}
 }
 @media(min-width:960px){
   .ant-shell{grid-template-columns:236px 1fr;grid-template-rows:1fr}
+  /* Sidebar FIXA ao rolar (9.4 T-A). Medição (Playwright @1280) mostrou que o
+     grid + shell 100dvh/overflow:hidden já a mantinha parada; aqui o
+     comportamento fica EXPLÍCITO e robusto a mudanças futuras de layout:
+     ocupa toda a altura, rola só por dentro, e não acompanha o conteúdo. */
   #sidebar{display:flex;flex-direction:column;gap:3px;padding:18px 12px;background:rgba(22,18,9,.7);
-    border-right:1px solid var(--border);grid-row:1/-1;position:relative;z-index:2;overflow-y:auto}
+    border-right:1px solid var(--border);grid-row:1/-1;position:sticky;top:0;align-self:start;
+    height:100dvh;z-index:2;overflow-y:auto}
   #sidebar .side-brand{display:flex;align-items:center;gap:11px;padding:4px 10px 16px}
   #sidebar .side-brand .mark{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
     background:radial-gradient(circle at 35% 30%,#2a2112,#161009);border:1px solid var(--border2);color:var(--amber)}

@@ -32,7 +32,12 @@
     const method = ((init && init.method) || (input && input.method) || "GET").toUpperCase();
     const t0 = performance.now();
     const track = API_RE.test(url);
-    if (track && method === "POST" && /\/hive\/task\b/.test(url)) captureGoal(init);
+    if (track && method === "POST" && /\/hive\/task\b/.test(url)) {
+      captureGoal(init);
+      // "Buscar de novo" (9.4 · T3): injeta fresh:true no corpo p/ ignorar o
+      // cache, sem tocar no chat.js legado. A flag é armada pelo selo.
+      if (window.__antFresh) { init = withFresh(init); window.__antFresh = false; }
+    }
     try {
       const res = await orig(input, init);
       if (track) { logCall(method, url.replace(api, "") || url, res.status, Math.round(performance.now() - t0)); AntAPI._mark(res.ok); }
@@ -52,6 +57,13 @@
     try { const b = JSON.parse((init && init.body) || "{}"); if (b.goal) window.__antLastQuestion = b.goal; } catch (e) {}
   }
 
+  function withFresh(init) {
+    try {
+      const b = JSON.parse((init && init.body) || "{}"); b.fresh = true;
+      return Object.assign({}, init, { body: JSON.stringify(b) });
+    } catch (e) { return init; }
+  }
+
   // Progresso dirigido por EVENTOS REAIS (9.2 · Bloco C): a fase do último
   // evento do backend (plan→do→check→act) mapeia para a etapa do fluxo. Nada
   // de contador por tempo — o % reflete o andamento verdadeiro.
@@ -68,6 +80,11 @@
     return Math.min(base + Math.max(0, same - 1), nextFloor - 1);
   }
 
+  // Transporte de eventos (9.4 · T5): WebSocket /hive/live/{id} é o PRIMÁRIO;
+  // o polling de /hive/status vira FALLBACK automático (o serviço hiberna no
+  // free tier). Antes: ~100 req/min por aba. Agora: ~2 fetches por missão
+  // (backfill na abertura + status final). O formato de ants:task-tick é o
+  // MESMO — a Câmera ao Vivo e a barra de progresso não mudam.
   function startFlow(taskId, echo) {
     const flow = document.getElementById("research-flow");
     if (!flow) return;
@@ -78,24 +95,22 @@
     const pct = document.getElementById("flow-pct"), narr = document.getElementById("flow-narr");
     const esc = (s) => String(s == null ? "" : s).replace(/[&<>]/g,
       (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-    // Eco imediato (<300ms): mostra o que a colônia recrutou antes do pipeline.
     if (narr && echo) narr.innerHTML = "<b>" + esc(echo) + "</b>";
-    let i = 0;                                          // reset limpo por missão
+    let i = 0, finished = false;
     const paint = () => {
       steps.forEach((s, k) => { s.classList.toggle("on", k === i); s.classList.toggle("done", k < i); });
       arms.forEach((a, k) => a.classList.toggle("lit", k < i));
       if (pct) pct.textContent = Math.round(i / last * 100) + "%";
     };
     paint();
-    const tick = async () => {
-      let st = null;
-      try { st = await AntAPI.get("/hive/status/" + taskId); } catch (e) {}
-      const done = st && ["done", "completed", "failed"].includes(st.status);
-      // Narração a partir dos EVENTOS REAIS emitidos pelo backend.
-      if (st && narr) {
+    const isDone = (st) => st && ["done", "completed", "failed"].includes(st.status);
+
+    // Renderiza e dispara ants:task-tick a partir de um status (fonte única).
+    const emit = (st, done) => {
+      st = st || {};
+      if (narr) {
         const r = st.result || {};
         if (done) {
-          // Explicabilidade (§4.7): toda conclusão traz o MOTIVO real.
           var motivo = [];
           if (r.confidence != null) motivo.push("confiança " + r.confidence);
           var nsrc = (r.sources || []).length;
@@ -107,26 +122,72 @@
         } else {
           const evs = st.events || [];
           const ev = evs.length ? evs[evs.length - 1] : null;
-          narr.innerHTML = ev
-            ? "<b>" + esc(ev.bot) + "</b> · " + esc(ev.message)
+          narr.innerHTML = ev ? "<b>" + esc(ev.bot) + "</b> · " + esc(ev.message)
             : "a colônia trabalha…";
         }
       }
-      // % derivado dos eventos reais, sempre monotônico (nunca recua).
-      const target = done ? last : stepFromEvents(st && st.events, i);
+      const target = done ? last : stepFromEvents(st.events, i);
       if (target > i) i = target;
       paint();
-      // Fonte ÚNICA de eventos (6.3): cada tick alimenta todas as seções.
       document.dispatchEvent(new CustomEvent("ants:task-tick", {
-        detail: { taskId: taskId, pct: Math.round(i / last * 100), done: !!done, status: st || {} },
+        detail: { taskId: taskId, pct: Math.round(i / last * 100), done: !!done, status: st },
       }));
-      if (done) {
-        clearInterval(poll);
-        document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st || {} }));
-      }
+      if (done) document.dispatchEvent(new CustomEvent("ants:task-done", { detail: st }));
     };
-    tick();                                             // 1º pulso imediato
-    const poll = setInterval(tick, 600);
-    setTimeout(() => clearInterval(poll), 30000);
+
+    const finish = async (st) => {
+      if (finished) return; finished = true;
+      if (!st || !st.result) { try { st = await AntAPI.get("/hive/status/" + taskId); } catch (e) {} }
+      emit(st, true);
+    };
+
+    // Fallback: polling de /hive/status a cada 600ms (só se o WS falhar).
+    let poll = null;
+    const startPolling = () => {
+      if (poll || finished) return;
+      const tick = async () => {
+        let st = null; try { st = await AntAPI.get("/hive/status/" + taskId); } catch (e) {}
+        if (isDone(st)) { clearInterval(poll); poll = null; finish(st); return; }
+        emit(st, false);
+      };
+      tick(); poll = setInterval(tick, 600);
+      setTimeout(() => { if (poll) { clearInterval(poll); poll = null; } }, 30000);
+    };
+
+    // Primário: WebSocket.
+    let ws = null;
+    try {
+      const proto = location.protocol === "https:" ? "wss:" : "ws:";
+      ws = new WebSocket(proto + "//" + location.host + "/hive/live/" + taskId);
+    } catch (e) { ws = null; }
+    if (!ws) { startPolling(); return; }
+
+    const events = [], seen = {};
+    let opened = false, gotEnd = false;
+    const push = (ev) => {
+      const id = ev && (ev.id || (ev.bot + "|" + ev.phase + "|" + ev.ts));
+      if (id && !seen[id]) { seen[id] = 1; events.push(ev); }
+    };
+    const failTimer = setTimeout(() => {
+      if (!opened) { try { ws.close(); } catch (e) {} startPolling(); }
+    }, 1800);
+    ws.onopen = async () => {
+      opened = true; clearTimeout(failTimer);
+      // Backfill: eventos já emitidos antes do WS assinar (não perde bots).
+      try {
+        const st0 = await AntAPI.get("/hive/status/" + taskId);
+        (st0.events || []).forEach(push);
+        if (isDone(st0)) { gotEnd = true; try { ws.close(); } catch (e) {} return finish(st0); }
+        emit({ status: "running", events: events, result: null }, false);
+      } catch (e) {}
+    };
+    ws.onmessage = (m) => {
+      let d; try { d = JSON.parse(m.data); } catch (e) { return; }
+      if (d.type === "event" && d.event) { push(d.event); emit({ status: "running", events: events, result: null }, false); }
+      else if (d.type === "end") { gotEnd = true; try { ws.close(); } catch (e) {} finish(); }
+    };
+    ws.onerror = () => {};
+    ws.onclose = () => { clearTimeout(failTimer); if (!gotEnd && !finished) startPolling(); };
+    setTimeout(() => { if (!finished) { try { ws.close(); } catch (e) {} finish(); } }, 45000);
   }
 })();

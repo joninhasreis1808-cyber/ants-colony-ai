@@ -17,3 +17,4 @@ deploy/data/
 ants.db
 *.db
 __pycache__/
+ants-contrato-backend.zip

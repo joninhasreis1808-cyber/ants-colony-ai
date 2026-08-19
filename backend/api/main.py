@@ -33,6 +33,27 @@ from backend.events.middleware import EventBusMiddleware
 VERSION = "2.0.0"
 _STARTED = time.time()
 
+
+def _count_tests() -> int:
+    """Conta funções de teste reais varrendo tests/ (9.4 · T8) — sem número
+    fixo. Se a pasta não estiver na imagem (deploy enxuto), devolve 0 e o front
+    mostra "—" (honesto), nunca um valor inventado."""
+    import re
+    root = Path(__file__).resolve().parents[2] / "tests"
+    if not root.is_dir():
+        return 0
+    n = 0
+    for f in root.rglob("test_*.py"):
+        try:
+            n += len(re.findall(r"^\s*(?:async\s+)?def test_",
+                                f.read_text(encoding="utf-8"), re.M))
+        except Exception:  # noqa: BLE001
+            pass
+    return n
+
+
+_TESTS = _count_tests()
+
 app = FastAPI(title="Ant's — Colônia de Bots", version=VERSION)
 
 # CORS liberado: a interface web (PWA) pode ser servida de qualquer origem.
@@ -116,6 +137,7 @@ async def health() -> dict[str, Any]:
         "tasks_submitted": hive_stats["tasks_submitted"],
         "providers": hive_stats["providers"],
         "uptime_seconds": round(time.time() - _STARTED, 1),
+        "tests": _TESTS,   # 9.4 · T8: contagem real (0 = pasta ausente → "—")
         # Postura de autenticação (9.3 · C-2): confere o modo sem revelar o token.
         # No Render: "mode" tem que ser "token" e "publico" true.
         "auth": auth_posture(),

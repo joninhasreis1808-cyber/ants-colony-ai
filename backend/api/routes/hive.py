@@ -38,6 +38,9 @@ class TaskRequest(BaseModel):
     """Corpo do POST /hive/task."""
 
     goal: str
+    # Forçar nova investigação (9.4 · T3): ignora o cache de respostas e roda o
+    # pipeline completo de novo (o botão "buscar de novo" do selo de proveniência).
+    fresh: bool = False
 
 
 class TaskResponse(BaseModel):
@@ -71,17 +74,34 @@ def _preview(goal: str) -> tuple[str, list[str]]:
     return intent, castes
 
 
+def _after_mission(task_id: str) -> None:
+    """Fecha a missão: conclui a formação e roda o auto-sono (9.4 · T-B).
+
+    O ciclo de sono é disparado pela ATIVIDADE, sem botão: consolida o
+    importante e deixa o irrelevante decair, respeitando um intervalo mínimo.
+    """
+    _complete_formation(task_id)
+    try:
+        from backend.api.routes.memory import maybe_auto_sleep
+        maybe_auto_sleep()
+    except Exception:  # noqa: BLE001 - automação nunca derruba a missão
+        pass
+
+
 async def _run_task(task: Task) -> None:
     """Executa a colmeia para uma tarefa em background."""
     # Roteador de intenção (8.1): comandos de AÇÃO e perguntas de CAPACIDADE
     # não vão para o Q&A — vão para o fluxo certo (Operárias / capabilities).
     if await _route_intent(task):
-        _complete_formation(task.id)
+        _after_mission(task.id)
         return
     # Aprendizado no fluxo real: se a colônia já respondeu isto com confiança,
-    # recupera da memória (cached) — não repete o esforço.
-    if await _answer_from_memory(task):
-        _complete_formation(task.id)
+    # recupera da memória (cached) — não repete o esforço. Exceto quando o
+    # usuário pediu "buscar de novo" (fresh): aí ignora o cache (9.4 · T3).
+    if task.id in _FRESH:
+        _FRESH.discard(task.id)
+    elif await _answer_from_memory(task):
+        _after_mission(task.id)
         return
     hive, _ = build_hive(
         bus=BUS, router=ROUTER, pheromones=PHEROMONES, lifecycle=LIFECYCLE
@@ -92,7 +112,7 @@ async def _run_task(task: Task) -> None:
     _LAST_HIVE["hive"] = hive
     await hive.solve(task)
     _learn_answer(task)          # guarda respostas confiáveis (aprende)
-    _complete_formation(task.id)
+    _after_mission(task.id)
 
 
 def _finish(task: Task, answer: str, provenance: dict, trace: dict) -> None:
@@ -234,6 +254,7 @@ async def _answer_from_memory(task: Task) -> bool:
     hit = get_answer_cache().get(task.goal)
     if not hit:
         return False
+    get_answer_cache().mark_auto_recall()   # telemetria da automação (9.4)
     msg = ("Reconheci a pergunta — recuperei da memória (aprendido antes), "
            "sem repetir o esforço")
     ev = BotEvent(task_id=task.id, bot="hive", phase=Phase.ACT, message=msg)
@@ -266,6 +287,8 @@ async def _answer_from_memory(task: Task) -> bool:
 _LAST_HIVE: dict = {}
 # Mapa tarefa → formação, para concluir a formação quando a tarefa termina.
 _TASK_FORMATION: dict[str, str] = {}
+# Tarefas que pediram investigação nova (ignoram o cache de respostas — T3).
+_FRESH: set[str] = set()
 
 
 @router.post("/task", response_model=TaskResponse)
@@ -275,6 +298,8 @@ async def create_task(req: TaskRequest) -> TaskResponse:
         raise HTTPException(400, "goal não pode ser vazio")
     task = Task(goal=req.goal)
     MEMORY.save_task(task)
+    if req.fresh:
+        _FRESH.add(task.id)            # "buscar de novo": ignora o cache (T3)
     _TASK_COUNT["n"] += 1
     intent, castes = _preview(req.goal)
     # A Rainha monta uma formação real para a missão (visível na Cognição).

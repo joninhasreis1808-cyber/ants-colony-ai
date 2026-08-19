@@ -7,7 +7,11 @@ const Ant = {
     this.wireTabs();
     this.wireTheme();
     this.checkHealth();
-    setInterval(() => this.checkHealth(), 15000);
+    // Fonte ÚNICA de saúde (9.4 · T6): um só /health por ciclo, distribuído por
+    // "ants:health". Pausa em segundo plano (document.hidden) e limpa no unload.
+    this._hz = setInterval(() => { if (!document.hidden) this.checkHealth(); }, 15000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) this.checkHealth(); });
+    window.addEventListener("beforeunload", () => clearInterval(this._hz));
     this.registerSW();
     window.addEventListener("online", () => this.setConn(true));
     window.addEventListener("offline", () => this.setConn(false));
@@ -52,8 +56,11 @@ const Ant = {
       const r = await fetch(`${this.api}/health`);
       this.setConn(r.ok);
       this._health = await r.json();
+      // distribui a saúde a quem ouve (rodapé, painéis) — 1 requisição só.
+      document.dispatchEvent(new CustomEvent("ants:health", { detail: this._health }));
     } catch {
       this.setConn(false);
+      document.dispatchEvent(new CustomEvent("ants:health", { detail: null }));
     }
   },
 

@@ -1,0 +1,67 @@
+/* Ant's — bot_camera.css (9.4 · T2): a Câmera ao Vivo da missão.
+   Aditivo; usa as variáveis do design system. Sem emojis. */
+#bot-camera { display: block; }
+.cam-empty {
+  border: 1px solid var(--border); border-radius: var(--r, 12px);
+  background: var(--surface); padding: 16px 18px; color: var(--dim);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+}
+.cam-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cam-badge {
+  display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono);
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--dim); border: 1px solid var(--border); border-radius: 20px; padding: 4px 11px;
+}
+.cam-badge.live { color: var(--amber); }
+.cam-rec { width: 8px; height: 8px; border-radius: 50%; background: var(--border2); }
+.cam-badge.live .cam-rec { background: var(--amber); animation: camPulse 1.4s ease-in-out infinite; }
+@keyframes camPulse { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
+.cam-follow {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 18px; padding: 5px 12px;
+}
+.cam-follow:hover { color: var(--text); background: var(--surface); }
+.cam-stage {
+  border: 1px solid var(--border); border-radius: var(--r, 12px);
+  background: var(--surface); padding: 16px 18px;
+}
+.cam-bot { display: flex; align-items: center; gap: 12px; }
+.cam-bot .ico { width: 26px; height: 26px; color: var(--amber); flex: 0 0 auto; }
+.cam-name { font-size: 17px; font-weight: 500; letter-spacing: -.01em; }
+.cam-sub { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.cam-state {
+  margin-left: auto; font-family: var(--mono); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .05em; padding: 3px 10px;
+  border-radius: 12px; border: 1px solid var(--border);
+}
+.cam-state.act { color: var(--amber); }
+.cam-state.done { color: var(--leaf, #5faa72); }
+.cam-state.fail { color: var(--muted); }
+.cam-phases { display: flex; gap: 6px; margin: 14px 0 10px; }
+.cam-ph {
+  flex: 1; text-align: center; font-family: var(--mono); font-size: 10.5px;
+  color: var(--dim); border: 1px solid var(--border); border-radius: 7px;
+  padding: 5px 0; transition: .18s;
+}
+.cam-ph.on { color: var(--honey, var(--amber)); border-color: var(--border2); background: var(--surface2); }
+.cam-action {
+  font-family: var(--mono); font-size: 12.5px; color: var(--text);
+  background: var(--bg2); border-radius: 8px; padding: 9px 12px; margin-bottom: 10px;
+  overflow-wrap: break-word;
+}
+.cam-log { font-family: var(--mono); font-size: 11px; color: var(--muted); max-height: 132px; overflow-y: auto; }
+.cam-ln { display: flex; gap: 9px; padding: 2px 0; overflow-wrap: anywhere; }
+.cam-ln span { color: var(--dim); min-width: 38px; text-transform: uppercase; font-size: 9.5px; padding-top: 2px; }
+.cam-roster { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cam-chip {
+  display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono);
+  font-size: 11px; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 18px; padding: 5px 11px; transition: .16s;
+}
+.cam-chip:hover { color: var(--text); background: var(--surface); }
+.cam-chip.sel { border-color: var(--amber); color: var(--honey, var(--amber)); }
+.cam-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); flex: 0 0 auto; }
+.cam-chip.act .cam-dot { background: var(--amber); }
+.cam-chip.done .cam-dot { background: var(--leaf, #5faa72); }
+.cam-chip.fail .cam-dot { background: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .cam-badge.live .cam-rec { animation: none; } }

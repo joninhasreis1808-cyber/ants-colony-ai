@@ -38,6 +38,11 @@
   function onHealth(h) {
     const ci = $("connection-indicator"); if (ci) { ci.textContent = "Conectado"; ci.classList.remove("offline"); }
     set("stat-bots", h.bots_active); set("stat-tasks", h.tasks_submitted); set("nav-bot-count", h.bots_active);
+    // Contador de testes REAL (9.4 · T8): vem do /health; 0 → "—" (honesto).
+    var tc = h.tests ? h.tests : "—";
+    ["test-count", "stat-tests", "chip-tests"].forEach(function (id) {
+      var e = $(id); if (e) e.textContent = (id === "chip-tests" ? tc + " testes" : tc);
+    });
     const s = Math.floor(h.uptime_seconds || 0);
     const up = String((s / 60) | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     set("stat-uptime", up);
@@ -67,10 +72,17 @@
     // (short_term/avg_strength na raiz) e ficava sempre "—".
     try {
       const m = await A().get("/memory/health");
-      const c = m.counts || {}, ex = m.extra || {};
+      const c = m.counts || {}, ex = m.extra || {}, au = m.automation || {};
       set("env-mem-total", c.total ?? "—");
       set("env-mem-consolidated", c.strong ?? "—");
       set("memory-strength", ex.avg_strength ?? "—");
+      // Card 'Memória automática' (9.4 · T-B) — dado real; ausente = "—".
+      set("am-total", c.total ?? "—");
+      set("am-strong", c.strong ?? "—");
+      set("am-recalls", au.auto_recalls ?? "—");
+      set("am-sleep", au.last_sleep_ts
+        ? new Date(au.last_sleep_ts * 1000).toLocaleTimeString().slice(0, 5)
+        : "—");
     } catch (e) {}
   }
 

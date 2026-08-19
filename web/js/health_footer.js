@@ -23,23 +23,22 @@
     f.querySelector(".txt").textContent = text;
   }
 
-  function tick() {
-    fetch(api + "/health", { cache: "no-store" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d || !d.modules) { set("down", "Colônia adormecida"); return; }
-        var mods = d.modules;
-        var total = Object.keys(mods).length;
-        var on = Object.keys(mods).filter(function (k) { return mods[k]; }).length;
-        if (on === total && d.status === "healthy")
-          set("", "Todos os sistemas operacionais");
-        else
-          set("warn", on + "/" + total + " módulos ativos");
-      })
-      .catch(function () { set("down", "Colônia adormecida"); });
+  // Fonte ÚNICA (9.4 · T6): não faz fetch próprio; ouve "ants:health" emitido
+  // pelo app.js (um /health por ciclo) e só renderiza. Zero requisição extra.
+  function render(d) {
+    if (!d || !d.modules) { set("down", "Colônia adormecida"); return; }
+    var mods = d.modules;
+    var total = Object.keys(mods).length;
+    var on = Object.keys(mods).filter(function (k) { return mods[k]; }).length;
+    if (on === total && d.status === "healthy")
+      set("", "Todos os sistemas operacionais");
+    else
+      set("warn", on + "/" + total + " módulos ativos");
   }
 
-  function start() { tick(); setInterval(tick, 15000); }
+  document.addEventListener("ants:health", function (e) { render(e.detail); });
+  // render inicial se o app já tem a saúde em mãos.
+  function start() { if (window.Ant && window.Ant._health) render(window.Ant._health); }
 
   if (document.readyState === "loading")
     document.addEventListener("DOMContentLoaded", start);

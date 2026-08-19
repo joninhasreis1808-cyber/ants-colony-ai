@@ -9,8 +9,8 @@ a disponibilidade é garantida.
 from __future__ import annotations
 
 import shutil
-import urllib.error
-import urllib.request
+
+import httpx   # dep do projeto (9.4 · T7): substitui o cliente síncrono antigo
 
 
 class LocalProvider:
@@ -39,36 +39,51 @@ class LocalProvider:
         return self._backend
 
     def generate(self, prompt: str) -> str:
-        """Gera uma resposta para o prompt pelo melhor motor disponível."""
+        """Gera uma resposta (síncrono). Em rota async, prefira `agenerate`."""
         backend = self.detect_backend()
         if backend == "ollama":
             try:
                 return self._ollama_generate(prompt)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 pass  # cai para regras se o modelo falhar
+        return self._rule_based(prompt)
+
+    async def agenerate(self, prompt: str) -> str:
+        """Versão ASSÍNCRONA (9.4 · T7): não bloqueia o worker único. É o
+        caminho correto para quem plugar o Ollama numa rota async."""
+        if await self._ollama_running_async():
+            try:
+                return await self._ollama_generate_async(prompt)
+            except Exception:  # noqa: BLE001
+                pass
         return self._rule_based(prompt)
 
     def _ollama_running(self) -> bool:
         try:
-            req = urllib.request.Request(f"{self._ollama_url}/api/tags")
-            with urllib.request.urlopen(req, timeout=1) as resp:
-                return resp.status == 200
-        except (urllib.error.URLError, OSError, ValueError):
+            with httpx.Client(timeout=1.0) as c:
+                return c.get(f"{self._ollama_url}/api/tags").status_code == 200
+        except Exception:  # noqa: BLE001 - qualquer falha = não disponível
+            return False
+
+    async def _ollama_running_async(self) -> bool:
+        try:
+            async with httpx.AsyncClient(timeout=1.0) as c:
+                r = await c.get(f"{self._ollama_url}/api/tags")
+                return r.status_code == 200
+        except Exception:  # noqa: BLE001
             return False
 
     def _ollama_generate(self, prompt: str, model: str = "llama3") -> str:
-        import json
+        with httpx.Client(timeout=20.0) as c:
+            r = c.post(f"{self._ollama_url}/api/generate",
+                       json={"model": model, "prompt": prompt, "stream": False})
+            return (r.json().get("response") or "").strip()
 
-        data = json.dumps(
-            {"model": model, "prompt": prompt, "stream": False}
-        ).encode()
-        req = urllib.request.Request(
-            f"{self._ollama_url}/api/generate", data=data,
-            headers={"Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            body = json.loads(resp.read().decode())
-        return body.get("response", "").strip()
+    async def _ollama_generate_async(self, prompt: str, model: str = "llama3") -> str:
+        async with httpx.AsyncClient(timeout=20.0) as c:
+            r = await c.post(f"{self._ollama_url}/api/generate",
+                             json={"model": model, "prompt": prompt, "stream": False})
+            return (r.json().get("response") or "").strip()
 
     def _rule_based(self, prompt: str) -> str:
         """Heurística offline: resume/estrutura o prompt de forma útil.

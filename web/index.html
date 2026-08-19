@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/css/design_system.css" />
 <link rel="stylesheet" href="/css/style.css" />
 <link rel="stylesheet" href="/css/cloud.css" />
+<link rel="stylesheet" href="/css/bot_camera.css" />
 </head>
 <body>
 <div class="ant-shell" id="app" data-mode="user" data-colony-state="observing">
@@ -176,6 +177,7 @@
             <div class="console" id="console-log"></div>
           </div>
           </div>
+          <div id="bot-camera" style="margin:14px 0"></div>
           <details class="colony-rede">
             <summary><svg class="ico sm"><use href="#i-colony"/></svg> Rede viva da colônia</summary>
             <div class="colony-layout">
@@ -410,11 +412,13 @@
         <button class="btn ghost" id="bot-vision-close" style="margin-left:auto;min-width:44px;padding:0"><svg class="ico sm"><use href="#i-x"/></svg></button></div>
       <div class="modal-body">
         <div class="grid g2">
-          <div class="mv-box"><h5>Casta</h5><div id="bot-vision-caste">Exploradora</div></div>
-          <div class="mv-box"><h5>Status</h5><div id="bot-vision-status" style="color:var(--leaf)">Ativa</div></div>
+          <div class="mv-box"><h5>Casta</h5><div id="bot-vision-caste">—</div></div>
+          <div class="mv-box"><h5>Status</h5><div id="bot-vision-status">—</div></div>
         </div>
-        <div class="mv-box"><h5>Ação atual</h5><div id="bot-vision-action">Buscando fontes primárias sobre o tema…</div></div>
-        <div class="mv-box"><h5>Log em tempo real</h5><div id="bot-vision-log"></div></div>
+        <div class="mv-box"><h5>Ação atual</h5><div id="bot-vision-action">—</div></div>
+        <!-- 9.4 · Regra 6: sem texto fixo rotulado "tempo real". O trajeto ao
+             vivo, com dado real, está na Câmera ao Vivo (aba Colônia). -->
+        <div class="mv-box"><h5>Registro</h5><div id="bot-vision-log"><div class="mono" style="color:var(--dim);font-size:12px">Sem eventos aqui — o trajeto ao vivo da colônia está na Câmera ao Vivo (aba Colônia).</div></div></div>
         <div class="bot-progress" style="height:8px"><span id="bot-vision-bar" style="width:0%"></span></div>
       </div>
       <div class="modal-foot">
@@ -458,5 +462,6 @@
 <script src="/js/formations_panel.js"></script>
 <script src="/js/device_panel.js"></script>
 <script src="/js/action_ui.js"></script>
+<script src="/js/bot_camera.js"></script>
 </body>
 </html>

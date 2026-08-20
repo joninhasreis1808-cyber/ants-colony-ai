@@ -61,7 +61,9 @@ async def capabilities() -> dict[str, Any]:
     que não roda. Cada item declara `available` e `where` (server | native).
     """
     from backend.api.deps import OCR
+    from backend.cognition.reasoner import posture as _reasoning
     return {
+        "reasoning": _reasoning(),   # córtex plugável (9.5): regras/ollama/api
         "offline": [
             {"name": "cálculo exato (raiz, aritmética, %, potência)",
              "available": True, "where": "server", "source": "computation"},

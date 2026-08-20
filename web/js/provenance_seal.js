@@ -32,7 +32,10 @@
     var box = document.getElementById("messages"); if (!box) return;
     var bots = box.querySelectorAll(".msg.bot");
     var msg = bots[bots.length - 1]; if (!msg) return;
-    if (msg.querySelector(".prov-seal")) return;  // não duplica
+    // Selo por missão: NÃO é filho da mensagem (o chat.js legado reescreve o
+    // textContent dela e apagaria o selo) — vai como IRMÃO, logo após.
+    if (msg.nextSibling && msg.nextSibling.classList
+        && msg.nextSibling.classList.contains("prov-seal")) return;
 
     var nsrc = (r.sources || []).length || (prov.urls || []).length;
     var cachedTag = prov.cached ? " · da memória (repetida)" : "";
@@ -48,7 +51,7 @@
       + esc(label) + esc(conf) + "</span>"
       + (again ? '<button class="ps-again" type="button">'
           + (meta.web ? "procurar na web" : "buscar de novo") + "</button>" : "");
-    msg.appendChild(seal);
+    msg.parentNode.insertBefore(seal, msg.nextSibling);   // irmão, não filho
 
     var btn = seal.querySelector(".ps-again");
     if (btn) btn.onclick = function () {

@@ -41,6 +41,9 @@ class TaskRequest(BaseModel):
     # Forçar nova investigação (9.4 · T3): ignora o cache de respostas e roda o
     # pipeline completo de novo (o botão "buscar de novo" do selo de proveniência).
     fresh: bool = False
+    # Pesquisa profunda (9.5 · Fase B): a colônia investiga o tema em etapas
+    # (sub-perguntas → busca → dedup → verificação → síntese pelo córtex).
+    deep: bool = False
 
 
 class TaskResponse(BaseModel):
@@ -101,6 +104,14 @@ async def _run_task(task: Task) -> None:
     if task.id in _FRESH:
         _FRESH.discard(task.id)
     elif await _answer_from_memory(task):
+        _after_mission(task.id)
+        return
+    # Pesquisa profunda (9.5 · Fase B): loop multi-etapas da colônia, em vez do
+    # Q&A de passo único. Emite eventos reais → a Câmera mostra o trajeto fundo.
+    if task.id in _DEEP:
+        _DEEP.discard(task.id)
+        from backend.hivemind import deep_research
+        await deep_research.run(task, MEMORY, BUS, ROUTER)
         _after_mission(task.id)
         return
     hive, _ = build_hive(
@@ -289,6 +300,8 @@ _LAST_HIVE: dict = {}
 _TASK_FORMATION: dict[str, str] = {}
 # Tarefas que pediram investigação nova (ignoram o cache de respostas — T3).
 _FRESH: set[str] = set()
+# Tarefas de pesquisa profunda (9.5 · Fase B): loop multi-etapas da colônia.
+_DEEP: set[str] = set()
 
 
 @router.post("/task", response_model=TaskResponse)
@@ -300,6 +313,8 @@ async def create_task(req: TaskRequest) -> TaskResponse:
     MEMORY.save_task(task)
     if req.fresh:
         _FRESH.add(task.id)            # "buscar de novo": ignora o cache (T3)
+    if req.deep:
+        _DEEP.add(task.id)            # pesquisa profunda multi-etapas (9.5)
     _TASK_COUNT["n"] += 1
     intent, castes = _preview(req.goal)
     # A Rainha monta uma formação real para a missão (visível na Cognição).

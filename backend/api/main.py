@@ -54,6 +54,15 @@ def _count_tests() -> int:
 
 _TESTS = _count_tests()
 
+
+def _reasoning_posture() -> dict:
+    """Postura do córtex plugável (9.5) — nunca derruba o /health."""
+    try:
+        from backend.cognition.reasoner import posture
+        return posture()
+    except Exception:  # noqa: BLE001
+        return {"backend": "rules", "llm": False, "model": None}
+
 app = FastAPI(title="Ant's — Colônia de Bots", version=VERSION)
 
 # CORS liberado: a interface web (PWA) pode ser servida de qualquer origem.
@@ -138,6 +147,9 @@ async def health() -> dict[str, Any]:
         "providers": hive_stats["providers"],
         "uptime_seconds": round(time.time() - _STARTED, 1),
         "tests": _TESTS,   # 9.4 · T8: contagem real (0 = pasta ausente → "—")
+        # Córtex plugável (9.5): qual cérebro rege o raciocínio agora, sem vazar
+        # a chave. backend ∈ {rules, ollama, api}. Sem cérebro externo = rules.
+        "reasoning": _reasoning_posture(),
         # Postura de autenticação (9.3 · C-2): confere o modo sem revelar o token.
         # No Render: "mode" tem que ser "token" e "publico" true.
         "auth": auth_posture(),

@@ -1,5 +1,5 @@
 /* Ant's Service Worker — cache offline (PWA). */
-const CACHE = "ants-v20-9.4";   // bump por release (9.4): animações nunca velhas
+const CACHE = "ants-v21-9.5";   // bump por release (9.5: córtex + pesquisa profunda)
 const ASSETS = [
   "/", "/index.html", "/acesso.html", "/manifest.json",
   "/css/style.css", "/css/design_system.css", "/css/cloud.css", "/css/bot_camera.css",
@@ -8,7 +8,7 @@ const ASSETS = [
   "/js/awaken.js", "/js/health_footer.js", "/js/onboarding.js",
   "/js/heatmap.js", "/js/replay.js", "/js/lab_mode.js", "/js/live_panels.js", "/js/api_bridge.js",
   "/js/timeline_hub.js", "/js/live_progress.js", "/js/formations_panel.js", "/js/device_panel.js", "/js/action_ui.js",
-  "/js/bot_camera.js", "/js/provenance_seal.js",
+  "/js/bot_camera.js", "/js/provenance_seal.js", "/js/deep_research_ui.js",
 ];
 
 self.addEventListener("install", (e) => {

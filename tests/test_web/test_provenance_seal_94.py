@@ -47,6 +47,6 @@ def test_selo_arquivo_e_integracao():
     assert "ants:task-done" in js and "__antFresh" in js
     assert "buscar de novo" in js and "recuperada" not in js  # rótulo do selo
     ab = (WEB / "js" / "api_bridge.js").read_text(encoding="utf-8")
-    assert "withFresh" in ab and "b.fresh = true" in ab
+    assert "__antFresh" in ab and "withFlag" in ab
     html = (WEB / "index.html").read_text(encoding="utf-8")
     assert "/js/provenance_seal.js" in html

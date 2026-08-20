@@ -180,3 +180,11 @@
 .ps-again{font-family:var(--mono);font-size:11px;color:var(--muted);
   border:1px solid var(--border);border-radius:16px;padding:4px 11px;min-height:0}
 .ps-again:hover{color:var(--text);background:var(--surface)}
+
+/* ── Pesquisa profunda (9.5) ── */
+.deep-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px;padding:0 2px}
+.deep-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11.5px;
+  color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:6px 13px;transition:.16s}
+.deep-chip:hover{color:var(--honey,var(--amber));border-color:var(--border2);background:var(--surface)}
+.deep-chip .ico{color:var(--amber)}
+.deep-cortex{font-size:11px;color:var(--dim);letter-spacing:.02em}

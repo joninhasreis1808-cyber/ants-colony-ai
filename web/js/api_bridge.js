@@ -34,9 +34,10 @@
     const track = API_RE.test(url);
     if (track && method === "POST" && /\/hive\/task\b/.test(url)) {
       captureGoal(init);
-      // "Buscar de novo" (9.4 · T3): injeta fresh:true no corpo p/ ignorar o
-      // cache, sem tocar no chat.js legado. A flag é armada pelo selo.
-      if (window.__antFresh) { init = withFresh(init); window.__antFresh = false; }
+      // "Buscar de novo" (9.4 · T3) e "Pesquisa profunda" (9.5): injetam
+      // fresh/deep no corpo, sem tocar no chat.js legado. Flags armadas pela UI.
+      if (window.__antFresh) { init = withFlag(init, "fresh"); window.__antFresh = false; }
+      if (window.__antDeep) { init = withFlag(init, "deep"); window.__antDeep = false; }
     }
     try {
       const res = await orig(input, init);
@@ -57,9 +58,9 @@
     try { const b = JSON.parse((init && init.body) || "{}"); if (b.goal) window.__antLastQuestion = b.goal; } catch (e) {}
   }
 
-  function withFresh(init) {
+  function withFlag(init, flag) {
     try {
-      const b = JSON.parse((init && init.body) || "{}"); b.fresh = true;
+      const b = JSON.parse((init && init.body) || "{}"); b[flag] = true;
       return Object.assign({}, init, { body: JSON.stringify(b) });
     } catch (e) { return init; }
   }

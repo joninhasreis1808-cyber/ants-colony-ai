@@ -17,6 +17,11 @@
     interpreter: { caste: "Operárias", role: "interpreta o material", icon: "i-brain" },
     decider: { caste: "Rainha", role: "decide a resposta", icon: "i-crown" },
     learner: { caste: "Cuidadoras", role: "guarda o aprendizado", icon: "i-leaf" },
+    // Pesquisa profunda (9.5): castas por papel no loop multi-etapas.
+    rainha: { caste: "Rainha", role: "planeja e sintetiza", icon: "i-crown" },
+    exploradoras: { caste: "Exploradoras", role: "pesquisa cada sub-pergunta", icon: "i-compass" },
+    operarias: { caste: "Operárias", role: "compila e deduplica fontes", icon: "i-worker" },
+    soldados: { caste: "Soldados", role: "verifica a suficiência", icon: "i-shield" },
   };
   var released = [], queue = [], seen = {}, timer = null, pinned = null,
       done = false, task = null;

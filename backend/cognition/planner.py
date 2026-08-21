@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from backend.cognition.cartographer import Route, get_cartographer
+from backend.cognition.experience import apply_experience
 from backend.hivemind.task_graph import TaskGraph
 
 
@@ -93,6 +94,7 @@ class HierarchicalPlanner:
 
     def plan(self, goal: str, context: dict | None = None) -> Plan:
         routes = get_cartographer().discover(goal, context)
+        apply_experience(routes, goal)          # viés da experiência (B3) na escolha
         route = get_cartographer().choose(routes)
         if route is None:                       # nada disponível → raciocínio puro
             route = [r for r in routes if r.name == "reasoning"][0]

@@ -27,6 +27,7 @@ from backend.api.routes import permissions as permission_routes
 from backend.api.routes import device as device_routes
 from backend.api.routes import nervous as nervous_routes
 from backend.api.routes import tools as tools_routes
+from backend.api.routes import mission as mission_routes
 from backend.api.security import auth_posture
 from backend.events.audit import EventAuditor
 from backend.events.middleware import EventBusMiddleware
@@ -93,6 +94,7 @@ app.include_router(mind_routes.router)
 app.include_router(evolution_routes.router)
 app.include_router(organism_routes.router)
 app.include_router(tools_routes.router)
+app.include_router(mission_routes.router)
 
 
 @app.get("/ping")

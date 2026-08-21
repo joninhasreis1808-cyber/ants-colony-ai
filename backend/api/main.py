@@ -65,6 +65,32 @@ def _reasoning_posture() -> dict:
     except Exception:  # noqa: BLE001
         return {"backend": "rules", "llm": False, "model": None}
 
+
+def _intelligence_posture() -> dict:
+    """Postura da inteligência FASE B (9.7) — planejar/executar como um Manus.
+
+    Declara honestamente o que a camada de inteligência oferece: as rotas que a
+    Cartógrafa conhece, o planejador hierárquico, a memória de experiência viva e
+    o endpoint de missão. Nunca derruba o /health."""
+    try:
+        from backend.cognition.cartographer import _CATALOG
+        from backend.cognition.experience import (
+            get_error_memory, get_strategy_memory,
+        )
+        return {
+            "cartographer": [c[0] for c in _CATALOG],
+            "hierarchical_planner": True,
+            "contradiction_engine": True,
+            "goal_drift_guard": True,
+            "learning": {
+                "successes": len(get_strategy_memory()._log),
+                "errors": len(get_error_memory()._log),
+            },
+            "mission_endpoint": "/mission",
+        }
+    except Exception:  # noqa: BLE001
+        return {"hierarchical_planner": False}
+
 app = FastAPI(title="Ant's — Colônia de Bots", version=VERSION)
 
 # CORS liberado: a interface web (PWA) pode ser servida de qualquer origem.
@@ -131,6 +157,7 @@ async def health() -> dict[str, Any]:
             "superorganism": True,
             "cognitive": True,
             "reasoning": True,
+            "planning": True,
             "colony_states": True,
             "meta_cognition": True,
             "homeostasis": True,
@@ -154,6 +181,9 @@ async def health() -> dict[str, Any]:
         # Córtex plugável (9.5): qual cérebro rege o raciocínio agora, sem vazar
         # a chave. backend ∈ {rules, ollama, api}. Sem cérebro externo = rules.
         "reasoning": _reasoning_posture(),
+        # Inteligência FASE B (9.7): rotas da Cartógrafa, planejador hierárquico,
+        # crítica (contradição + desvio) e memória de experiência viva.
+        "intelligence": _intelligence_posture(),
         # Postura de autenticação (9.3 · C-2): confere o modo sem revelar o token.
         # No Render: "mode" tem que ser "token" e "publico" true.
         "auth": auth_posture(),

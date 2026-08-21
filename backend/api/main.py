@@ -77,8 +77,12 @@ def _intelligence_posture() -> dict:
         from backend.cognition.experience import (
             get_error_memory, get_strategy_memory,
         )
+        from backend.tools.registry import get_tool_registry
+        tools = get_tool_registry().list()
         return {
             "cartographer": [c[0] for c in _CATALOG],
+            "tools": [{"name": t["name"], "risk": t["risk"],
+                       "available": t["available"]} for t in tools],
             "hierarchical_planner": True,
             "contradiction_engine": True,
             "goal_drift_guard": True,

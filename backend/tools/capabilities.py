@@ -16,6 +16,7 @@ CAP_FS_DELETE = "filesystem.delete"
 CAP_APP_LAUNCH = "app.launch"
 CAP_SCREEN_CAPTURE = "screen.capture"
 CAP_WEB_NAVIGATE = "web.navigate"
+CAP_COMPUTE = "compute.exact"          # cálculo puro — não toca no dispositivo
 
 # Capacidade → escopo exigido (a "chave" que o dono precisa ter concedido).
 CAPABILITY_SCOPE: dict[str, str] = {
@@ -35,7 +36,10 @@ CAPABILITY_RISK: dict[str, str] = {
     CAP_APP_LAUNCH: "medium",
     CAP_SCREEN_CAPTURE: "medium",
     CAP_WEB_NAVIGATE: "low",
+    CAP_COMPUTE: "low",
 }
+# CAP_COMPUTE não aparece em CAPABILITY_SCOPE de propósito: é puro (sem escopo de
+# device). scope_for devolve None → o registro não exige permissão para usá-lo.
 
 
 def scope_for(capability: str) -> str | None:

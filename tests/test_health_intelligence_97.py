@@ -25,3 +25,6 @@ def test_health_expoe_inteligencia_fase_b():
     assert "deep_research" in intel["cartographer"]
     assert intel["mission_endpoint"] == "/mission"
     assert "successes" in intel["learning"] and "errors" in intel["learning"]
+    # superorganismo (FASE C · 9.8): decisão coletiva, atenção, realocação
+    assert intel["collective_decision"] is True
+    assert intel["attention_field"] is True and intel["adaptive_labor"] is True

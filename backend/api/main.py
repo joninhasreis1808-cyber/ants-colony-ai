@@ -83,6 +83,8 @@ def _intelligence_posture() -> dict:
             "contradiction_engine": True,
             "goal_drift_guard": True,
             "collective_decision": True,
+            "attention_field": True,
+            "adaptive_labor": True,
             "learning": {
                 "successes": len(get_strategy_memory()._log),
                 "errors": len(get_error_memory()._log),

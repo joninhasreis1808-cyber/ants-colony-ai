@@ -25,6 +25,7 @@ from backend.cognition.experience import get_error_memory, get_strategy_memory
 from backend.cognition.planner import get_planner
 from backend.hivemind.attention import get_attention_field
 from backend.hivemind.collective import DecisionSignals, get_collective_decider
+from backend.hivemind.labor import get_labor_allocator
 from backend.hivemind.blackboard import get_blackboard
 from backend.hivemind.mission import Mission, MissionState, get_mission_store
 
@@ -156,6 +157,15 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
                f"Decisão coletiva: {verdict.decision} ({verdict.reason})",
                {"collective": verdict.to_dict(), "signals": signals.to_dict()})
 
+    # 3c) Divisão de trabalho adaptativa (C3): se a colônia decidiu investigar,
+    # recruta a casta que resolve o gargalo. Advisory (FASE E executa o reforço).
+    allocation = get_labor_allocator().allocate(signals, verdict)
+    if allocation.total:
+        board.note("next_actions", {"reallocate": allocation.to_dict()})
+        await emit("rainha", Phase.PLAN,
+                   f"Realocação: +{allocation.total} bot(s) para o gargalo",
+                   {"allocation": allocation.to_dict()})
+
     # 4) Aprendizado (B3): reforça a rota vitoriosa ou registra o fracasso.
     if failed:
         mission.touch(MissionState.FAILED)
@@ -173,6 +183,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         "drift": drift.to_dict(), "blackboard": board.snapshot(),
         "collective": verdict.to_dict(),
         "attention": attention.focus(limit=6),
+        "allocation": allocation.to_dict(),
         "checkpoints": [c.to_dict() for c in mission.checkpoints],
     }
     _OUTCOMES[mission.id] = outcome

@@ -28,6 +28,7 @@ class MissionRequest(BaseModel):
     goal: str
     deep: bool = False
     online: Optional[bool] = None       # None = deixa a Cartógrafa decidir
+    max_cycles: int = 3                 # teto do laço autônomo (FASE E)
 
 
 class MissionResponse(BaseModel):
@@ -113,6 +114,23 @@ async def run_mission_sync(req: MissionRequest) -> dict[str, Any]:
     context = {"online": online, "deep": req.deep}
     executor = _make_executor(req.deep, online)
     return await run_mission(req.goal, MEMORY, context=context, executor=executor)
+
+
+@router.post("/auto")
+async def run_mission_autonomous(req: MissionRequest) -> dict[str, Any]:
+    """Laço autônomo seguro (FASE E): Observar→Planejar→Agir→Verificar até
+    convergir ou o governador parar (teto de ciclos, prazo, sem-progresso, falha).
+    Age só pelas ferramentas gated — nunca excede a permissão do dono."""
+    if not req.goal.strip():
+        raise HTTPException(400, "goal não pode ser vazio")
+    from backend.hivemind.autonomy import AutonomyGovernor, run_autonomous_mission
+
+    online = True if req.online is None else bool(req.online)
+    context = {"online": online, "deep": req.deep}
+    executor = _make_executor(req.deep, online)
+    gov = AutonomyGovernor(max_cycles=max(1, min(5, req.max_cycles)))
+    return await run_autonomous_mission(req.goal, MEMORY, executor=executor,
+                                        context=context, governor=gov)
 
 
 @router.get("/{mission_id}")

@@ -28,6 +28,7 @@ def test_health_expoe_inteligencia_fase_b():
     # superorganismo (FASE C · 9.8): decisão coletiva, atenção, realocação
     assert intel["collective_decision"] is True
     assert intel["attention_field"] is True and intel["adaptive_labor"] is True
+    assert intel["autonomous_loop"] is True             # FASE E · 9.9
     # ferramentas (FASE D · 9.8): mãos reais gated no catálogo
     tool_names = {t["name"] for t in intel["tools"]}
     assert {"compute", "write_file", "delete_path"} <= tool_names

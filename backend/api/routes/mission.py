@@ -63,7 +63,10 @@ def _make_executor(deep: bool, online: bool):
                 cache["answer"] = (t.result or {}).get("answer", "")
                 cache["sources"] = (t.result or {}).get("sources", [])
                 n = len(cache.get("sources") or [])
-                return True, f"{node.description} — {n} fonte(s)", {"n": n}
+                ev = (t.result or {}).get("deep_research", {}).get("evidence_count", n)
+                # deposita sinais REAIS para a decisão coletiva (C1) pesar
+                return True, f"{node.description} — {n} fonte(s)", {
+                    "n": n, "discovery": {"sources": n, "evidence": ev}}
             except Exception as exc:            # noqa: BLE001
                 return True, f"{node.description} — sem rede útil ({exc})", {}
         if nid in ("sintetizar", "responder", "resolver") and cache.get("answer"):

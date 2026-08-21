@@ -23,6 +23,7 @@ from typing import Any, Awaitable, Callable, Optional
 from backend.cognition.critic import get_goal_guard
 from backend.cognition.experience import get_error_memory, get_strategy_memory
 from backend.cognition.planner import get_planner
+from backend.hivemind.collective import DecisionSignals, get_collective_decider
 from backend.hivemind.blackboard import get_blackboard
 from backend.hivemind.mission import Mission, MissionState, get_mission_store
 
@@ -130,8 +131,27 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         await emit("soldados", Phase.CHECK,
                    "Foco derivou do objetivo — reancorando", {"drift": drift.to_dict()})
 
-    # 4) Aprendizado (B3): reforça a rota vitoriosa ou registra o fracasso.
+    # 3b) Decisão COLETIVA (C1): as castas votam comprometer × investigar por
+    # sinais reais. Advisory nesta fase — informa a interface e a autonomia
+    # futura (FASE E) sem alterar o estado done/failed do passo a passo.
     progress = mission.progress(graph)
+    snap = board.snapshot()
+    evid = sum(int(d.get("evidence", 0)) for d in snap["discoveries"]
+               if isinstance(d, dict))
+    srcs = sum(int(d.get("sources", 0)) for d in snap["discoveries"]
+               if isinstance(d, dict))
+    contras = sum(int(d.get("contradictions", 0)) for d in snap["discoveries"]
+                  if isinstance(d, dict))
+    signals = DecisionSignals(evidence_count=evid, sources=srcs,
+                              contradictions=contras, drifted=drift.drifted,
+                              confidence=progress)
+    verdict = get_collective_decider().decide(signals)
+    board.note("decisions", verdict.to_dict())
+    await emit("rainha", Phase.CHECK,
+               f"Decisão coletiva: {verdict.decision} ({verdict.reason})",
+               {"collective": verdict.to_dict(), "signals": signals.to_dict()})
+
+    # 4) Aprendizado (B3): reforça a rota vitoriosa ou registra o fracasso.
     if failed:
         mission.touch(MissionState.FAILED)
         get_error_memory().remember(goal, plan.route.name, final_answer)
@@ -146,6 +166,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         "route": plan.route.to_dict(), "graph": graph.to_dict(),
         "progress": progress, "answer": final_answer,
         "drift": drift.to_dict(), "blackboard": board.snapshot(),
+        "collective": verdict.to_dict(),
         "checkpoints": [c.to_dict() for c in mission.checkpoints],
     }
     _OUTCOMES[mission.id] = outcome

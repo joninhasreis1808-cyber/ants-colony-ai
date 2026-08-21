@@ -7,9 +7,24 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from backend.core import SearchResult, Task
 from backend.hivemind import deep_research
 from backend.memory.shared_memory import SharedMemory
+
+
+@pytest.fixture(autouse=True)
+def _forca_rules(monkeypatch):
+    """Prova o caminho OFFLINE (compositor 'busca na web'). Fixa o córtex em
+    regras e limpa o probe do Ollama para o teste não depender da ordem da suíte
+    (outro teste pode ter detectado transitoriamente um backend LLM)."""
+    import backend.cognition.reasoner as R
+    monkeypatch.setenv("ANTS_LLM", "rules")
+    monkeypatch.delenv("ANTS_LLM_API_KEY", raising=False)
+    R._OLLAMA_PROBE.clear()
+    yield
+    R._OLLAMA_PROBE.clear()
 
 
 class FakeRouter:

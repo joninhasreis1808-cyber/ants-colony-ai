@@ -12,7 +12,7 @@ from typing import Any, Callable, Optional
 
 from backend.permissions.device_scopes import get_device_scopes
 from backend.tools import capabilities as caps
-from backend.tools import file_tools
+from backend.tools import compute_tools, file_tools, write_tools
 
 
 @dataclass
@@ -100,4 +100,24 @@ def get_tool_registry() -> ToolRegistry:
             "read_file", caps.CAP_FS_READ,
             "Lê o início de um arquivo autorizado (texto)",
             file_tools.read_file, {"path": "string"}))
+        # FASE D (9.8): "mãos" que MODIFICAM — dry-run por padrão, confirm:true
+        # para agir; sempre atrás do path_guard e do escopo write_files.
+        _INSTANCE.register(Tool(
+            "write_file", caps.CAP_FS_WRITE,
+            "Escreve texto num arquivo autorizado (dry-run salvo confirm:true)",
+            write_tools.write_file,
+            {"path": "string", "content": "string", "confirm": "bool?"}))
+        _INSTANCE.register(Tool(
+            "make_dir", caps.CAP_FS_WRITE,
+            "Cria uma pasta autorizada (dry-run salvo confirm:true)",
+            write_tools.make_dir, {"path": "string", "confirm": "bool?"}))
+        _INSTANCE.register(Tool(
+            "delete_path", caps.CAP_FS_DELETE,
+            "Apaga um arquivo ou pasta vazia autorizada (dry-run salvo confirm:true)",
+            write_tools.delete_path, {"path": "string", "confirm": "bool?"}))
+        # Cálculo exato: puro, sem escopo de device (capacidade ≠ permissão).
+        _INSTANCE.register(Tool(
+            "compute", caps.CAP_COMPUTE,
+            "Resolve uma expressão aritmética exata (offline, sem eval)",
+            compute_tools.compute, {"expression": "string"}))
     return _INSTANCE

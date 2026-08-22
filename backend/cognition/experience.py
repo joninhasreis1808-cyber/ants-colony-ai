@@ -73,11 +73,18 @@ _MAX_BOOST = 0.20         # teto do bônus
 class ErrorMemory:
     """Registra e recorda fracassos, para não repetir a mesma rota que falhou."""
 
-    def __init__(self) -> None:
-        self._log: list[Attempt] = []
+    def __init__(self, path=None) -> None:
+        from backend.hivemind.state_store import load_json
+        self._path = path
+        self._log: list[Attempt] = [Attempt(**d) for d in load_json(path, [])]
+
+    def _save(self) -> None:
+        from backend.hivemind.state_store import save_json
+        save_json(self._path, [a.to_dict() for a in self._log])
 
     def remember(self, goal: str, route: str, error: str = "") -> None:
         self._log.append(Attempt(goal=goal, route=route, detail=str(error)))
+        self._save()
 
     def recall(self, goal: str) -> list[Attempt]:
         return [a for a in self._log if _similar(a.goal, goal)]
@@ -90,17 +97,25 @@ class ErrorMemory:
 
     def clear(self) -> None:
         self._log.clear()
+        self._save()
 
 
 class StrategyMemory:
     """Registra e recorda sucessos, para reforçar a rota que já funcionou."""
 
-    def __init__(self) -> None:
-        self._log: list[Attempt] = []
+    def __init__(self, path=None) -> None:
+        from backend.hivemind.state_store import load_json
+        self._path = path
+        self._log: list[Attempt] = [Attempt(**d) for d in load_json(path, [])]
+
+    def _save(self) -> None:
+        from backend.hivemind.state_store import save_json
+        save_json(self._path, [a.to_dict() for a in self._log])
 
     def record_success(self, goal: str, route: str, quality: float = 1.0) -> None:
         self._log.append(Attempt(goal=goal, route=route,
                                  quality=max(0.0, min(1.0, quality))))
+        self._save()
 
     def recall(self, goal: str) -> list[Attempt]:
         return [a for a in self._log if _similar(a.goal, goal)]
@@ -123,6 +138,7 @@ class StrategyMemory:
 
     def clear(self) -> None:
         self._log.clear()
+        self._save()
 
 
 def apply_experience(routes: list, goal: str) -> list:
@@ -141,15 +157,24 @@ _ERR: ErrorMemory | None = None
 _STRAT: StrategyMemory | None = None
 
 
+def reload_experience() -> None:
+    """Descarta os singletons para recarregar do disco (após reinício/persistência)."""
+    global _ERR, _STRAT
+    _ERR = None
+    _STRAT = None
+
+
 def get_error_memory() -> ErrorMemory:
     global _ERR
     if _ERR is None:
-        _ERR = ErrorMemory()
+        from backend.hivemind.state_store import state_path
+        _ERR = ErrorMemory(path=state_path("error_memory.json"))
     return _ERR
 
 
 def get_strategy_memory() -> StrategyMemory:
     global _STRAT
     if _STRAT is None:
-        _STRAT = StrategyMemory()
+        from backend.hivemind.state_store import state_path
+        _STRAT = StrategyMemory(path=state_path("strategy_memory.json"))
     return _STRAT

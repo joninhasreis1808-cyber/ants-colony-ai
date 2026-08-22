@@ -28,6 +28,7 @@ from backend.api.routes import device as device_routes
 from backend.api.routes import nervous as nervous_routes
 from backend.api.routes import tools as tools_routes
 from backend.api.routes import mission as mission_routes
+from backend.api.routes import evolution_ledger as evolution_ledger_routes
 from backend.api.security import auth_posture
 from backend.events.audit import EventAuditor
 from backend.events.middleware import EventBusMiddleware
@@ -90,11 +91,13 @@ def _intelligence_posture() -> dict:
             "attention_field": True,
             "adaptive_labor": True,
             "autonomous_loop": True,
+            "controlled_evolution": True,
             "learning": {
                 "successes": len(get_strategy_memory()._log),
                 "errors": len(get_error_memory()._log),
             },
             "mission_endpoint": "/mission",
+            "evolution_endpoint": "/evolution",
         }
     except Exception:  # noqa: BLE001
         return {"hierarchical_planner": False}
@@ -129,6 +132,7 @@ app.include_router(evolution_routes.router)
 app.include_router(organism_routes.router)
 app.include_router(tools_routes.router)
 app.include_router(mission_routes.router)
+app.include_router(evolution_ledger_routes.router)
 
 
 @app.get("/ping")

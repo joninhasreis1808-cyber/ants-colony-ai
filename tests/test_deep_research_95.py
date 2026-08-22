@@ -22,6 +22,9 @@ def _forca_rules(monkeypatch):
     import backend.cognition.reasoner as R
     monkeypatch.setenv("ANTS_LLM", "rules")
     monkeypatch.delenv("ANTS_LLM_API_KEY", raising=False)
+    # À prova de balas contra flakiness de CI: neutraliza o probe de rede do
+    # Ollama (timing/porta) — o backend fica deterministicamente em "regras".
+    monkeypatch.setattr(R, "_ollama_reachable", lambda: False)
     R._OLLAMA_PROBE.clear()
     yield
     R._OLLAMA_PROBE.clear()

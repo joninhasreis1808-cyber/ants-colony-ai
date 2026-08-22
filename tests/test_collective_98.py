@@ -95,3 +95,27 @@ def test_missao_registra_a_decisao_coletiva():
     # e o evento da decisão foi emitido (a Câmera mostra o consenso)
     msgs = [e["message"] for e in mem.get_events(out["mission_id"])]
     assert any("Decisão coletiva" in m for m in msgs)
+
+
+def test_rota_deterministica_nao_exige_evidencia_externa():
+    """Refino R: cálculo/memória/conhecimento não reúnem evidência externa —
+    concluídos com confiança, a colônia COMPROMETE (não pede investigar)."""
+    v = CollectiveDecider().decide(DecisionSignals(
+        evidence_count=0, sources=0, contradictions=0, drifted=False,
+        confidence=1.0, evidence_based=False))
+    assert v.decision == COMMIT and v.reached_quorum
+    # mas contradição/desvio ainda vetam, mesmo em rota determinística
+    v2 = CollectiveDecider().decide(DecisionSignals(
+        evidence_count=0, sources=0, contradictions=1, confidence=1.0,
+        evidence_based=False))
+    assert v2.decision == INVESTIGATE
+
+
+def test_missao_de_calculo_compromete():
+    import asyncio
+    from backend.hivemind.mission_runner import run_mission
+    from backend.memory.shared_memory import SharedMemory
+    out = asyncio.run(run_mission("quanto é 9 * 9", SharedMemory(":memory:")))
+    assert out["route"]["name"] == "computation"
+    assert out["collective"]["decision"] == COMMIT       # antes vinha "investigar"
+    assert out["allocation"]["total"] == 0               # nada a realocar

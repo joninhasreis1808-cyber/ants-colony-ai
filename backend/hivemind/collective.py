@@ -32,11 +32,16 @@ class DecisionSignals:
     contradictions: int = 0          # divergências abertas (crítica B4)
     drifted: bool = False            # foco derivou do objetivo? (guarda B4)
     confidence: float = 0.0          # confiança agregada [0,1]
+    evidence_based: bool = True      # a rota depende de evidência EXTERNA (web)?
+    #  Rotas determinísticas (cálculo, memória, conhecimento, dispositivo) NÃO
+    #  reúnem evidência externa: exigir fontes/evidência delas seria um sinal
+    #  falso. Quando evidence_based=False, as castas julgam por confiança +
+    #  ausência de contradição/desvio, não por contagem de fontes.
 
     def to_dict(self) -> dict:
         return {"evidence_count": self.evidence_count, "sources": self.sources,
                 "contradictions": self.contradictions, "drifted": self.drifted,
-                "confidence": self.confidence}
+                "confidence": self.confidence, "evidence_based": self.evidence_based}
 
 
 @dataclass
@@ -61,12 +66,18 @@ def _vote_of(caste: str, s: DecisionSignals) -> str:
         # guardiões da qualidade: contradição aberta ou desvio → investigar
         if s.contradictions > 0 or s.drifted:
             return INVESTIGATE
+        if not s.evidence_based:                 # rota determinística: confia na conclusão
+            return COMMIT if s.confidence >= 0.5 else INVESTIGATE
         return COMMIT if s.evidence_count >= 2 else INVESTIGATE
     if caste == "exploradoras":
-        # quem busca sabe se ainda falta terreno: poucas fontes → investigar
+        # quem busca só cobra fontes em rota de pesquisa; senão confia
+        if not s.evidence_based:
+            return COMMIT
         return COMMIT if s.sources >= 2 else INVESTIGATE
     if caste == "operarias":
-        # quem compila confia no volume de material útil
+        # quem compila só cobra material útil em rota de pesquisa
+        if not s.evidence_based:
+            return COMMIT if s.confidence >= 0.5 else INVESTIGATE
         return COMMIT if s.evidence_count >= 2 else INVESTIGATE
     # rainha: pondera a confiança agregada e a ausência de desvio
     if s.drifted:

@@ -148,9 +148,11 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
                if isinstance(d, dict))
     contras = sum(int(d.get("contradictions", 0)) for d in snap["discoveries"]
                   if isinstance(d, dict))
+    # A rota diz se depende de evidência externa (web) — cálculo/memória/etc. não.
+    evidence_based = plan.route.name in ("web_search", "deep_research")
     signals = DecisionSignals(evidence_count=evid, sources=srcs,
                               contradictions=contras, drifted=drift.drifted,
-                              confidence=progress)
+                              confidence=progress, evidence_based=evidence_based)
     verdict = get_collective_decider().decide(signals)
     board.note("decisions", verdict.to_dict())
     await emit("rainha", Phase.CHECK,

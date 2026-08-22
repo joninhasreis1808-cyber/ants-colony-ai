@@ -101,6 +101,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
     mission.touch(MissionState.RUNNING)
     final_answer = ""
     failed = False
+    tools_used: list[dict] = []
     for i, nid in enumerate(order):
         node = graph.get(nid)
         bot = _bot_of(nid)
@@ -118,6 +119,15 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
                 board.note("discoveries", data["discovery"])
                 attention.reinforce(str(data["discovery"].get("topic", "")))
             attention.reinforce(note)            # cada passo reforça o foco (C2)
+            if data.get("tool"):                 # a colônia AGIU com uma ferramenta (Passo 1)
+                tools_used.append(data["tool"])
+                board.note("decisions", {"tool_call": data["tool"]})
+                tl = data["tool"]
+                await emit("operarias", Phase.DO,
+                           f"Ferramenta '{tl['tool']}' "
+                           + ("usada" if tl.get("ok") else "recusada")
+                           + (f": {tl['reason']}" if tl.get("reason") else ""),
+                           {"tool": tl})
             final_answer = note
             await emit(bot, phase, note, data or {})
         else:
@@ -129,9 +139,14 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         if failed:
             break
 
-    # 3) Verificação de desvio de objetivo (B4).
+    # 3) Verificação de desvio de objetivo (B4). O desvio é medido por
+    # sobreposição de PALAVRAS — só faz sentido quando a resposta é texto. Numa
+    # rota de cálculo a resposta é um número (144), que não compartilha palavras
+    # com o objetivo: aí o alinhamento é medido contra o próprio objetivo (não há
+    # como derivar num único passo determinístico).
     mission.touch(MissionState.VERIFYING)
-    drift = get_goal_guard().check(goal, final_answer or goal)
+    drift_focus = goal if plan.route.name == "computation" else (final_answer or goal)
+    drift = get_goal_guard().check(goal, drift_focus)
     if drift.drifted:
         board.note("blockers", {"drift": drift.to_dict()})
         await emit("soldados", Phase.CHECK,
@@ -148,9 +163,11 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
                if isinstance(d, dict))
     contras = sum(int(d.get("contradictions", 0)) for d in snap["discoveries"]
                   if isinstance(d, dict))
+    # A rota diz se depende de evidência externa (web) — cálculo/memória/etc. não.
+    evidence_based = plan.route.name in ("web_search", "deep_research")
     signals = DecisionSignals(evidence_count=evid, sources=srcs,
                               contradictions=contras, drifted=drift.drifted,
-                              confidence=progress)
+                              confidence=progress, evidence_based=evidence_based)
     verdict = get_collective_decider().decide(signals)
     board.note("decisions", verdict.to_dict())
     await emit("rainha", Phase.CHECK,
@@ -184,6 +201,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         "collective": verdict.to_dict(),
         "attention": attention.focus(limit=6),
         "allocation": allocation.to_dict(),
+        "tools_used": tools_used,
         "checkpoints": [c.to_dict() for c in mission.checkpoints],
     }
     _OUTCOMES[mission.id] = outcome

@@ -55,18 +55,42 @@ class EvolutionProposal:
                 "status": self.status, "created_at": self.created_at,
                 "decided_at": self.decided_at, "history": list(self.history)}
 
+    @classmethod
+    def from_dict(cls, d: dict) -> "EvolutionProposal":
+        return cls(kind=d["kind"], title=d["title"], rationale=d["rationale"],
+                   goal_signature=d["goal_signature"], route=d["route"],
+                   risk=d.get("risk", "low"), evidence=list(d.get("evidence", [])),
+                   status=d.get("status", "proposed"), id=d["id"],
+                   created_at=d.get("created_at", time.time()),
+                   decided_at=d.get("decided_at"),
+                   history=list(d.get("history", [])))
+
 
 class EvolutionLedger:
     """Livro-razão append-only das propostas de evolução (auditável)."""
 
-    def __init__(self) -> None:
+    def __init__(self, path=None) -> None:
+        from backend.hivemind.state_store import load_json
+        self._path = path
         self._items: dict[str, EvolutionProposal] = {}
         self._order: list[str] = []
+        data = load_json(path, None)
+        if data:
+            self._order = list(data.get("order", []))
+            self._items = {i: EvolutionProposal.from_dict(d)
+                           for i, d in (data.get("items") or {}).items()}
+
+    def _save(self) -> None:
+        from backend.hivemind.state_store import save_json
+        save_json(self._path, {"order": self._order,
+                               "items": {i: p.to_dict()
+                                         for i, p in self._items.items()}})
 
     def propose(self, p: EvolutionProposal) -> EvolutionProposal:
         p.history.append({"at": time.time(), "to": p.status})
         self._items[p.id] = p
         self._order.append(p.id)
+        self._save()
         return p
 
     def get(self, pid: str) -> Optional[EvolutionProposal]:
@@ -82,6 +106,7 @@ class EvolutionLedger:
         p.status = to.value
         p.decided_at = time.time()
         p.history.append({"at": p.decided_at, "to": p.status})
+        self._save()
         return p
 
     def approve(self, pid: str) -> Optional[EvolutionProposal]:
@@ -165,9 +190,16 @@ def propose_from_experience(error_mem=None, strategy_mem=None,
 _LEDGER: Optional[EvolutionLedger] = None
 
 
+def reload_evolution_ledger() -> None:
+    """Descarta o singleton para recarregar do disco (após reinício/persistência)."""
+    global _LEDGER
+    _LEDGER = None
+
+
 def get_evolution_ledger() -> EvolutionLedger:
     """Singleton de processo do livro-razão de evolução."""
     global _LEDGER
     if _LEDGER is None:
-        _LEDGER = EvolutionLedger()
+        from backend.hivemind.state_store import state_path
+        _LEDGER = EvolutionLedger(path=state_path("evolution_ledger.json"))
     return _LEDGER

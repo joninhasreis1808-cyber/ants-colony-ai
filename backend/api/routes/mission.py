@@ -39,42 +39,11 @@ class MissionResponse(BaseModel):
 
 
 def _make_executor(deep: bool, online: bool):
-    """Executor real: delega a síntese à pesquisa profunda quando faz sentido.
-
-    Roda a pesquisa em uma memória isolada (não polui o /hive) e injeta a resposta
-    real no passo de síntese. No sandbox sem rede, a pesquisa já devolve uma
-    limitação honesta — a missão continua verdadeira, sem inventar."""
-    from backend.core import Task
-    from backend.hivemind import deep_research
-    from backend.memory.shared_memory import SharedMemory
-    from backend.providers.router import ProviderRouter
-    from backend.providers.local_provider import LocalProvider
-
-    cache: dict[str, Any] = {}
-
-    async def executor(node, board):
-        nid = node.id
-        if nid in ("explorar", "buscar") and online:
-            try:
-                t = Task(goal=board.goal)
-                scratch = SharedMemory(":memory:")
-                scratch.save_task(t)
-                await deep_research.run(t, scratch, None,
-                                        ProviderRouter([LocalProvider()]))
-                cache["answer"] = (t.result or {}).get("answer", "")
-                cache["sources"] = (t.result or {}).get("sources", [])
-                n = len(cache.get("sources") or [])
-                ev = (t.result or {}).get("deep_research", {}).get("evidence_count", n)
-                # deposita sinais REAIS para a decisão coletiva (C1) pesar
-                return True, f"{node.description} — {n} fonte(s)", {
-                    "n": n, "discovery": {"sources": n, "evidence": ev}}
-            except Exception as exc:            # noqa: BLE001
-                return True, f"{node.description} — sem rede útil ({exc})", {}
-        if nid in ("sintetizar", "responder", "resolver") and cache.get("answer"):
-            return True, cache["answer"], {"sources": cache.get("sources", [])}
-        return True, f"{node.description} — concluído", {}
-
-    return executor
+    """Executor real da missão (Passo 1): AGE com ferramentas gated do
+    ToolRegistry + delega às rotas de pesquisa a Pesquisa Profunda. Sempre honesto
+    (dry-run/escopo); no sandbox sem rede a pesquisa declara a limitação."""
+    from backend.hivemind.tool_executor import make_tool_executor
+    return make_tool_executor("", deep, online)
 
 
 async def _launch(goal: str, context: dict, executor, mission) -> None:

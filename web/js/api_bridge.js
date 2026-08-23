@@ -12,9 +12,16 @@
 
   const AntAPI = {
     online: null,
-    async get(p) { const r = await orig(api + p, { cache: "no-store" }); if (!r.ok) throw new Error(r.status); return r.json(); },
+    // Chave do dono (9.14): num deploy público as rotas sensíveis (/mission,
+    // /evolution, /tools/run) exigem o token. O dono guarda a chave aqui (só no
+    // navegador dele, localStorage) e ela viaja como X-Ants-Token. Visitante
+    // anônimo não envia nada e segue barrado — a coleira do dono continua.
+    token() { try { return localStorage.getItem("ants-owner-token") || ""; } catch (e) { return ""; } },
+    setToken(t) { try { t ? localStorage.setItem("ants-owner-token", String(t).trim()) : localStorage.removeItem("ants-owner-token"); } catch (e) {} document.dispatchEvent(new CustomEvent("ants:token", { detail: !!t })); },
+    _hdrs(base) { const h = Object.assign({}, base || {}); const t = this.token(); if (t) h["X-Ants-Token"] = t; return h; },
+    async get(p) { const r = await orig(api + p, { cache: "no-store", headers: this._hdrs() }); if (!r.ok) throw new Error(r.status); return r.json(); },
     async post(p, body) {
-      const r = await orig(api + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+      const r = await orig(api + p, { method: "POST", headers: this._hdrs({ "Content-Type": "application/json" }), body: JSON.stringify(body || {}) });
       if (!r.ok) throw new Error(r.status); return r.json();
     },
     _mark(ok) { if (ok !== this.online) { this.online = ok; document.dispatchEvent(new CustomEvent("ants:online", { detail: ok })); } },

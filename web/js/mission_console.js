@@ -49,6 +49,10 @@
       + '<button id="mc-run">Executar</button></div>'
       + '<div class="mc-out" id="mc-out"></div>'
       + '<div class="mc-sep"></div>'
+      + '<h3>Histórico de missões</h3>'
+      + '<div class="mc-row"><button id="mc-hist-refresh">Atualizar histórico</button></div>'
+      + '<div id="mc-hist" class="mc-out"></div>'
+      + '<div class="mc-sep"></div>'
       + '<h3>Evolução da colônia</h3>'
       + '<div class="mc-row"><button id="mc-mine">Minerar propostas</button>'
       + '<button id="mc-refresh">Atualizar lista</button></div>'
@@ -56,7 +60,25 @@
     $("mc-run").onclick = runMission;
     $("mc-mine").onclick = mineProposals;
     $("mc-refresh").onclick = loadProposals;
+    $("mc-hist-refresh").onclick = loadHistory;
+    loadHistory();
     loadProposals();
+  }
+
+  function loadHistory() {
+    var box = $("mc-hist"); if (!box) return;
+    AntAPI.get("/mission").then(function (r) {
+      var ms = (r && r.missions) || [];
+      if (!ms.length) { box.textContent = "Sem missões ainda."; return; }
+      box.innerHTML = ms.slice(0, 20).map(function (m) {
+        var steps = (m.checkpoints || []).length;
+        return '<div>· <b>' + esc(m.goal) + "</b> — " + esc(m.state)
+          + " (" + steps + " checkpoints)</div>";
+      }).join("");
+    }).catch(function (e) {
+      box.innerHTML = '<span class="mc-err">Falha ao ler histórico ('
+        + esc(e && e.message) + ").</span>";
+    });
   }
 
   function runMission() {
@@ -81,6 +103,7 @@
         return t.tool + (t.ok ? " (ok)" : " (recusada)"); }).join(", "));
       if (r.answer) lines.push("\nResposta: " + esc(r.answer));
       out.textContent = lines.join("\n");
+      loadHistory();                     // a missão recém-executada entra no histórico
     }).catch(function (e) {
       out.innerHTML = '<span class="mc-err">Falha (' + esc(e && e.message)
         + '). Rotas de missão são do dono: rode na sua máquina (127.0.0.1) ou '

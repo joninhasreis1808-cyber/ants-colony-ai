@@ -92,33 +92,71 @@ class Mission:
         return m
 
 
-class MissionStore:
-    """Registro de missões vivas (retomáveis via to_dict/from_dict)."""
+# Teto do histórico persistido: guarda as missões mais recentes (por updated_at)
+# para o disco nunca crescer sem limite. Em memória o comportamento é o de sempre.
+_MAX_MISSIONS = 200
 
-    def __init__(self) -> None:
+
+class MissionStore:
+    """Registro de missões vivas (retomáveis via to_dict/from_dict).
+
+    Persistência OPT-IN (9.13): com `ANTS_STATE_DIR` definido, o histórico de
+    missões — objetivo, estado e checkpoints — sobrevive ao reinício do processo;
+    sem a variável, tudo continua só em memória (comportamento anterior)."""
+
+    def __init__(self, path=None) -> None:
+        from backend.hivemind.state_store import load_json
+        self._path = path
         self._m: dict[str, Mission] = {}
+        for d in load_json(path, []):
+            try:
+                m = Mission.from_dict(d)
+                self._m[m.id] = m
+            except Exception:  # noqa: BLE001 - registro corrompido é ignorado
+                pass
+
+    def _save(self) -> None:
+        from backend.hivemind.state_store import save_json
+        items = sorted(self._m.values(), key=lambda m: m.updated_at)
+        if len(items) > _MAX_MISSIONS:                 # poda as mais antigas
+            for m in items[:-_MAX_MISSIONS]:
+                self._m.pop(m.id, None)
+            items = items[-_MAX_MISSIONS:]
+        save_json(self._path, [m.to_dict() for m in items])
 
     def save(self, mission: Mission) -> None:
         self._m[mission.id] = mission
+        self._save()
 
     def get(self, mid: str) -> Optional[Mission]:
         return self._m.get(mid)
 
     def list(self) -> list[dict[str, Any]]:
-        return [m.to_dict() for m in self._m.values()]
+        # mais recentes primeiro — a interface mostra o histórico de cima p/ baixo.
+        return [m.to_dict()
+                for m in sorted(self._m.values(),
+                                key=lambda m: m.updated_at, reverse=True)]
 
     def resume(self, data: dict[str, Any]) -> Mission:
         """Reconstrói uma missão a partir do estado persistido e a registra."""
         m = Mission.from_dict(data)
         self._m[m.id] = m
+        self._save()
         return m
 
 
 _STORE: Optional[MissionStore] = None
 
 
+def reload_mission_store() -> None:
+    """Descarta o singleton para recarregar do disco (após reinício/persistência)."""
+    global _STORE
+    _STORE = None
+
+
 def get_mission_store() -> MissionStore:
     global _STORE
     if _STORE is None:
-        _STORE = MissionStore()
+        from backend.hivemind.state_store import state_path
+        _STORE = MissionStore(path=state_path("missions.json"))
     return _STORE

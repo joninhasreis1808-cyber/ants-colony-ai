@@ -102,6 +102,17 @@ async def run_mission_autonomous(req: MissionRequest) -> dict[str, Any]:
                                         context=context, governor=gov)
 
 
+@router.get("")
+async def list_missions(limit: int = 50) -> dict[str, Any]:
+    """Histórico de missões (9.13) — mais recentes primeiro, retomável do disco.
+
+    Com `ANTS_STATE_DIR` definido, esta lista sobrevive ao reinício do processo:
+    objetivo, estado e checkpoints de cada missão executada."""
+    from backend.hivemind.mission import get_mission_store
+    missions = get_mission_store().list()[:max(1, min(500, limit))]
+    return {"missions": missions, "count": len(missions)}
+
+
 @router.get("/{mission_id}")
 async def get_mission(mission_id: str) -> dict[str, Any]:
     """Desfecho auditável de uma missão executada (rota, grafo, checkpoints…)."""

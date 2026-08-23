@@ -42,5 +42,8 @@ def save_json(path: Optional[Path], data: Any) -> None:
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(p.suffix + ".tmp")
-    tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    # default=str: um desfecho de missão carrega snapshots ricos; se algo raro
+    # não for serializável, vira texto em vez de derrubar a persistência.
+    tmp.write_text(json.dumps(data, ensure_ascii=False, default=str),
+                   encoding="utf-8")
     os.replace(tmp, p)          # troca atômica

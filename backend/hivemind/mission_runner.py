@@ -43,7 +43,45 @@ _BOT_BY_STEP = {
 StepResult = tuple[bool, str, dict]
 Executor = Callable[[Any, Any], Awaitable[StepResult]]
 
+# Desfechos das missões executadas. Persistência OPT-IN (9.13): com
+# `ANTS_STATE_DIR` definido, o histórico de desfechos sobrevive ao reinício; sem a
+# variável, fica só em memória (comportamento anterior). Teto para o disco não
+# crescer sem limite — mantém os mais recentes (ordem de inserção do dict).
+_MAX_OUTCOMES = 200
 _OUTCOMES: dict[str, dict] = {}
+_OUTCOMES_LOADED = False
+
+
+def _outcomes_path():
+    from backend.hivemind.state_store import state_path
+    return state_path("mission_outcomes.json")
+
+
+def _load_outcomes() -> None:
+    global _OUTCOMES_LOADED
+    if _OUTCOMES_LOADED:
+        return
+    from backend.hivemind.state_store import load_json
+    data = load_json(_outcomes_path(), {})
+    if isinstance(data, dict):
+        _OUTCOMES.update(data)
+    _OUTCOMES_LOADED = True
+
+
+def _save_outcome(mission_id: str, outcome: dict) -> None:
+    _load_outcomes()
+    _OUTCOMES[mission_id] = outcome
+    while len(_OUTCOMES) > _MAX_OUTCOMES:              # poda o mais antigo
+        _OUTCOMES.pop(next(iter(_OUTCOMES)))
+    from backend.hivemind.state_store import save_json
+    save_json(_outcomes_path(), _OUTCOMES)
+
+
+def reload_outcomes() -> None:
+    """Esquece o cache em memória para recarregar do disco (após reinício)."""
+    global _OUTCOMES_LOADED
+    _OUTCOMES.clear()
+    _OUTCOMES_LOADED = False
 
 
 def _bot_of(step_id: str) -> str:
@@ -192,6 +230,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         get_strategy_memory().record_success(goal, plan.route.name,
                                              quality=max(0.1, progress))
     mission.checkpoint(graph, note="missão encerrada")
+    get_mission_store().save(mission)   # persiste o estado final (9.13)
 
     outcome = {
         "mission_id": mission.id, "goal": goal, "state": mission.state,
@@ -204,10 +243,11 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         "tools_used": tools_used,
         "checkpoints": [c.to_dict() for c in mission.checkpoints],
     }
-    _OUTCOMES[mission.id] = outcome
+    _save_outcome(mission.id, outcome)
     return outcome
 
 
 def get_mission_outcome(mission_id: str) -> Optional[dict]:
     """Desfecho persistido de uma missão executada (para a interface consultar)."""
+    _load_outcomes()
     return _OUTCOMES.get(mission_id)

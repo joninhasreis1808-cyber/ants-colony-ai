@@ -41,7 +41,11 @@
     var el = $("mission-console"); if (!el) return;
     injectStyle();
     el.innerHTML =
-      '<h3>Missão autônoma</h3>'
+      '<div class="mc-row" id="mc-keyrow">'
+      + '<input type="password" id="mc-key" placeholder="Chave do dono (só p/ deploy público)"/>'
+      + '<button id="mc-key-save">Desbloquear</button>'
+      + '<span id="mc-key-state" class="mc-badge"></span></div>'
+      + '<h3>Missão autônoma</h3>'
       + '<div class="mc-row"><input type="text" id="mc-goal" '
       + 'placeholder="Objetivo (ex.: quanto é 12 * 12)"/></div>'
       + '<div class="mc-row"><label><input type="checkbox" id="mc-online"/> usar rede</label>'
@@ -61,8 +65,22 @@
     $("mc-mine").onclick = mineProposals;
     $("mc-refresh").onclick = loadProposals;
     $("mc-hist-refresh").onclick = loadHistory;
+    $("mc-key-save").onclick = function () {
+      AntAPI.setToken(($("mc-key").value || "").trim());
+      $("mc-key").value = "";
+      updateKeyState();
+      loadProposals();
+    };
+    updateKeyState();
     loadHistory();
     loadProposals();
+  }
+
+  function updateKeyState() {
+    var b = $("mc-key-state"); if (!b) return;
+    var has = !!(window.AntAPI && AntAPI.token());
+    b.textContent = has ? "desbloqueado" : "bloqueado";
+    b.style.color = has ? "#2e7d32" : "var(--dim,#9aa)";
   }
 
   function loadHistory() {

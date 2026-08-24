@@ -10,4 +10,13 @@ services:
     dockerContext: .
     healthCheckPath: /health
     autoDeployTrigger: commit
-    envVars: []
+    # Blindagem da autenticação do dono (9.14): declarada no blueprint para
+    # SOBREVIVER a um blueprint sync (antes `envVars: []` zeraria a config).
+    # O token é um SEGREDO — `sync: false` mantém o valor só no dashboard do
+    # Render, NUNCA no repositório. Definido em Environment; o blueprint apenas
+    # declara a intenção e o preserva.
+    envVars:
+      - key: ANTS_PUBLIC
+        value: "1"
+      - key: ANTS_API_TOKEN
+        sync: false

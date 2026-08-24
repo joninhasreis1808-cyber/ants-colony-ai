@@ -50,6 +50,8 @@
       + 'placeholder="Objetivo (ex.: quanto é 12 * 12)"/></div>'
       + '<div class="mc-row"><label><input type="checkbox" id="mc-online"/> usar rede</label>'
       + '<label><input type="checkbox" id="mc-deep"/> pesquisa profunda</label>'
+      + '<label title="grava arquivo de verdade (exige escopo write_files do dono)">'
+      + '<input type="checkbox" id="mc-confirm"/> gravar de verdade</label>'
       + '<button id="mc-run">Executar</button></div>'
       + '<div class="mc-out" id="mc-out"></div>'
       + '<div class="mc-sep"></div>'
@@ -106,7 +108,8 @@
     out.textContent = "a colônia trabalha…";
     $("mc-run").disabled = true;
     AntAPI.post("/mission/auto", {
-      goal: goal, online: $("mc-online").checked, deep: $("mc-deep").checked, max_cycles: 3,
+      goal: goal, online: $("mc-online").checked, deep: $("mc-deep").checked,
+      confirm: $("mc-confirm").checked, max_cycles: 3,
     }).then(function (r) {
       var lines = [];
       lines.push("rota final: " + esc((r.final_outcome && r.final_outcome.route

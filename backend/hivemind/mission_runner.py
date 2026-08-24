@@ -183,7 +183,8 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
     # com o objetivo: aí o alinhamento é medido contra o próprio objetivo (não há
     # como derivar num único passo determinístico).
     mission.touch(MissionState.VERIFYING)
-    drift_focus = goal if plan.route.name == "computation" else (final_answer or goal)
+    drift_focus = goal if plan.route.name in ("computation", "device_action") \
+        else (final_answer or goal)
     drift = get_goal_guard().check(goal, drift_focus)
     if drift.drifted:
         board.note("blockers", {"drift": drift.to_dict()})

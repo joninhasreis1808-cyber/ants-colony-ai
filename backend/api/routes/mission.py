@@ -29,6 +29,7 @@ class MissionRequest(BaseModel):
     deep: bool = False
     online: Optional[bool] = None       # None = deixa a Cartógrafa decidir
     max_cycles: int = 3                 # teto do laço autônomo (FASE E)
+    confirm: bool = False               # dono confirma AÇÃO real (ex.: gravar arquivo)
 
 
 class MissionResponse(BaseModel):
@@ -38,12 +39,15 @@ class MissionResponse(BaseModel):
     steps: list[str]
 
 
-def _make_executor(deep: bool, online: bool):
+def _make_executor(deep: bool, online: bool, confirm: bool = False):
     """Executor real da missão (Passo 1): AGE com ferramentas gated do
     ToolRegistry + delega às rotas de pesquisa a Pesquisa Profunda. Sempre honesto
-    (dry-run/escopo); no sandbox sem rede a pesquisa declara a limitação."""
+    (dry-run/escopo); no sandbox sem rede a pesquisa declara a limitação.
+
+    `confirm` libera a escrita de verdade — e mesmo assim só se o dono já concedeu
+    o escopo `write_files` e autorizou o caminho (dupla trava)."""
     from backend.hivemind.tool_executor import make_tool_executor
-    return make_tool_executor("", deep, online)
+    return make_tool_executor("", deep, online, confirm)
 
 
 async def _launch(goal: str, context: dict, executor, mission) -> None:
@@ -68,7 +72,7 @@ async def create_mission(req: MissionRequest) -> MissionResponse:
     steps = plan.graph.topological_order()
     mission = Mission(goal=req.goal)             # id real já disponível para o GET
     get_mission_store().save(mission)
-    executor = _make_executor(req.deep, online)
+    executor = _make_executor(req.deep, online, req.confirm)
     asyncio.create_task(_launch(req.goal, context, executor, mission))
     return MissionResponse(mission_id=mission.id, state="planning",
                            route=plan.route.name, steps=steps)
@@ -81,7 +85,7 @@ async def run_mission_sync(req: MissionRequest) -> dict[str, Any]:
         raise HTTPException(400, "goal não pode ser vazio")
     online = True if req.online is None else bool(req.online)
     context = {"online": online, "deep": req.deep}
-    executor = _make_executor(req.deep, online)
+    executor = _make_executor(req.deep, online, req.confirm)
     return await run_mission(req.goal, MEMORY, context=context, executor=executor)
 
 
@@ -96,7 +100,7 @@ async def run_mission_autonomous(req: MissionRequest) -> dict[str, Any]:
 
     online = True if req.online is None else bool(req.online)
     context = {"online": online, "deep": req.deep}
-    executor = _make_executor(req.deep, online)
+    executor = _make_executor(req.deep, online, req.confirm)
     gov = AutonomyGovernor(max_cycles=max(1, min(5, req.max_cycles)))
     return await run_autonomous_mission(req.goal, MEMORY, executor=executor,
                                         context=context, governor=gov)

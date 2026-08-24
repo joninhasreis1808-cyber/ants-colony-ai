@@ -32,6 +32,15 @@ do Render já tem acesso ao repositório, o merge deste commit no `main` deve di
 um deploy automático em ants-c2ik com trigger "Push to main" (não mais
 `blueprint_sync`).
 
+## Auto-deploy ativado (via Deploy Hook)
+O webhook nativo GitHub→Render não disparava (mesmo com o repo vinculado). Solução
+confiável, sem OAuth/GitHub App: o workflow `.github/workflows/deploy.yml` já
+buildava a imagem e fazia smoke test do `/health` a cada push no `main`; agora,
+com o segredo `RENDER_DEPLOY_HOOK` configurado, o passo final faz `POST` no Deploy
+Hook do Render — o deploy só acontece **depois** de o build e o `/health` passarem.
+Este commit é o teste: o merge no `main` deve disparar o deploy sozinho (trigger
+"Deploy Hook", não `blueprint_sync`).
+
 <!-- Snapshot bruto do /health (produção), para auditoria -->
 ```json
 {"status":"healthy","version":"2.0.0","bots_active":5,"tasks_submitted":9,

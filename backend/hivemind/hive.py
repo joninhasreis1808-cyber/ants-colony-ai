@@ -98,15 +98,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         for bot in bots:
             bot._emit = self._emit  # noqa: SLF001 - injeção interna proposital
 
-        intent = self.recruiter.intent_of(task.goal)
-        # Registra quem chamou quem: a Rainha recruta cada casta (motivo=intenção)
-        # e cada bot passa o bastão ao próximo — a cadeia real da missão.
-        for b in bots:
-            self.recruitment.record("rainha", b.name, intent)
-        for a, b in zip(bots, bots[1:]):
-            self.recruitment.record(a.name, b.name, "passou o bastão")
-        self.memory.set_context(task.id, "recruitment",
-                                self.recruitment.get_chain())
+        intent = self._record_recruitment(task, bots)
         await self._announce(
             task.id,
             f"Colmeia leu a intenção '{intent}' e recrutou: "
@@ -124,26 +116,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 task.id, f"Colmeia recordou {n_recalled} memórias úteis"
             )
 
-        last_output: dict[str, Any] = {}
         try:
-            for bot in bots:
-                self._run_bot_hooks_pre(bot.name)
-                last_output = await bot.run(task.id, payload)
-                ok = last_output.get("ok", True)
-                self._run_bot_hooks_post(intent, bot.name, ok)
-                if not ok:
-                    await self._announce(
-                        task.id,
-                        f"{bot.name} não teve sucesso; colmeia prossegue",
-                    )
-            task.result = self._compile_result(task.id)
-            for ev in self._pending_events:  # emite anúncios do fallback
-                await self._emit(ev)
-            self._pending_events.clear()
-            task.touch(TaskStatus.DONE)
-            self._remember_outcome(task)
-            self._record_trust(bots, success=True)  # confiança conquistada
-            self.lifecycle.maintain()  # hiberna ociosos (poupa recursos)
+            await self._run_pipeline(task, bots, intent, payload)
         except Exception as exc:  # noqa: BLE001
             task.error = str(exc)
             task.touch(TaskStatus.FAILED)
@@ -152,6 +126,43 @@ class Hivemind(MemoryMixin, SwarmMixin):
             if self.bus is not None:
                 await self.bus.close(task.id)
         return task
+
+    def _record_recruitment(self, task: Task, bots: list) -> str:
+        """Registra 'quem chamou quem' (§3.3) e devolve a intenção lida.
+
+        A Rainha recruta cada casta (motivo=intenção) e cada bot passa o bastão
+        ao próximo — a cadeia real da missão, gravada no contexto compartilhado.
+        """
+        intent = self.recruiter.intent_of(task.goal)
+        for b in bots:
+            self.recruitment.record("rainha", b.name, intent)
+        for a, b in zip(bots, bots[1:]):
+            self.recruitment.record(a.name, b.name, "passou o bastão")
+        self.memory.set_context(task.id, "recruitment",
+                                self.recruitment.get_chain())
+        return intent
+
+    async def _run_pipeline(self, task: Task, bots: list, intent: str,
+                            payload: dict[str, Any]) -> None:
+        """Executa a cadeia de bots e consolida o desfecho de sucesso."""
+        for bot in bots:
+            self._run_bot_hooks_pre(bot.name)
+            last_output = await bot.run(task.id, payload)
+            ok = last_output.get("ok", True)
+            self._run_bot_hooks_post(intent, bot.name, ok)
+            if not ok:
+                await self._announce(
+                    task.id,
+                    f"{bot.name} não teve sucesso; colmeia prossegue",
+                )
+        task.result = self._compile_result(task.id)
+        for ev in self._pending_events:  # emite anúncios do fallback
+            await self._emit(ev)
+        self._pending_events.clear()
+        task.touch(TaskStatus.DONE)
+        self._remember_outcome(task)
+        self._record_trust(bots, success=True)  # confiança conquistada
+        self.lifecycle.maintain()  # hiberna ociosos (poupa recursos)
 
     def _compile_result(self, task_id: str) -> dict[str, Any]:
         """Reúne o produto final a partir do contexto compartilhado.
@@ -165,52 +176,18 @@ class Hivemind(MemoryMixin, SwarmMixin):
         created = self.memory.get_context(task_id, "created_app")
         perception = self.memory.get_context(task_id, "perception")
 
-        # Córtex determinístico (7.2): se a pergunta é calculável, o cálculo
-        # EXATO é autoritativo — vence web/memória/seed e nunca solta frase
-        # inata irrelevante. Roteado à frente das demais fontes.
-        computation = self._deterministic(task_id)
-        # Planejador (raciocínio puro): pedidos de "plano/N passos" viram um
-        # plano raciocinado real — não precisa de web nem de fato inato.
-        plan = None if computation else self._planner(task_id)
+        answer, confidence, cognition, computation, plan = \
+            self._resolve_answer(task_id, decision, created)
 
-        answer = decision.get("answer")
-        confidence = decision.get("confidence")
-        _GENERIC = "Sem evidências suficientes"
-        cognition: dict[str, Any] | None = None
-        if computation:
-            answer = computation["answer_text"]
-            confidence = computation["confidence"]
-        elif plan:
-            answer = plan["answer_text"]
-            confidence = plan["confidence"]
-        elif created and (not answer or _GENERIC in answer):
-            summary = created.get("summary", {})
-            answer = (
-                f"App criado: {summary.get('type')} "
-                f"({summary.get('files')} arquivos, "
-                f"{summary.get('tests')} testes)."
-            )
-        elif not created and (not answer or _GENERIC in answer):
-            # Sem evidência externa e sem app: recorre ao cérebro próprio.
-            cognition = self._cognitive_fallback(task_id)
-            if cognition:
-                answer = cognition["answer"]
-                confidence = cognition["confidence"]
         sources_list = self.memory.get_context(task_id, "sources") or []
         # Clareza da busca (9.2 · Bloco D): a resposta da web passa pelo
         # compositor — síntese limpa + selo de proveniência + fontes — em vez
         # do despejo cru do decisor (a "confusão" que o dono relatou). Só
         # quando a resposta veio da web (há fontes e não foi cálculo/plano).
         if sources_list and not computation and not plan and answer \
-                and _GENERIC not in answer:
+                and "Sem evidências suficientes" not in answer:
             from backend.cognitive.response_composer import get_composer
-            domains = []
-            for s in sources_list:
-                url = (s or {}).get("url", "") if isinstance(s, dict) else ""
-                if "://" in url:
-                    dom = url.split("://", 1)[1].split("/", 1)[0]
-                    if dom not in domains:
-                        domains.append(dom)
+            domains = self._domains_of(sources_list, dedup=True)
             answer = get_composer().web(answer, len(sources_list), domains)
         result: dict[str, Any] = {
             "answer": answer,
@@ -242,6 +219,54 @@ class Hivemind(MemoryMixin, SwarmMixin):
         result["trace"] = self._compile_trace(task_id, result)
         return result
 
+    def _resolve_answer(
+        self, task_id: str, decision: dict[str, Any], created: Any
+    ) -> tuple:
+        """Decide a resposta/confiança e a fonte cognitiva a partir das rotas.
+
+        Ordem de autoridade: cálculo exato (córtex determinístico) › plano
+        raciocinado › app criado › cérebro próprio (fallback cognitivo). Devolve
+        (answer, confidence, cognition, computation, plan) para o compilador usar.
+        """
+        computation = self._deterministic(task_id)
+        plan = None if computation else self._planner(task_id)
+        answer = decision.get("answer")
+        confidence = decision.get("confidence")
+        _GENERIC = "Sem evidências suficientes"
+        cognition: dict[str, Any] | None = None
+        if computation:
+            answer = computation["answer_text"]
+            confidence = computation["confidence"]
+        elif plan:
+            answer = plan["answer_text"]
+            confidence = plan["confidence"]
+        elif created and (not answer or _GENERIC in answer):
+            summary = created.get("summary", {})
+            answer = (
+                f"App criado: {summary.get('type')} "
+                f"({summary.get('files')} arquivos, "
+                f"{summary.get('tests')} testes)."
+            )
+        elif not created and (not answer or _GENERIC in answer):
+            # Sem evidência externa e sem app: recorre ao cérebro próprio.
+            cognition = self._cognitive_fallback(task_id)
+            if cognition:
+                answer = cognition["answer"]
+                confidence = cognition["confidence"]
+        return answer, confidence, cognition, computation, plan
+
+    @staticmethod
+    def _domains_of(sources: list, dedup: bool = False) -> list[str]:
+        """Extrai os domínios (host) das fontes com URL. `dedup` remove repetidos."""
+        out: list[str] = []
+        for s in sources:
+            url = (s or {}).get("url", "") if isinstance(s, dict) else ""
+            if "://" in url:
+                dom = url.split("://", 1)[1].split("/", 1)[0]
+                if not dedup or dom not in out:
+                    out.append(dom)
+        return out
+
     def _compile_trace(
         self, task_id: str, result: dict[str, Any]
     ) -> dict[str, Any]:
@@ -251,8 +276,27 @@ class Hivemind(MemoryMixin, SwarmMixin):
         os obstáculos reais (bot sem sucesso, web bloqueada) e o que a colônia
         aprendeu (lacunas, memórias recordadas, fonte usada).
         """
-        import re as _re
         events = self.memory.get_events(task_id) or []
+        bots, errors = self._group_events(events)
+        prov = result.get("provenance") or {}
+        # Obstáculo real de rede (403/erro) entra no trajeto, com honestidade.
+        web = prov.get("web") or ""
+        if web and ("bloqueado" in web or "erro" in web):
+            errors.append({"bot": "exploradores",
+                           "detail": f"busca externa {web}"})
+        return {
+            "bots": bots,
+            "errors": errors,
+            "learnings": self._collect_learnings(result, prov),
+            "source": prov.get("source"),
+            "path_reason": result.get("recruitment") or [],
+            "conclusion": result.get("answer"),
+        }
+
+    @staticmethod
+    def _group_events(events: list) -> tuple:
+        """Agrupa os eventos por bot (o que cada um fez) e coleta os erros reais."""
+        import re as _re
         per_bot: dict[str, dict[str, Any]] = {}
         order: list[str] = []
         errors: list[dict[str, str]] = []
@@ -280,13 +324,13 @@ class Hivemind(MemoryMixin, SwarmMixin):
             elif "falhou" in low or "erro:" in low:
                 slot["ok"] = False
                 errors.append({"bot": slot["bot"], "detail": msg})
-        prov = result.get("provenance") or {}
-        # Obstáculo real de rede (403/erro) entra no trajeto, com honestidade.
-        web = prov.get("web") or ""
-        if web and ("bloqueado" in web or "erro" in web):
-            errors.append({"bot": "exploradores",
-                           "detail": f"busca externa {web}"})
-        # O que a colônia aprendeu (sinais reais).
+        return [per_bot[b] for b in order], errors
+
+    @staticmethod
+    def _collect_learnings(
+        result: dict[str, Any], prov: dict[str, Any]
+    ) -> list[str]:
+        """Sinais reais do que a colônia aprendeu (lição, lacunas, fonte usada)."""
         learnings: list[str] = []
         lesson = result.get("learning") or {}
         if isinstance(lesson, dict) and lesson.get("lesson"):
@@ -301,14 +345,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
             learnings.append("sem evidência suficiente offline — limitação declarada")
         elif src in ("memory", "seed_knowledge", "seed_knowledge+memory"):
             learnings.append(f"respondido a partir de {src}")
-        return {
-            "bots": [per_bot[b] for b in order],
-            "errors": errors,
-            "learnings": learnings,
-            "source": src,
-            "path_reason": result.get("recruitment") or [],
-            "conclusion": result.get("answer"),
-        }
+        return learnings
 
     def _build_provenance(
         self,
@@ -328,30 +365,43 @@ class Hivemind(MemoryMixin, SwarmMixin):
         bloqueada (403) ou não trouxe nada, isso fica explícito em `web`.
         """
         web_report = self.memory.get_context(task_id, "web_report") or []
-        # ---- status real da tentativa externa ----
-        codes = [r.get("status") for r in web_report]
-        domains: list[str] = []
-        for s in sources:
-            url = (s or {}).get("url", "") if isinstance(s, dict) else ""
-            if "://" in url:
-                domains.append(url.split("://", 1)[1].split("/", 1)[0])
+        domains = self._domains_of(sources)     # sem dedup (comportamento original)
+        web_status = self._web_status(sources, web_report)
+        direct = self._direct_provenance(web_report, computation, plan)
+        if direct is not None:                  # cálculo/plano: autoritativo, sem web
+            return direct
         if sources:
-            web_status = "web: 200 ok"
-        elif not web_report:
-            web_status = "web: nao tentado"
-        elif any(isinstance(c, int) and 400 <= c < 500 for c in codes):
-            code = next(c for c in codes if isinstance(c, int) and 400 <= c < 500)
-            web_status = f"web: {code} bloqueado"
-        elif all(c == "sem_resultado" for c in codes):
-            web_status = "web: sem resultado"
+            source, confidence, gaps, castes = \
+                "web_search", 0.9, [], ["rainha", "exploradoras"]
+        elif created:
+            source, confidence, gaps, castes = \
+                "reasoning", None, [], ["rainha", "exploradoras"]
+        elif cognition:
+            source, confidence, gaps, castes = \
+                self._classify_cognition(cognition, answer)
         else:
-            web_status = "web: erro/offline"
-        # ---- classificação da fonte ----
-        gaps: list = []
-        castes: list = ["rainha", "exploradoras"]
-        confidence = None
+            source, confidence, gaps, castes = \
+                "none", None, [], ["rainha", "exploradoras"]
+        return {
+            "source": source,
+            "web": web_status,
+            "web_attempts": web_report,
+            "urls": domains,
+            "confidence": confidence,
+            "castes": castes,
+            "gaps": gaps,
+        }
+
+    @staticmethod
+    def _direct_provenance(
+        web_report: list, computation: dict[str, Any] | None,
+        plan: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
+        """Proveniência das rotas determinísticas (cálculo/plano) — sem web.
+
+        Autoritativa: não precisou de fonte externa nem de fato inato.
+        """
         if computation:
-            # Cálculo exato e autoritativo — não precisou de web/inato.
             return {
                 "source": "computation",
                 "web": "web: nao necessario",
@@ -364,7 +414,6 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 "kind": computation.get("kind"),
             }
         if plan:
-            # Raciocínio próprio (plano) — sem fonte externa, honesto.
             return {
                 "source": "reasoning",
                 "web": "web: nao necessario",
@@ -376,43 +425,51 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 "steps": plan.get("steps", []),
                 "kind": "plan",
             }
+        return None
+
+    @staticmethod
+    def _web_status(sources: list, web_report: list) -> str:
+        """Status honesto e real da tentativa de busca externa."""
+        codes = [r.get("status") for r in web_report]
         if sources:
-            source = "web_search"
-            confidence = 0.9
-        elif created:
-            source = "reasoning"  # app gerado por inferência própria
-        elif cognition:
-            confidence = cognition.get("confidence")
-            gaps = cognition.get("gaps", []) or []
-            castes = cognition.get("castes", castes)
-            mem = cognition.get("memory_used", 0)
-            seed = cognition.get("seed_used", 0)
-            if mem and not seed:
-                source = "memory"
-            elif seed and not mem:
-                source = "seed_knowledge"
-            elif seed and mem:
-                source = "seed_knowledge+memory"
-            else:
-                source = "reasoning"  # nenhum fato: pura inferência
-            # Confiança muito baixa e sem qualquer base: declarou limitação.
-            if not mem and not seed and (confidence or 0) < 0.35:
-                source = "none"
-            # Honestidade: se a resposta é o template de "sem evidências", a
-            # colônia declarou limitação, ainda que tenha juntado algum fato.
-            if answer and "Não tenho evidências suficientes" in answer:
-                source = "none"
+            return "web: 200 ok"
+        if not web_report:
+            return "web: nao tentado"
+        if any(isinstance(c, int) and 400 <= c < 500 for c in codes):
+            code = next(c for c in codes if isinstance(c, int) and 400 <= c < 500)
+            return f"web: {code} bloqueado"
+        if all(c == "sem_resultado" for c in codes):
+            return "web: sem resultado"
+        return "web: erro/offline"
+
+    @staticmethod
+    def _classify_cognition(cognition: dict[str, Any], answer: str | None) -> tuple:
+        """Classifica a fonte quando a resposta veio do cérebro próprio.
+
+        memory (grafo) · seed_knowledge (inato) · seed_knowledge+memory ·
+        reasoning (pura inferência) · none (confiança baixa/limitação declarada).
+        """
+        confidence = cognition.get("confidence")
+        gaps = cognition.get("gaps", []) or []
+        castes = cognition.get("castes", ["rainha", "exploradoras"])
+        mem = cognition.get("memory_used", 0)
+        seed = cognition.get("seed_used", 0)
+        if mem and not seed:
+            source = "memory"
+        elif seed and not mem:
+            source = "seed_knowledge"
+        elif seed and mem:
+            source = "seed_knowledge+memory"
         else:
+            source = "reasoning"  # nenhum fato: pura inferência
+        # Confiança muito baixa e sem qualquer base: declarou limitação.
+        if not mem and not seed and (confidence or 0) < 0.35:
             source = "none"
-        return {
-            "source": source,
-            "web": web_status,
-            "web_attempts": web_report,
-            "urls": domains,
-            "confidence": confidence,
-            "castes": castes,
-            "gaps": gaps,
-        }
+        # Honestidade: se a resposta é o template de "sem evidências", a colônia
+        # declarou limitação, ainda que tenha juntado algum fato.
+        if answer and "Não tenho evidências suficientes" in answer:
+            source = "none"
+        return source, confidence, gaps, castes
 
     def _record_trust(self, bots: list, success: bool) -> None:
         """Registra confiança conquistada/perdida por bot (durável §4.1).

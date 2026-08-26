@@ -119,10 +119,10 @@ funcionalidade ou mude arquitetura. Ajuste de texto não conta.
 
 | Item | Valor |
 |---|---|
-| Versão | 9.4 em desenvolvimento (branch `ants-9.4-refino`, base 9.3 `f94edf8`) |
-| Testes | **549 passando** (base 9.3 era 529 no `main`; +20 no 9.4) |
-| Serviço oficial no Render | **`ants-yeys`** (roda o commit `d0b5510`, versão 9.2) |
-| Serviços duplicados | 7 outros, mesmo repositório, plano gratuito |
+| Versão | 9.16 no `main` (evolução cautelosa; refino v9.4 concluído + T10) |
+| Testes | **720 passando**, 5 skipped (era 549 no 9.4; 534 na base 9.3) |
+| Serviço oficial no Render | **`ants-c2ik`** (9.16 no ar; auto-deploy via Deploy Hook + Actions) |
+| Serviços duplicados | apagados pelo dono — **um só serviço** agora |
 | Objetivo principal do dono | **usar o projeto no computador** |
 
 ### Entregue no 9.4 (branch `ants-9.4-refino`)
@@ -136,14 +136,20 @@ invisível) · T4 as 7 abas no celular · T5 WebSocket primário + polling fallb
 T8 contador de testes real · T9 zero emoji no JS editável (legados via noEmojiLayer) ·
 FASE 4 SW bump por release.
 
+### Entregue no 9.16 (evolução cautelosa)
+
+Fase 0 (autoavaliação verificada) · T10 higiene do `hive.py` (4 funções longas →
+9 helpers, sem mudar comportamento, +8 testes de caracterização) · T6 saúde numa
+fonte só (painéis via `ants:health`) · rótulo de versão dinâmico do `/health`
+(fim do "9.4.0" fixo) · Visão 7.0 registrada em `docs/visao/`.
+
 ### Pendências abertas
 
-1. **Tela branca no `ants-7ylk`** — sem diagnóstico. O servidor responde `200 OK`, o mesmo
-   commit roda perfeitamente em ambiente local. A causa é do lado do navegador. Falta o
-   console do aparelho afetado. (Teste barato ainda não feito: abrir em aba anônima do
-   celular — se funcionar, é SW com cache velho; o bump do 9.4 tende a resolver.)
-2. **Token de segurança não configurado** — a guarda do 9.3 só age com `ANTS_PUBLIC=1` e
-   `ANTS_API_TOKEN` definidos. Hoje o `/health` responde `"mode": "open"`. Ação do dono.
+1. ~~Tela branca no `ants-7ylk`~~ — **SUPERADA**: serviço oficial consolidado em
+   `ants-c2ik` (9.16 no ar); os duplicados foram apagados.
+2. ~~Token de segurança não configurado~~ — **RESOLVIDO**: `ANTS_PUBLIC=1` +
+   `ANTS_API_TOKEN` no serviço (`/health` reporta `mode:"token"`, `publico:true`);
+   blindado no `render.yaml` (`sync:false`, segredo só no dashboard).
 3. ~~Cache de respostas invisível~~ — **RESOLVIDO no 9.4 (T3)**: o selo declara "da memória
    (repetida)" e oferece "buscar de novo" (força o pipeline, ignorando o cache).
 4. **Sem servidor MCP** — não há implementação do protocolo no repositório. (Recomendação
@@ -158,7 +164,7 @@ FASE 4 SW bump por release.
 - **Sem framework de UI** — migrar para React/Vue seria reescrita, não melhoria
 - **Custo zero é requisito**, não meta
 - **Docker + Render** é o alvo de deploy
-- **534 testes** são intocáveis
+- **A suíte de testes** (hoje 720) é a rede de segurança — só sobe, nunca regride
 
 ---
 

@@ -43,6 +43,8 @@
     ["test-count", "stat-tests", "chip-tests"].forEach(function (id) {
       var e = $(id); if (e) e.textContent = (id === "chip-tests" ? tc + " testes" : tc);
     });
+    // Versão REAL (9.16): do /health, nunca fixa no HTML (achado 9 fechado).
+    set("chip-version", "versão " + (h.version || "—"));
     const s = Math.floor(h.uptime_seconds || 0);
     const up = String((s / 60) | 0).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     set("stat-uptime", up);
@@ -206,6 +208,9 @@
   document.addEventListener("ants:tab", (e) => onTab(e.detail));
   document.addEventListener("ants:task-done", () => { if (document.querySelector('.tab.is-active#tab-cognitive')) fillCognition(); });
   document.addEventListener("ants:online", (e) => { if (e.detail) { fillResources(); } else setDormant(); });
+  // Fonte ÚNICA de saúde (9.4 · T6): os stats base (bots, testes, versão, uptime)
+  // vêm do /health compartilhado pelo app.js — sem fetch periódico próprio.
+  document.addEventListener("ants:health", (e) => { if (e.detail) onHealth(e.detail); });
 
   document.addEventListener("DOMContentLoaded", () => {
     fillResources();

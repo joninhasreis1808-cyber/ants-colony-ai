@@ -18,6 +18,20 @@
     analogy: { t: "analogia com um caso anterior", ico: "i-brain" },
     none: { t: "não sei — sem evidência suficiente", ico: "i-x" },
   };
+  // Rótulo epistêmico (9.17 · FASE 1): o quanto a resposta se sustenta.
+  var EPI = { verified: "verificado", inferred: "inferido", uncertain: "incerto" };
+  function injectEpiStyle() {
+    if (document.getElementById("prov-epi-style")) return;
+    var s = document.createElement("style");
+    s.id = "prov-epi-style";
+    s.textContent =
+      ".ps-epi{font-size:10px;text-transform:uppercase;letter-spacing:.04em;"
+      + "padding:1px 6px;border-radius:999px;border:1px solid var(--line,#2a2a2a);margin-left:6px}"
+      + ".ps-epi-verified{color:#2e7d32;border-color:#2e7d32}"
+      + ".ps-epi-inferred{color:#2f6f9f;border-color:#2f6f9f}"
+      + ".ps-epi-uncertain{color:#c0392b;border-color:#c0392b}";
+    document.head.appendChild(s);
+  }
   var lastTask = null;
 
   document.addEventListener("ants:task-done", function (e) {
@@ -44,11 +58,16 @@
     var conf = (r.confidence != null) ? " · confiança " + r.confidence : "";
     var again = (meta.again || meta.web || prov.cached);
 
+    var epiKey = prov.epistemic;
+    var epi = EPI[epiKey] ? '<span class="ps-epi ps-epi-' + epiKey + '">'
+      + EPI[epiKey] + "</span>" : "";
+    if (epi) injectEpiStyle();
+
     var seal = document.createElement("div");
     seal.className = "prov-seal";
     seal.innerHTML =
       '<span class="ps-chip"><svg class="ico sm"><use href="#' + meta.ico + '"/></svg>'
-      + esc(label) + esc(conf) + "</span>"
+      + esc(label) + esc(conf) + "</span>" + epi
       + (again ? '<button class="ps-again" type="button">'
           + (meta.web ? "procurar na web" : "buscar de novo") + "</button>" : "");
     msg.parentNode.insertBefore(seal, msg.nextSibling);   // irmão, não filho

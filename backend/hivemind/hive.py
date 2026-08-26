@@ -390,7 +390,25 @@ class Hivemind(MemoryMixin, SwarmMixin):
             "confidence": confidence,
             "castes": castes,
             "gaps": gaps,
+            "epistemic": self._epistemic(source, confidence),
         }
+
+    @staticmethod
+    def _epistemic(source: str, confidence: float | None) -> str:
+        """Rótulo epistêmico honesto da resposta (anti-alucinação · FASE 1).
+
+        • verified  — evidência real: cálculo exato ou fontes externas na web.
+        • uncertain — sem base (source none) ou confiança muito baixa (<0.35).
+        • inferred  — inferência própria (raciocínio/memória/inato) sem
+          verificação externa. Nunca transforma inferência em fato.
+        """
+        if source in ("computation", "web_search"):
+            return "verified"
+        if source == "none":
+            return "uncertain"
+        if confidence is not None and confidence < 0.35:
+            return "uncertain"
+        return "inferred"
 
     @staticmethod
     def _direct_provenance(
@@ -412,6 +430,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 "gaps": [],
                 "steps": computation.get("steps", []),
                 "kind": computation.get("kind"),
+                "epistemic": "verified",     # cálculo exato = evidência dura
             }
         if plan:
             return {
@@ -424,6 +443,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 "gaps": [],
                 "steps": plan.get("steps", []),
                 "kind": "plan",
+                "epistemic": "inferred",     # raciocínio próprio, sem verificação
             }
         return None
 

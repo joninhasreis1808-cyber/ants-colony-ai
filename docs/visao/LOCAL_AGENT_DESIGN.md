@@ -47,8 +47,10 @@ Cada capacidade entra como uma ferramenta do **ToolRegistry** (já existente), c
 permissão, risco, schema, timeout e rollback — e **só** depois da anterior estar
 sólida:
 
-1. `CAN_READ_FILES` (leitura, atrás do `path_guard` + whitelist).
-2. `CAN_WRITE_FILES` (dry-run por padrão; confirm + escopo `write_files`).
+1. `CAN_READ_FILES` — **ABERTA (9.18)**: leitura via `backend/local_agent/
+   executor.py`, com defesa em profundidade (grant assinado + escopo `read_files`
+   + `path_guard` + capacidade explicitamente aberta) e auditoria. Read-only.
+2. `CAN_WRITE_FILES` (dry-run por padrão; confirm + escopo `write_files`) — próxima.
 3. `CAN_SCREENSHOT` / `CAN_CONTROL_APP` (abrir apps/URLs).
 4. `CAN_RUN_COMMAND` (allowlist de comandos; o mais perigoso — por último).
 5. Input/tela no nativo.
@@ -60,8 +62,10 @@ Scope Guard + Goal-drift. Runtime web continua "apenas planeja".
 
 ## O que NÃO existe ainda (honestidade)
 
-- Nenhuma execução de filesystem/tela/input/app pelo servidor.
+- Só a **leitura** (`CAN_READ_FILES`) está aberta; escrita/tela/input/app/comando
+  **não** — respondem "capacidade ainda não aberta".
+- Enquanto não há app nativo (Tauri), o `executor.py` roda no **servidor** como
+  ponte de referência (lê o FS do container, sob todas as travas). Quando o Local
+  Agent nativo existir, o mesmo fluxo grant→verify→ler roda **no dispositivo**.
 - O transporte real (WebSocket autenticado Render↔Tauri) e o handshake de
   *device identity* ainda não foram implementados — só o formato do grant assinado.
-- Este passo entrega **desenho + trava**; a próxima autorização abre a **primeira
-  capacidade** (leitura), com prova executável.

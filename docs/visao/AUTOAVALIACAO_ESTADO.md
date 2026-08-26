@@ -6,29 +6,36 @@
 
 ## Aviso de honestidade (antes de tudo)
 
-- O `PROTOCOLO_COWORK.md` **não estava entre os anexos** desta rodada. As 6 regras
-  abaixo foram **reconstruídas** a partir dos documentos fornecidos (são
-  consistentes entre si); marque como *inferência a confirmar* até o protocolo real
-  ser fornecido.
+- **Correção da própria Fase 0:** numa rodada anterior o `PROTOCOLO_COWORK.md` não
+  havia sido anexado e eu **reconstruí** as 6 regras — e **errei**. O protocolo real
+  (v1.0, base 9.3) foi fornecido depois; as 6 regras corretas são de **processo**
+  (abaixo), não os princípios que eu havia inferido. Registro o erro em vez de
+  escondê-lo (Regra 5).
 - O dossiê `RELATORIO_PARA_CHATGPT.md` é da base **9.3 / commit `f94edf8` / 534
   testes**. O projeto avançou **muito** desde então (hoje 9.15 / `01e3603` / **712
   testes**). Por isso a maioria dos 9 achados **já foi resolvida** — confirmado por
   medição, não presunção.
 
-## A · As 6 regras do PROTOCOLO_COWORK (reconstruídas — a confirmar)
+## A · As 6 regras do PROTOCOLO_COWORK (as reais, v1.0)
 
-1. **Não reescrever.** Evolução incremental e reversível; incompatibilidade → camada
-   de compatibilidade, nunca demolição.
-2. **Testes só sobem.** `pytest -q` antes/depois; quebrou → PARAR, diagnosticar,
-   corrigir; nunca mascarar ou editar teste só para passar.
-3. **Intocáveis.** MD5 dos 4 JS legados e IDs legados no DOM preservados.
-4. **UI nunca inventa estado.** Todo dado/animação/progresso vem do backend real; a
-   IA atualiza a UI só por eventos/comandos tipados (UI Kernel), nunca HTML cru.
-5. **Coleira.** Sem LLM externo como cérebro; sem auto-modificação de código em
-   produção; device só via Local Agent nativo autenticado (cérebro remoto × corpo
-   local).
-6. **Limites.** Custo zero, offline-first, sem build step, sem framework novo;
-   segurança primeiro em qualquer ação de dispositivo; trabalho em branch → PR.
+1. **Diagnóstico antes de correção.** Nenhuma alteração entra sem uma medição que a
+   justifique; hipótese derrubada por experimento é progresso, não fracasso.
+2. **Prova executável, não descrição.** Toda mudança relevante vem com algo que o
+   dono possa abrir e conferir (screenshot, artefato, saída de comando, número
+   antes/depois) — nunca só "corrigido".
+3. **A rede de segurança é sagrada.** `pytest -q` verde antes e depois; quem adiciona
+   teste declara o total; quem quebra conserta ou reverte.
+4. **Um commit por tarefa** (formato: versão · Tarefa · Diagnóstico · Correção ·
+   Prova · Testes) — nada de commit-monstro.
+5. **Declarar o que NÃO foi verificado** (a mais importante): todo relatório termina
+   com essa seção; omitir limite é o mesmo que mentir.
+6. **Interface nunca inventa texto.** Painel sem dado real não é preenchido com
+   exemplo; "ao vivo" só se for ao vivo; estado vazio se explica.
+
+> Observação: os *princípios* que eu havia reconstruído (não reescrever, offline-
+> first, MD5/IDs intactos, sem LLM-cérebro, cérebro remoto×corpo local) são reais e
+> valem — mas vivem no `ROTEIRO`/`PLANO_MESTRE` (invariantes I1–I8), **não** são "as 6
+> regras do protocolo". As duas coisas se somam; eu as confundi.
 
 ## B · Linha de base (medida)
 
@@ -111,6 +118,43 @@ Alinhada ao Roteiro, mas ajustada ao fato de o esqueleto já existir:
    sensível. Só depois de núcleo + interface sólidos. *Risco: alto (segurança da
    ponte) — abrir uma capacidade por vez, com dry-run/rollback/pânico/auditoria.*
 
+## G · Status da Ordem de Serviço v9.4 (refino imediato) — medido
+
+Os documentos `ROTEIRO_ants_9.4_*.md` descrevem o refino imediato. Estado real:
+
+| Tarefa | O que pedia | Estado |
+|---|---|---|
+| T-A | Sidebar fixa (sticky) | ✅ `design_system.css:390` (`position:sticky;top:0;align-self:start`) |
+| T-B | Remover botão "Memória", automatizar sob a Rainha + cartão em Sinais Vitais | ✅ **em grande parte** (nav sem aba "Memória"; cartão "Memória · viva" no Ambiente). *A prova do teste "pergunta repetida → cached sem clique" e do sono agendado a confirmar.* |
+| T-C | Responsividade desktop/celular (bottom-nav) | ✅ `bottomnav` + breakpoints |
+| T1 | `min-width` da topbar no celular (98→0) | ✅ (estrutural; visual pendente) |
+| T3 | Selo de proveniência | ✅ `provenance_seal.js` |
+| T4 | Abas por toque ≥44×44px | ✅ (bottom-nav; medida em px pendente) |
+| T5 | Fim do polling 600ms → fonte única (SSE/WS) | ✅ WS primário, polling fallback |
+| T6 | Unificar 2 chamadas de saúde | 🟡 a verificar (vários JS leem `/health`) |
+| T7 | Remover chamada síncrona do provedor local | ✅ `httpx` async |
+| T8 | Contador de testes real | ✅ dinâmico do `/health` |
+| T9 | Zero emoji em `web/js/` (SVG) | 🟡 a verificar (o `grep -P` deste ambiente falhou; checar com ferramenta compatível) |
+| T10 | Extrair 4 funções longas de `hive.py` **sem mudar comportamento** | ⬜ **pendente** (as 4 seguem >60 linhas) |
+| Câmera ao Vivo | Live Bot View aprofundada, cache honesto | ✅ `bot_camera.js` |
+
+**Resumo:** o refino v9.4 está **quase todo entregue**. Pendências reais: **T10**
+(higiene de `hive.py`), confirmar **T6** e **T9**, atualizar o rótulo "versão 9.4.0"
+no front, e provar visualmente (Playwright) T-B/T-C/T1/T4.
+
+## H · Pendências abertas do PROTOCOLO (seção 4) — estado atual
+
+| Pendência (protocolo, 9.3) | Estado agora |
+|---|---|
+| Tela branca no `ants-7ylk` | **Superada**: o serviço oficial foi consolidado em **`ants-c2ik`** (9.15); os duplicados foram apagados pelo dono. |
+| Token de segurança não configurado | ✅ **Resolvido**: `ANTS_PUBLIC=1` + `ANTS_API_TOKEN` no serviço; `/health` reporta `auth.mode:"token"`, `publico:true` (confirmado pelo dono). Blindado no `render.yaml` (`sync:false`). |
+| Cache de respostas invisível | ✅ **Resolvido**: `provenance_seal.js` (web/memória/conhecimento) + "buscar de novo". |
+| Sem servidor MCP | ⬜ **Ainda aberto**: não há servidor MCP no repositório (fora do escopo até o dono pedir). |
+
+> Nota: o "Estado do projeto" do PROTOCOLO_COWORK (serviço oficial `ants-yeys`/9.2,
+> 534 testes) está **defasado**; hoje é `ants-c2ik`/9.15/712 testes. Recomendo
+> atualizar essa seção do protocolo quando o dono autorizar.
+
 ## F · O que NÃO foi verificado nesta Fase 0 (Regra 5)
 
 - **Confirmação visual em pixel** dos achados 1–3 (layout a 390px/1280px) — exigiria
@@ -121,6 +165,10 @@ Alinhada ao Roteiro, mas ajustada ao fato de o esqueleto já existir:
 - **Busca web real** e **Safari/iOS (WebKit)** não exercidos.
 - **RAM/CPU/latência** não medidos (Fase 0 é diagnóstico; medição de desempenho
   entra nas fases que tocam desempenho).
-- **`PROTOCOLO_COWORK.md`** não foi lido (não anexado) — as 6 regras acima são
-  reconstrução.
+- **T9 (zero emoji em `web/js/`)** não confirmado — o `grep -P` de emoji falhou neste
+  ambiente (faixa de code point grande demais para este build do grep); checar com
+  ferramenta compatível.
+- **T6 (unificação das chamadas de `/health`)** não medido a fundo — vários JS leem
+  `/health`; falta confirmar se há redundância por ciclo.
 - **Kit de ataque de segurança** não reexecutado nesta rodada.
+- (O `PROTOCOLO_COWORK.md` **agora** foi lido — a seção A já traz as 6 regras reais.)

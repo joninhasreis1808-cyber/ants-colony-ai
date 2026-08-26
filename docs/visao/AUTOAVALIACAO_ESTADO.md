@@ -131,16 +131,19 @@ Os documentos `ROTEIRO_ants_9.4_*.md` descrevem o refino imediato. Estado real:
 | T3 | Selo de proveniência | ✅ `provenance_seal.js` |
 | T4 | Abas por toque ≥44×44px | ✅ (bottom-nav; medida em px pendente) |
 | T5 | Fim do polling 600ms → fonte única (SSE/WS) | ✅ WS primário, polling fallback |
-| T6 | Unificar 2 chamadas de saúde | 🟡 a verificar (vários JS leem `/health`) |
+| T6 | Unificar 2 chamadas de saúde | ✅ fonte única `app.js`→`ants:health` (rodapé, painéis, mente); `live_panels` passou a ouvir o evento; `awaken` é one-shot de despertar |
 | T7 | Remover chamada síncrona do provedor local | ✅ `httpx` async |
 | T8 | Contador de testes real | ✅ dinâmico do `/health` |
-| T9 | Zero emoji em `web/js/` (SVG) | 🟡 a verificar (o `grep -P` deste ambiente falhou; checar com ferramenta compatível) |
-| T10 | Extrair 4 funções longas de `hive.py` **sem mudar comportamento** | ⬜ **pendente** (as 4 seguem >60 linhas) |
+| T9 | Zero emoji em `web/js/` (SVG) | ✅ **verificado**: os únicos pictogramas reais estão em `memory.js` (imutável — removidos em runtime pela `noEmojiLayer` do `scripts.js`) e no próprio shim que os detecta; o resto são setas `→`/`↔` em comentários/logs (não decorativas) |
+| T10 | Extrair 4 funções longas de `hive.py` **sem mudar comportamento** | ✅ **feito** (9.16): 9 helpers extraídos, nenhuma função >60 linhas, 8 testes de caracterização |
+| Rótulo de versão | Front mostrava "versão 9.4.0" fixo | ✅ **dinâmico** do `/health` (`#chip-version`), nunca inventa |
 | Câmera ao Vivo | Live Bot View aprofundada, cache honesto | ✅ `bot_camera.js` |
 
-**Resumo:** o refino v9.4 está **quase todo entregue**. Pendências reais: **T10**
-(higiene de `hive.py`), confirmar **T6** e **T9**, atualizar o rótulo "versão 9.4.0"
-no front, e provar visualmente (Playwright) T-B/T-C/T1/T4.
+**Resumo:** o refino v9.4 está **entregue**. Restam apenas provas visuais
+(Playwright) de T-B/T-C/T1/T4, que dependem de ambiente gráfico. Nota honesta: o
+`/health` reporta `version:"2.0.0"` (versão da API) enquanto a iteração é "9.x" — o
+front agora mostra fielmente o que a API reporta; unificar essa numeração é decisão
+do dono (mexer no `VERSION` do backend).
 
 ## H · Pendências abertas do PROTOCOLO (seção 4) — estado atual
 

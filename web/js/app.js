@@ -3,18 +3,38 @@ const Ant = {
   api: location.origin,
   online: false,
 
+  _hzHealthy: 15000,   // ritmo estável quando a colônia responde
+  _backoff: 0,         // reconexão com backoff exponencial quando offline
+
   init() {
     this.wireTabs();
     this.wireTheme();
-    this.checkHealth();
     // Fonte ÚNICA de saúde (9.4 · T6): um só /health por ciclo, distribuído por
     // "ants:health". Pausa em segundo plano (document.hidden) e limpa no unload.
-    this._hz = setInterval(() => { if (!document.hidden) this.checkHealth(); }, 15000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) this.checkHealth(); });
-    window.addEventListener("beforeunload", () => clearInterval(this._hz));
+    // Agendamento ADAPTATIVO (9.18 · FASE 2): não é intervalo fixo — recua no
+    // backoff quando o Render hiberna e volta ao ritmo ao despertar; a UI nunca
+    // trava nem martela o servidor.
+    this._scheduleHealth(0);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) this._scheduleHealth(0); });
+    window.addEventListener("beforeunload", () => clearTimeout(this._hz));
     this.registerSW();
-    window.addEventListener("online", () => this.setConn(true));
+    window.addEventListener("online", () => { this.setConn(true); this._scheduleHealth(0); });
     window.addEventListener("offline", () => this.setConn(false));
+  },
+
+  // Próxima checagem em `delay`ms. Em segundo plano, só reprograma (não consulta).
+  _scheduleHealth(delay) {
+    clearTimeout(this._hz);
+    this._hz = setTimeout(() => {
+      if (document.hidden) { this._scheduleHealth(this._hzHealthy); return; }
+      this.checkHealth();
+    }, Math.max(0, delay));
+  },
+
+  // Backoff exponencial (FASE 2): 2s → 4s → 8s → 16s → teto 30s. Determinístico.
+  _nextBackoff() {
+    this._backoff = Math.min(this._backoff ? this._backoff * 2 : 2000, 30000);
+    return this._backoff;
   },
 
   wireTabs() {
@@ -58,9 +78,14 @@ const Ant = {
       this._health = await r.json();
       // distribui a saúde a quem ouve (rodapé, painéis) — 1 requisição só.
       document.dispatchEvent(new CustomEvent("ants:health", { detail: this._health }));
+      this._backoff = 0;                       // saudável → zera o backoff
+      this._scheduleHealth(this._hzHealthy);   // volta ao ritmo estável
     } catch {
       this.setConn(false);
       document.dispatchEvent(new CustomEvent("ants:health", { detail: null }));
+      // Reconexão com backoff exponencial (FASE 2): sonda o despertar da colônia
+      // (Render hiberna no free tier) sem travar a UI nem martelar o servidor.
+      this._scheduleHealth(this._nextBackoff());
     }
   },
 

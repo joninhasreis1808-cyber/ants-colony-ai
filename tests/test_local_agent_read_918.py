@@ -48,8 +48,8 @@ def test_grant_invalido_negado(limpa):
 
 
 def test_capacidade_nao_aberta_recusa(limpa):
-    # escrita ainda NÃO foi aberta — mesmo com grant válido, recusa.
-    tok = CT.sign_command("CAN_WRITE_FILES", "/tmp/x.txt", secret=SECRET)
+    # execução de comando ainda NÃO foi aberta — mesmo com grant válido, recusa.
+    tok = CT.sign_command("CAN_RUN_COMMAND", "ls", secret=SECRET)
     out = EX.execute_local(tok, secret=SECRET, seen=set())
     assert out["ok"] is False and "ainda não aberta" in out["reason"]
 

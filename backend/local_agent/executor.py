@@ -8,8 +8,9 @@ certa, com defesa em profundidade:
   path_guard (whitelist de pastas)    │  honesta e auditada.
   capacidade explicitamente ABERTA    ─┘
 
-Só a LEITURA está aberta; qualquer outra capacidade responde "ainda não aberta"
-(o ROTEIRO manda abrir uma por vez). Nenhuma escrita/execução aqui.
+LEITURA e ESCRITA estão abertas (a escrita é dry-run salvo confirm:true); qualquer
+outra capacidade responde "ainda não aberta" (o ROTEIRO manda abrir uma por vez).
+Nenhuma execução de comando/tela/input aqui.
 
 Nota honesta de arquitetura: enquanto não existe o app nativo (Tauri), este
 executor roda no servidor como PONTE de referência — lê o filesystem do próprio
@@ -24,8 +25,8 @@ from typing import Any, Optional
 
 from backend.local_agent.capability_tokens import verify_command
 
-# Capacidades já ABERTAS (uma por vez, com cautela). Leitura primeiro.
-_OPEN = frozenset({"CAN_READ_FILES"})
+# Capacidades já ABERTAS (uma por vez, com cautela). Leitura e escrita gated.
+_OPEN = frozenset({"CAN_READ_FILES", "CAN_WRITE_FILES"})
 
 # Trilha de auditoria (toda tentativa entra aqui — Regra: nada sem registro).
 _AUDIT: list[dict] = []
@@ -41,11 +42,14 @@ def _audit(capability: str, resource: str, outcome: str, reason: str = "") -> No
                    "resource": resource, "outcome": outcome, "reason": reason})
 
 
-def execute_local(token: str, *, secret: Optional[bytes] = None,
+def execute_local(token: str, *, args: Optional[dict] = None,
+                  secret: Optional[bytes] = None,
                   seen: Optional[set] = None) -> dict[str, Any]:
-    """Valida o grant assinado e executa a capacidade — só leitura, tudo gated.
+    """Valida o grant assinado e executa a capacidade aberta, tudo gated.
 
-    Devolve sempre um dict honesto: {ok, allowed, capability?, result?, reason?}.
+    `args` traz o payload por capacidade (escrita: {content, confirm}). Leitura o
+    ignora. Devolve sempre um dict honesto: {ok, allowed, capability?, result?,
+    reason?}.
     """
     ok, grant = verify_command(token, secret=secret, seen=seen)
     if not ok:
@@ -59,10 +63,19 @@ def execute_local(token: str, *, secret: Optional[bytes] = None,
                 "reason": f"capacidade ainda não aberta: {cap} "
                           "(abertura uma por vez, com autorização)"}
 
-    # CAN_READ_FILES → ferramenta gated do ToolRegistry (escopo + path_guard).
+    # Cada capacidade → ferramenta gated do ToolRegistry (escopo + path_guard;
+    # escrita é dry-run salvo confirm:true). Grant assinado já validado acima.
     from backend.tools.registry import get_tool_registry
-    res = get_tool_registry().run("read_file", {"path": resource})
-    outcome = "lido" if res.get("ok") else (
+    a = args or {}
+    if cap == "CAN_READ_FILES":
+        tool, targs, ok_word = "read_file", {"path": resource}, "lido"
+    else:  # CAN_WRITE_FILES
+        tool = "write_file"
+        targs = {"path": resource, "content": str(a.get("content", "")),
+                 "confirm": bool(a.get("confirm"))}
+        ok_word = "gravado" if a.get("confirm") else "prévia (dry-run)"
+    res = get_tool_registry().run(tool, targs)
+    outcome = ok_word if res.get("ok") else (
         "recusado" if res.get("allowed") is False else "erro")
     _audit(cap, resource, outcome, str(res.get("reason") or ""))
     return {"ok": bool(res.get("ok")), "allowed": res.get("allowed"),

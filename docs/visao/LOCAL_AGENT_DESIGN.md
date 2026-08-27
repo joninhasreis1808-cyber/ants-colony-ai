@@ -50,7 +50,10 @@ sólida:
 1. `CAN_READ_FILES` — **ABERTA (9.18)**: leitura via `backend/local_agent/
    executor.py`, com defesa em profundidade (grant assinado + escopo `read_files`
    + `path_guard` + capacidade explicitamente aberta) e auditoria. Read-only.
-2. `CAN_WRITE_FILES` (dry-run por padrão; confirm + escopo `write_files`) — próxima.
+2. `CAN_WRITE_FILES` — **ABERTA (9.18)**: escrita via `executor.py` com dry-run por
+   padrão (grava só com `confirm:true`) + escopo `write_files` + `path_guard` +
+   grant assinado. `docs`/testes em `tests/test_local_agent_write_918.py`.
+3. `CAN_SCREENSHOT` / `CAN_CONTROL_APP` (abrir apps/URLs) — próximas.
 3. `CAN_SCREENSHOT` / `CAN_CONTROL_APP` (abrir apps/URLs).
 4. `CAN_RUN_COMMAND` (allowlist de comandos; o mais perigoso — por último).
 5. Input/tela no nativo.
@@ -62,8 +65,9 @@ Scope Guard + Goal-drift. Runtime web continua "apenas planeja".
 
 ## O que NÃO existe ainda (honestidade)
 
-- Só a **leitura** (`CAN_READ_FILES`) está aberta; escrita/tela/input/app/comando
-  **não** — respondem "capacidade ainda não aberta".
+- **Leitura e escrita** (`CAN_READ_FILES`, `CAN_WRITE_FILES`) estão abertas (a
+  escrita é dry-run salvo `confirm`); tela/input/app/comando **não** — respondem
+  "capacidade ainda não aberta".
 - Enquanto não há app nativo (Tauri), o `executor.py` roda no **servidor** como
   ponte de referência (lê o FS do container, sob todas as travas). Quando o Local
   Agent nativo existir, o mesmo fluxo grant→verify→ler roda **no dispositivo**.

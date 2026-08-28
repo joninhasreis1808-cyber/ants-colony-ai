@@ -28,39 +28,53 @@
 
 ## O que está PROVADO agora (9.18)
 
-- **`ants-local-agent-core`** (Rust): `verify_grant(token, secret)` — mesmo formato
-  do `backend/local_agent/capability_tokens.py` (HMAC-SHA256, base64url sem padding,
-  prazo, capacidade conhecida; comparação em tempo constante).
-- **Interoperabilidade cérebro↔corpo provada por `cargo test`**: o teste
-  `verifica_token_de_ouro_do_python` verifica um token **assinado pelo Python**. Os
-  dois lados falam a mesma língua. (`cd app/local-agent-core && cargo test` → 4/4.)
+O `ants-local-agent-core` (Rust) tem **24 testes** (`cd app/local-agent-core &&
+cargo test` → 20 unit + 4 de integração), cobrindo as DUAS travas do corpo local:
+
+- **1ª trava — `verify_grant(token, secret)`**: mesmo formato do
+  `backend/local_agent/capability_tokens.py` (HMAC-SHA256, base64url sem padding,
+  prazo, capacidade conhecida; comparação em tempo constante). O teste
+  `verifica_token_de_ouro_do_python` verifica um token **assinado pelo Python** — os
+  dois lados falam a mesma língua (interoperabilidade cérebro↔corpo provada).
+- **2ª trava — `authorize(grant, args, guard)`**: mesmo com grant válido, o pedido
+  só passa sob as travas do dono, espelhando `executor.py`:
+  - **`path_guard`** (espelho de `permissions/path_guard.py`): whitelist de pastas +
+    blacklist dura (`/etc`, `/root`, `.ssh`, `.env`…) recusada MESMO se o dono pedir;
+    normalização colapsa `..` e barra escape da whitelist.
+  - **`command_guard`** (espelho de `action/command_guard.py`): allowlist explícita
+    de binários, recusa de escalonamento (`sudo`/`pkexec`…) e de padrões destrutivos
+    (`rm -rf`…), `confirm:true` obrigatório; argv via `shlex`, nunca shell.
+- **Execução real provada (`tests/native_flow.rs`)**: o caminho que o `la_execute`
+  percorre DEPOIS de autorizar — `std::fs::read_to_string`, `std::fs::write` (com
+  dry-run/confirm) e `std::process::Command` — rodando de verdade sob as travas.
 - **`web/js/native_bridge.js`**: no web, `AntNative.available = false` (nada é
-  executado no dispositivo — honesto); no nativo, invoca o Rust.
+  executado no dispositivo — honesto); no nativo, invoca `la_execute` no Rust.
 
-## Blueprint de integração (pronto para aplicar num ambiente com libs de sistema)
+## O comando nativo `la_execute` (ESCRITO e ligado)
 
-O comando Tauri que liga o core à interface (adicionar em
-`app/src-tauri/src/lib.rs`, com `ants-local-agent-core` como dependência de path e
-`.invoke_handler(tauri::generate_handler![la_execute])`):
+Já está em `app/src-tauri/src/lib.rs`, com `ants-local-agent-core` como dependência
+de path e `.invoke_handler(tauri::generate_handler![la_execute])`. Ele NÃO reimplementa
+segurança: chama `verify_and_authorize` (o core testado) e só então faz o I/O real.
 
 ```rust
 #[tauri::command]
 fn la_execute(token: String, args: Option<serde_json::Value>) -> Result<serde_json::Value, String> {
-    // Segredo da ponte vem do ambiente (compartilhado com o sidecar Python).
     let secret = std::env::var("ANTS_BRIDGE_SECRET").unwrap_or_default();
-    let grant = ants_local_agent_core::verify_grant(&token, secret.as_bytes())?;
-    match grant.capability.as_str() {
-        "CAN_READ_FILES" => {
-            // Aqui o corpo nativo lê DE VERDADE, sob whitelist/path_guard local.
-            let body = std::fs::read_to_string(&grant.resource).map_err(|e| e.to_string())?;
-            Ok(serde_json::json!({ "ok": true, "result": body }))
-        }
-        // CAN_WRITE_FILES / CAN_SCREENSHOT / CAN_RUN_COMMAND: espelhar as travas do
-        // Python (escopo + allowlist + confirm) antes de agir.
-        other => Err(format!("capacidade ainda não ligada no nativo: {other}")),
+    // ... traduz args JSON → ants_local_agent_core::Args ...
+    let guard = build_path_guard();              // pastas do dono (ANTS_ALLOWED_DIRS)
+    let action = ants_local_agent_core::verify_and_authorize(
+        &token, secret.as_bytes(), &core_args, &guard)?;   // 1ª + 2ª trava (core testado)
+    match action.capability.as_str() {
+        "CAN_READ_FILES"  => { /* std::fs::read_to_string */ }
+        "CAN_WRITE_FILES" => { /* dry-run, ou std::fs::write se confirm */ }
+        "CAN_RUN_COMMAND" => { /* std::process::Command sobre argv já validado */ }
+        other => Err(format!("capacidade sem executor nativo: {other}")),
     }
 }
 ```
+
+As pastas autorizadas vêm de `ANTS_ALLOWED_DIRS` (separadas por `:`); a blacklist
+dura recusa sozinha qualquer caminho crítico, mesmo listado.
 
 ## Build e execução (numa máquina de verdade)
 
@@ -76,12 +90,17 @@ npm run tauri build    # binário nativo do Ant's
 
 ## O que NÃO foi verificado (Regra 5)
 
-- **O build completo do Tauri não roda neste ambiente**: falta a lib de sistema
-  `gdk-3.0`/`webkit2gtk` (o `cargo check` do crate `ants` para em `pkg-config`).
-  Não instalei libs de sistema. O que foi provado com `cargo test` é o **core**
-  (verificação do grant) — o coração da segurança do corpo.
+- **O build completo do Tauri não roda neste ambiente**: `cargo check` do crate
+  `ants` para em `gdk-sys` (falta a lib de sistema `gdk-3.0`/`webkit2gtk` no
+  `pkg-config`) ANTES de chegar ao meu código — ou seja, o bloqueio é a lib de
+  sistema, não o `la_execute`. Não instalei libs de sistema. Para não deixar o
+  `la_execute` sem prova, seu corpo (menos o atributo `#[tauri::command]`, a única
+  parte que exige GTK) foi **type-checado isoladamente** contra o core real
+  (`cargo check` limpo) e sua lógica de I/O está provada por `tests/native_flow.rs`.
+  Só a casca gráfica do Tauri fica por compilar numa máquina com as libs.
+- **Tela e controle de app** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`) ainda não têm
+  executor nativo: `authorize` os recusa com honestidade ("capacidade ainda não
+  ligada"). Ligados quando o dono autorizar, um por vez.
 - O **transporte real** Render↔Tauri e o handshake de *device identity* ainda não
   existem; hoje o corpo e o cérebro compartilham `ANTS_BRIDGE_SECRET` via ambiente
   no modo nativo (sidecar).
-- A execução nativa de tela/app/comando ainda não está ligada — o blueprint acima
-  mostra onde plugar, sempre espelhando as travas do Python.

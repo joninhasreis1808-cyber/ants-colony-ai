@@ -217,6 +217,11 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # Trajeto da missão (7.2): o que CADA bot fez, obstáculos reais e o
         # que a colônia aprendeu — para o chat mostrar o caminho todo.
         result["trace"] = self._compile_trace(task_id, result)
+        # Trilha cognitiva TIPADA (9.19 · FASE 1): os MESMOS eventos, agora num
+        # contrato único (kind/actor/confidence/evidence) — aditivo ao texto.
+        from backend.cognitive.cognitive_trace import CognitiveTrace
+        events = self.memory.get_events(task_id) or []
+        result["cognitive_trace"] = CognitiveTrace.from_bot_events(events).to_dict()
         return result
 
     def _resolve_answer(

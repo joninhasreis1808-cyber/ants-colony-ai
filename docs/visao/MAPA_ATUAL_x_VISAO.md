@@ -69,7 +69,7 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 |---|---|---|
 | Padrão universal de Tool + Registry + Discovery | ✅ | `tools/registry.py`, `capabilities.py` (name/schema/risk/scope) |
 | Browser Controller | 🟡 | `action/web_navigator.py`, `smart_navigator.py`, `providers/playwright_provider.py` |
-| Browser Perception (PAGE MODEL, relearn) | ⬜ | fronteira principal do lado "navegação" |
+| Browser Perception (PAGE MODEL, relearn) | ✅ | `perception/page_model.py` — `PageModel.from_html` (forms/inputs/buttons/links/landmarks + fingerprint estrutural); `needs_relearn` dispara em mudança de DOM; `WebNavigator.perceive()` (9.19 · FASE 4) |
 | Filesystem / screenshot / process tools | 🟡 | `tools/file_tools.py`, `write_tools.py`; `action/device_files.py`, `screen_reader.py`, `computer_use.py` |
 | Factory 2.0 (app como missão + sandbox + testes) | ✅ | `backend/app_factory/*` (architect, code_generator, tester, sandbox, quality_analyzer) |
 | n8n Tool Bridge | ⬜ | opcional; ainda não existe |

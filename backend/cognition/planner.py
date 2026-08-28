@@ -101,8 +101,12 @@ class HierarchicalPlanner:
             route.available = True
         skeleton = _SKELETONS.get(route.name, _skeleton_reasoning)(goal)
         graph = TaskGraph()
+        # Confiança do nó = score REAL da rota escolhida (sinal medido, não
+        # inventado). Prioridade fica neutra: não há sinal honesto por-etapa
+        # ainda — o campo existe e é respeitado por quem tiver um. (FASE 1)
+        route_score = route.score()
         for sid, desc, deps in skeleton:
-            graph.add(sid, desc, deps)
+            graph.add(sid, desc, deps, confidence=route_score)
         graph.topological_order()               # valida (sem ciclo) já no plano
         return Plan(goal=goal, route=route, graph=graph)
 

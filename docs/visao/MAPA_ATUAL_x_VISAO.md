@@ -37,7 +37,7 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Fallback em cadeia | ✅ | `cognitive/fallback_chain.py` — escada tipada PRIMARY→SECONDARY→COGNITIVE→HUMAN, escala ao humano sem base; `hive` anexa `result['fallback']` (9.19 · FASE 1) |
 | Planner / Researcher / Hypothesizer / Simulator / Executor / Critic / Verifier / Learner / Meta-supervisor | ✅ | `backend/cognitive/*` tem todos esses módulos + `cognition/planner.py` |
 | Deliberação e simulação antes de agir | 🟡 | `cognitive/simulator.py` existe; ligar ao gate de risco/permissão |
-| Confidence calibration (predito × real) | ⬜ | confiança existe; laço de calibração a criar |
+| Confidence calibration (predito × real) | ✅ | `evaluation/confidence_calibration.py` — ECE + confiança corrigida pela taxa real de acerto por faixa (9.19 · FASE 6) |
 
 ### Colônia, agentes e recursos
 | Visão | Status | Onde / observação |
@@ -61,7 +61,7 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Anti-alucinação (verified/inferred/uncertain) | 🟡 | composição de resposta honesta existe; rótulos internos a formalizar |
 | Knowledge Graph vivo | ✅ | `memory/knowledge_graph.py` |
 | Contradição + hipóteses | 🟡 | `cognition/critic.py` (contradição), `cognitive/hypothesizer.py`; unir num fluxo |
-| Causal Graph | ⬜ | a construir |
+| Causal Graph | ✅ | `evaluation/causal_graph.py` — ligações causa→efeito com observações, força, `explain` e `root_causes` (9.19 · FASE 6) |
 | Garbage collector cognitivo | ✅ | `memory/forgetter.py`, `compactor.py`, `consolidator.py` |
 
 ### Ferramentas, ação e autonomia
@@ -94,7 +94,7 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 |---|---|---|
 | Logs / metrics / traces / self-diagnosis | ✅ | `monitoring/observability.py`, `metrics.py`, `logger.py`, `self_diagnosis.py` |
 | Benchmark / A-B de estratégias | 🟡 | `evaluation/strategy_competition.py`, `algorithm_selection.py` |
-| Canary interno (5→10→25→50→100%) | ⬜ | a construir |
+| Canary interno (5→10→25→50→100%) | ✅ | `evaluation/canary.py` — escada de exposição com promoção/rollback e `in_canary` estável por chave (9.19 · FASE 6) |
 | Autoevolução só em DADOS (nunca código em produção) | ✅ | `hivemind/evolution.py` (propor→aprovar→aplicar, gated) |
 | IDs globais + correlation ID | 🟡 | task/mission/agent/event ids existem; correlation ponta-a-ponta a padronizar |
 | Autoavaliação final de missão | 🟡 | desfecho auditável existe; template OBJECTIVE/RESULT/… a padronizar |

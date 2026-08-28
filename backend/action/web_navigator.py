@@ -87,6 +87,17 @@ class WebNavigator:
             "a[href]", "els => els.map(e => e.href)"
         )
 
+    def perceive(self, url: str = "") -> Any:
+        """Browser Perception (FASE 4): modelo ESTRUTURADO da página atual.
+
+        Transforma o HTML corrente num `PageModel` (formulários/campos/botões/
+        links/landmarks + fingerprint). A colônia passa a enxergar o que a página
+        oferece — e sabe quando reaprender (`needs_relearn`) se o DOM mudar.
+        """
+        self._require_page()
+        from backend.perception.page_model import PageModel
+        return PageModel.from_html(self.page.content(), url)
+
     def execute_js(self, script: str) -> Any:
         """Executa JavaScript e devolve o resultado serializável."""
         self._require_page()

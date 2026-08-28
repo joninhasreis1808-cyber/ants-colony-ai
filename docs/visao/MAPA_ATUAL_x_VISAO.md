@@ -117,27 +117,34 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Comunicação segura (capability tokens, signed commands, nonce, TTL) | ⬜ | fronteira de segurança da ponte |
 | Offline-first + degradação graciosa | ✅ | PWA + núcleo em regras; providers declaram indisponibilidade |
 
-## Fronteiras genuinamente novas (o que realmente falta)
+## Fronteiras genuinamente novas — estado (9.19: TODAS as obrigatórias fechadas)
 
-Em ordem sugerida, cauta e incremental — cada uma como **proposta → aprovação →
-incremento testado**, sem tocar no que já funciona:
+Em ordem sugerida, cauta e incremental — cada uma foi **proposta → aprovação →
+incremento testado**, sem tocar no que já funciona. Estado atual:
 
-1. **Padronizar o esqueleto que já existe** (baixo risco, alto retorno): nós do
-   TaskGraph com `priority/confidence/evidence`; Cognitive Trace unificado; cadeia
-   de fallback explícita. — *conecta o que já está lá.*
-2. **Modos de deliberação FAST/DELIBERATE/CRITICAL** ligados ao gate de
-   risco/permissão e ao simulador que já existe.
-3. **Local Agent seguro (o "corpo")** — a ponte remota↔local com capability tokens,
-   comandos assinados, nonce e TTL. *O item mais estratégico e o mais sensível: só
-   depois do esqueleto e da segurança estarem redondos.*
-4. **Browser Perception** (PAGE MODEL + relearn on DOM change) sobre o
-   `web_navigator`/`playwright_provider` atuais.
-5. **UI Command API tipada + Design System** — formalizar como a Mente atualiza a
-   interface por comandos, não por HTML.
-6. **Calibração de confiança, canary interno e causal graph** — maturidade de
-   autoevolução.
-7. **n8n Tool Bridge** e **Secret Vault dedicado** — opcionais, quando houver
-   necessidade real.
+1. ✅ **Padronizar o esqueleto** — nós do TaskGraph com `priority/confidence/
+   evidence`; Cognitive Trace unificado tipado; cadeia de fallback explícita
+   (9.19 · FASE 1).
+2. ✅ **Modos FAST/DELIBERATE/CRITICAL** ligados ao gate de risco (9.19 · FASE 2).
+3. ✅ **Local Agent seguro (o "corpo")** — ponte com capability tokens assinados,
+   nonce e TTL; core Rust que verifica o grant + `la_execute` nativo com travas
+   provadas (9.18 · FASE 5).
+4. ✅ **Browser Perception** — PAGE MODEL + relearn on DOM change (9.19 · FASE 4).
+5. ✅ **UI Command API tipada + Design System** — contrato tipado no backend
+   (`interface/ui_commands.py`) casado com o `ui_kernel.js`; tokens centralizados
+   (9.19 · FASE 5b).
+6. ✅ **Calibração de confiança, canary interno e causal graph** — maturidade de
+   autoevolução (9.19 · FASE 6).
+7. ⬜ **n8n Tool Bridge** e **Secret Vault dedicado** — *opcionais*, só quando
+   houver necessidade real (fora do escopo obrigatório do roteiro).
+
+> **Marco (9.19):** as seis fronteiras obrigatórias do roteiro estão **fechadas**,
+> cada uma com prova executável e merge seguro. O que resta (item 7) é
+> explicitamente opcional. As ferramentas das FASES 1, 2 e 6 estão prontas e
+> testadas; **ligá-las ao laço vivo da missão** (o `hive` alimentar o calibrador,
+> o `evolution` usar o canary, a UI consumir `cognitive_trace`/`fallback`/`mode`)
+> é o trabalho de **integração** seguinte — a abrir uma por vez, com autorização
+> do dono, como sempre.
 
 ## Regras de ouro ao evoluir (resumo operacional)
 

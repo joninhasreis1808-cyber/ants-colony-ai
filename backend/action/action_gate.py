@@ -19,6 +19,12 @@ from dataclasses import dataclass, field
 # Ações irreversíveis/destrutivas — sempre exigem confirmação humana (§B.5).
 DESTRUCTIVE = {"delete", "overwrite", "move_bulk", "install",
                "system_command", "kill_process"}
+# Risco por escopo — alimenta o modo de deliberação (FASE 2).
+_SCOPE_RISK = {
+    "read_files": "low", "screen_capture": "low",
+    "write_files": "medium", "control_input": "medium",
+    "run_apps": "high", "system_commands": "high",
+}
 # Escopo exigido por tipo de ação.
 _SCOPE_OF = {
     "read": "read_files", "list": "read_files", "search": "read_files",
@@ -42,6 +48,7 @@ class Decision:
     threat: str = "safe"
     injection: bool = False
     details: dict = field(default_factory=dict)
+    mode: str = ""          # modo de deliberação (FASE 2): fast/deliberate/critical
 
     def to_dict(self) -> dict:
         return self.__dict__.copy()
@@ -89,13 +96,17 @@ class ActionGate:
             return Decision(False, False,
                             "conteúdo externo com injeção não pode originar "
                             "ação destrutiva", scope, threat, injection=True)
+        # Modo de deliberação (FASE 2): risco do escopo + sensibilidade real.
+        from backend.cognitive.deliberation_mode import decide as _decide
+        sensitive = destructive or threat in ("suspicious", "dangerous")
+        policy = _decide(_SCOPE_RISK.get(scope, "medium"), sensitive=sensitive)
         # Ação destrutiva ou ameaça → precisa de confirmação humana explícita.
         if destructive or threat in ("suspicious", "dangerous"):
             return Decision(True, True,
                             "ação sensível — requer confirmação", scope, threat,
-                            injection=injection)
+                            injection=injection, mode=policy.mode.value)
         return Decision(True, False, "liberado", scope, threat,
-                        injection=injection)
+                        injection=injection, mode=policy.mode.value)
 
 
 _INSTANCE: ActionGate | None = None

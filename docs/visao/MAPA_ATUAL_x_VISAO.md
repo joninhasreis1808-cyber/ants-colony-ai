@@ -72,7 +72,8 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Browser Perception (PAGE MODEL, relearn) | ✅ | `perception/page_model.py` — `PageModel.from_html` (forms/inputs/buttons/links/landmarks + fingerprint estrutural); `needs_relearn` dispara em mudança de DOM; `WebNavigator.perceive()` (9.19 · FASE 4) |
 | Filesystem / screenshot / process tools | 🟡 | `tools/file_tools.py`, `write_tools.py`; `action/device_files.py`, `screen_reader.py`, `computer_use.py` |
 | Factory 2.0 (app como missão + sandbox + testes) | ✅ | `backend/app_factory/*` (architect, code_generator, tester, sandbox, quality_analyzer) |
-| n8n Tool Bridge | ⬜ | opcional; ainda não existe |
+| Automação de fluxos (alternativa nativa ao n8n) | ✅ | `security/secret_vault.py` (cofre) + `tools/workflow.py` (fluxos multi-passo pelo Registry, segredos por referência) + `tools/workflow_triggers.py` (gatilho por evento/agenda) — soberano, offline, gated (9.20) |
+| n8n Tool Bridge (hospedado) | ⬜ | opcional; **substituído pela automação nativa** acima. Só se o dono quiser deliberadamente operar contas de nuvem externas |
 | Pause/Resume/Cancel/Retry + rollback + recovery | 🟡 | autonomia + checkpoints existem; cancelamento propagado e rollback a completar |
 | Níveis de autonomia 0–5 | 🟡 | `permissions/trust_based_autonomy.py`, `hivemind/autonomy.py` (governador) |
 | Loop / deadlock / progress detectors | 🟡 | governador detecta sem-progresso; deadlock/loop dedicados a criar |

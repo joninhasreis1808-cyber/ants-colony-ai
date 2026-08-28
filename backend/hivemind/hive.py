@@ -222,6 +222,15 @@ class Hivemind(MemoryMixin, SwarmMixin):
         from backend.cognitive.cognitive_trace import CognitiveTrace
         events = self.memory.get_events(task_id) or []
         result["cognitive_trace"] = CognitiveTrace.from_bot_events(events).to_dict()
+        # Cadeia de fallback EXPLÍCITA (9.19 · FASE 1): de qual degrau a missão
+        # saiu (PRIMARY→…→HUMAN) e se precisa escalar ao humano — lido do sinal
+        # real de proveniência, aditivo. Torna explícita a degradação implícita.
+        from backend.cognitive.fallback_chain import FallbackChain
+        prov = result.get("provenance") or {}
+        result["fallback"] = FallbackChain.classify(
+            prov.get("source"), result.get("confidence"),
+            evidence_count=len(prov.get("urls") or []),
+        ).to_dict()
         return result
 
     def _resolve_answer(

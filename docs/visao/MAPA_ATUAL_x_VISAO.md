@@ -30,11 +30,11 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Visão | Status | Onde / observação |
 |---|---|---|
 | Inteligência distribuída (não bots soltos) | ✅ | `hivemind/` + Mente Colmeia; castas em `castes.py` |
-| Task Graph com nós ricos | 🟡 | grafo existe; campos `priority/confidence/evidence` por nó a padronizar |
-| Cognitive Trace (eventos estruturados) | 🟡 | `BotEvent` por casta + `/hive` events; falta trilha unificada tipada |
+| Task Graph com nós ricos | ✅ | `hivemind/task_graph.py` — nós com `priority/confidence/evidence` (9.19 · FASE 1); planner popula confiança com o score real da rota |
+| Cognitive Trace (eventos estruturados) | ✅ | `cognitive/cognitive_trace.py` — `TraceStep`/`CognitiveTrace` tipados dos BotEvents reais; `hive` anexa `result['cognitive_trace']` (9.19 · FASE 1) |
 | Modos FAST/DELIBERATE/CRITICAL | ⬜ | há roteamento por risco (cartographer/autonomy); modos explícitos a formalizar |
 | Route Explorer (todas as rotas + score) | ✅ | `cognition/cartographer.py` (7 rotas, score, bias da experiência) |
-| Fallback em cadeia | 🟡 | `hivemind/cognitive_fallback.py`, `monitoring/recovery.py`; cadeia PRIMARY→…→HUMAN a formalizar |
+| Fallback em cadeia | ✅ | `cognitive/fallback_chain.py` — escada tipada PRIMARY→SECONDARY→COGNITIVE→HUMAN, escala ao humano sem base; `hive` anexa `result['fallback']` (9.19 · FASE 1) |
 | Planner / Researcher / Hypothesizer / Simulator / Executor / Critic / Verifier / Learner / Meta-supervisor | ✅ | `backend/cognitive/*` tem todos esses módulos + `cognition/planner.py` |
 | Deliberação e simulação antes de agir | 🟡 | `cognitive/simulator.py` existe; ligar ao gate de risco/permissão |
 | Confidence calibration (predito × real) | ⬜ | confiança existe; laço de calibração a criar |

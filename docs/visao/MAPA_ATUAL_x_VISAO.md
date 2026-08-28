@@ -105,8 +105,8 @@ destaque para o **Local Agent** (o "corpo") e a **Browser Perception**.
 | Colônia viva / cognição / ambiente / rainha / missões | 🟡 | `web/js/`: `mind_panel.js`, `mission_console.js`, `bot_camera.js`, `live_*`, `cognitive_center.js`, `timeline.js` |
 | Live Activity por evento (sem vídeo 24/7) | ✅ | `bot_camera.js` + eventos por casta; screenshots por evento (padrão do projeto) |
 | WebSocket / Event Stream | ✅ | `/hive/live/{id}` (ver `api_bridge.js`), fallback de polling |
-| UI Command API tipada (IA não edita HTML) | 🟡 | JS aditivo por eventos; API de comandos tipados a formalizar |
-| Design System central | 🟡 | CSS existe; tokens (cor/espaço/tipografia) a centralizar |
+| UI Command API tipada (IA não edita HTML) | ✅ | `interface/ui_commands.py` (contrato tipado e validado no backend) + `web/js/ui_kernel.js` (conjunto fechado); teste cruza os dois vocabulários (9.19 · FASE 5b) |
+| Design System central | ✅ | `web/css/design_system.css` `:root` centraliza cor/espaço/tipografia + camada de aliases `--ant-*` para os módulos v6 |
 | Feedback 👍/👎 que realmente aprende | 🟡 | `learning/feedback_learner.py`, `feedback_store.py`; ligar à Rainha |
 
 ### Cérebro remoto × corpo local (a correção técnica central)

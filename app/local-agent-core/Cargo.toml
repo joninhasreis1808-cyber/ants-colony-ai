@@ -1,0 +1,16 @@
+[package]
+name = "ants-local-agent-core"
+version = "0.1.0"
+edition = "2021"
+description = "Núcleo do corpo local do Ant's: verifica os grants assinados pela Mente Colmeia (interop com o backend Python)."
+
+[dependencies]
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[lib]
+name = "ants_local_agent_core"
+path = "src/lib.rs"

@@ -47,16 +47,25 @@ Cada capacidade entra como uma ferramenta do **ToolRegistry** (já existente), c
 permissão, risco, schema, timeout e rollback — e **só** depois da anterior estar
 sólida:
 
-1. `CAN_READ_FILES` — **ABERTA (9.18)**: leitura via `backend/local_agent/
-   executor.py`, com defesa em profundidade (grant assinado + escopo `read_files`
-   + `path_guard` + capacidade explicitamente aberta) e auditoria. Read-only.
-2. `CAN_WRITE_FILES` — **ABERTA (9.18)**: escrita via `executor.py` com dry-run por
-   padrão (grava só com `confirm:true`) + escopo `write_files` + `path_guard` +
-   grant assinado. `docs`/testes em `tests/test_local_agent_write_918.py`.
-3. `CAN_SCREENSHOT` / `CAN_CONTROL_APP` (abrir apps/URLs) — próximas.
-3. `CAN_SCREENSHOT` / `CAN_CONTROL_APP` (abrir apps/URLs).
-4. `CAN_RUN_COMMAND` (allowlist de comandos; o mais perigoso — por último).
-5. Input/tela no nativo.
+Distinção profissional: **arquivo** é seguro executar como ponte no servidor;
+**dispositivo** (tela/app/comando) é só **validado + delegado** ao agente nativo —
+o servidor nunca age no dispositivo.
+
+1. `CAN_READ_FILES` — **ABERTA · executada** (gated: grant + `read_files` +
+   `path_guard`). Read-only.
+2. `CAN_WRITE_FILES` — **ABERTA · executada** (dry-run salvo `confirm` + `write_files`
+   + `path_guard`).
+3. `CAN_SCREENSHOT` — **ABERTA · validada+delegada** (escopo `screen_capture`;
+   envelope autorizado, `executed:false`).
+4. `CAN_CONTROL_APP` — **ABERTA · validada+delegada** (escopo `run_apps`).
+5. `CAN_RUN_COMMAND` — **ABERTA · validada+delegada** (o mais perigoso: escopo
+   `system_commands` + **allowlist** (`command_guard`) + `confirm` obrigatório;
+   nunca executado no servidor).
+6. `CAN_BROWSER` — **ainda fechada** (demonstra a regra "uma por vez"): responde
+   "capacidade ainda não aberta".
+
+Runtime: `ANTS_LOCAL_AGENT=native` marca o app nativo; sem isso, é o servidor/ponte
+(padrão). As capacidades de dispositivo só executam de fato no runtime nativo.
 
 Antes de **cada** ação: permissão por escopo, confirmação para destrutivo, dry-run,
 rollback, **botão de pânico** (`POST /device/panic`), auditoria, sanitização anti
@@ -65,11 +74,14 @@ Scope Guard + Goal-drift. Runtime web continua "apenas planeja".
 
 ## O que NÃO existe ainda (honestidade)
 
-- **Leitura e escrita** (`CAN_READ_FILES`, `CAN_WRITE_FILES`) estão abertas (a
-  escrita é dry-run salvo `confirm`); tela/input/app/comando **não** — respondem
-  "capacidade ainda não aberta".
+- **Nenhuma ação de dispositivo** (tela/app/comando) é executada por este código —
+  são só **validadas** e delegadas ao agente nativo (`executed:false`). Só arquivo
+  executa, como ponte, sob todas as travas.
 - Enquanto não há app nativo (Tauri), o `executor.py` roda no **servidor** como
-  ponte de referência (lê o FS do container, sob todas as travas). Quando o Local
-  Agent nativo existir, o mesmo fluxo grant→verify→ler roda **no dispositivo**.
+  ponte de referência (lê/escreve o FS do container, sob todas as travas; autoriza
+  dispositivo sem agir). Quando o Local Agent nativo existir, o mesmo fluxo
+  grant→verify→executar roda **no dispositivo**.
+- O transporte real (WebSocket autenticado Render↔Tauri) e o *device identity*
+  handshake ainda não existem — só o formato do grant assinado e o envelope.
 - O transporte real (WebSocket autenticado Render↔Tauri) e o handshake de
   *device identity* ainda não foram implementados — só o formato do grant assinado.

@@ -89,3 +89,14 @@ class ConfidenceCalibrator:
     def to_dict(self) -> dict[str, Any]:
         return {"total": self.total, "ece": self.ece(),
                 "reliability": self.reliability()}
+
+
+_INSTANCE: "ConfidenceCalibrator | None" = None
+
+
+def get_calibrator() -> "ConfidenceCalibrator":
+    """Singleton de processo — o calibrador VIVO, alimentado pelas missões reais."""
+    global _INSTANCE
+    if _INSTANCE is None:
+        _INSTANCE = ConfidenceCalibrator()
+    return _INSTANCE

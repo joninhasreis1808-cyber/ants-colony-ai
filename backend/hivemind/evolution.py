@@ -47,13 +47,15 @@ class EvolutionProposal:
     created_at: float = field(default_factory=time.time)
     decided_at: Optional[float] = None
     history: list = field(default_factory=list)
+    canary: Optional[dict] = None    # estado do canário quando aplicada (rollout)
 
     def to_dict(self) -> dict:
         return {"id": self.id, "kind": self.kind, "title": self.title,
                 "rationale": self.rationale, "goal_signature": self.goal_signature,
                 "route": self.route, "risk": self.risk, "evidence": list(self.evidence),
                 "status": self.status, "created_at": self.created_at,
-                "decided_at": self.decided_at, "history": list(self.history)}
+                "decided_at": self.decided_at, "history": list(self.history),
+                "canary": self.canary}
 
     @classmethod
     def from_dict(cls, d: dict) -> "EvolutionProposal":
@@ -63,7 +65,8 @@ class EvolutionProposal:
                    status=d.get("status", "proposed"), id=d["id"],
                    created_at=d.get("created_at", time.time()),
                    decided_at=d.get("decided_at"),
-                   history=list(d.get("history", [])))
+                   history=list(d.get("history", [])),
+                   canary=d.get("canary"))
 
 
 class EvolutionLedger:
@@ -140,9 +143,60 @@ class EvolutionLedger:
             effect = "registrou penalidade na memória (viés −)"
         else:
             return {"ok": False, "reason": f"kind desconhecido: {p.kind}"}
+        # Laço vivo (FASE 6 · integração): a mudança aplicada entra sob CANÁRIO —
+        # começa valendo para uma fatia (5%) e sobe em degraus conforme se prova;
+        # se piorar, volta atrás (reversível de verdade). min_samples baixo porque
+        # a "amostra" aqui são desfechos de missão, não usuários.
+        from backend.evaluation.canary import CanaryController
+        ctrl = CanaryController(min_samples=5, success_threshold=0.8)
+        p.canary = ctrl.to_state()
         self._transition(pid, ProposalStatus.APPLIED)
         return {"ok": True, "applied": p.to_dict(), "effect": effect,
-                "note": "mudança só em dados — nenhum código de produção foi tocado"}
+                "canary": ctrl.to_dict(),
+                "note": "mudança só em dados, sob canário — nenhum código tocado"}
+
+    def observe_canary(self, pid: str, success: bool) -> Optional[dict]:
+        """Registra o desfecho de uma missão sob o canário de uma proposta aplicada."""
+        from backend.evaluation.canary import CanaryController
+        p = self._items.get(pid)
+        if not p or not p.canary:
+            return None
+        ctrl = CanaryController.from_state(p.canary)
+        ctrl.record(bool(success))
+        p.canary = ctrl.to_state()
+        self._save()
+        return ctrl.to_dict()
+
+    def evaluate_canary(self, pid: str) -> dict:
+        """Decide o degrau: promove, segura, ou faz ROLLBACK (desfaz o efeito).
+
+        No rollback, aplica o contrapeso inverso na memória de experiência — a
+        colônia desfaz a evolução que piorou (reversível), com honestidade: é um
+        lançamento de contrapeso, não um apagamento do histórico.
+        """
+        from backend.evaluation.canary import CanaryController
+        p = self._items.get(pid)
+        if not p or not p.canary:
+            return {"ok": False, "reason": "proposta sem canário ativo"}
+        ctrl = CanaryController.from_state(p.canary)
+        verdict = ctrl.evaluate()
+        p.canary = ctrl.to_state()
+        if verdict == "rollback":
+            self._undo_effect(p)
+        self._save()
+        return {"ok": True, "verdict": verdict, "canary": ctrl.to_dict()}
+
+    @staticmethod
+    def _undo_effect(p: "EvolutionProposal") -> None:
+        """Contrapeso inverso do efeito aplicado (rollback do canário)."""
+        from backend.cognition.experience import (
+            get_error_memory, get_strategy_memory,
+        )
+        if p.kind == "promote_route":
+            get_error_memory().remember(p.goal_signature, p.route,
+                                        "canário: promoção revertida (piorou)")
+        elif p.kind == "deprioritize_route":
+            get_strategy_memory().record_success(p.goal_signature, p.route, 1.0)
 
 
 def propose_from_experience(error_mem=None, strategy_mem=None,

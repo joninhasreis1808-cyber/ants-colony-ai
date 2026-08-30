@@ -97,3 +97,20 @@ class CanaryController:
         return {"percentage": self.percentage, "stage": self._stage,
                 "samples": self.samples, "success_rate": round(self.success_rate, 4),
                 "rolled_back": self._rolled_back, "is_full": self.is_full}
+
+    def to_state(self) -> dict[str, Any]:
+        """Estado completo e serializável (para persistir o canário no ledger)."""
+        return {"stage": self._stage, "ok": self._ok, "fail": self._fail,
+                "rolled_back": self._rolled_back, "min_samples": self._min,
+                "threshold": self._threshold}
+
+    @classmethod
+    def from_state(cls, s: dict[str, Any]) -> "CanaryController":
+        """Reconstrói um controlador a partir de `to_state` (round-trip fiel)."""
+        c = cls(min_samples=int(s.get("min_samples", 20)),
+                success_threshold=float(s.get("threshold", 0.95)))
+        c._stage = int(s.get("stage", 0))
+        c._ok = int(s.get("ok", 0))
+        c._fail = int(s.get("fail", 0))
+        c._rolled_back = bool(s.get("rolled_back", False))
+        return c

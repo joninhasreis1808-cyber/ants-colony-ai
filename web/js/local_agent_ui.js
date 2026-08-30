@@ -59,8 +59,9 @@
       '  <option value="CAN_RUN_COMMAND">Rodar comando</option>' +
       '  <option value="CAN_SCREENSHOT">Capturar tela</option>' +
       '  <option value="CAN_CONTROL_APP">Abrir app</option>' +
+      '  <option value="CAN_CONTROL_INPUT">Controle de entrada</option>' +
       '</select>' +
-      '<input id="la-res" placeholder="caminho / comando / app / destino .png" style="width:100%;margin-bottom:6px" />' +
+      '<input id="la-res" placeholder="caminho / comando / app / destino .png / entrada: click left, move 100 200, type oi, key ctrl+c" style="width:100%;margin-bottom:6px" />' +
       '<textarea id="la-content" placeholder="conteudo (para escrever)" style="width:100%;height:48px;margin-bottom:6px"></textarea>' +
       '<label style="display:block;margin-bottom:6px"><input type="checkbox" id="la-confirm" /> confirmar (gravar/rodar de verdade)</label>' +
       '<button id="la-run" style="width:100%;padding:6px">Executar</button>' +

@@ -71,6 +71,7 @@ fn la_execute(token: String, args: Option<serde_json::Value>) -> Result<serde_js
         "CAN_RUN_COMMAND" => { /* std::process::Command sobre argv já validado */ }
         "CAN_SCREENSHOT"  => { /* comando do SO grava a captura na pasta autorizada */ }
         "CAN_CONTROL_APP" => { /* abre o app da allowlist (spawn) */ }
+        "CAN_CONTROL_INPUT" => { /* entrada sintética via ferramenta do SO (xdotool) */ }
         other => Err(format!("capacidade sem executor nativo: {other}")),
     }
 }
@@ -83,12 +84,15 @@ fn la_execute(token: String, args: Option<serde_json::Value>) -> Result<serde_js
 - **tela** (`CAN_SCREENSHOT`): a captura só grava DENTRO de uma pasta autorizada
   (privacidade); o SO tira a foto via comando (padrão por SO ou `ANTS_SCREENSHOT_CMD`);
 - **app** (`CAN_CONTROL_APP`): o app precisa estar em `ANTS_ALLOWED_APPS` E ter
-  `confirm:true`; é aberto por `spawn` (nunca via shell).
+  `confirm:true`; é aberto por `spawn` (nunca via shell);
+- **entrada** (`CAN_CONTROL_INPUT`): controle fino (mover/clicar/digitar/tecla) —
+  vocabulário FECHADO de verbos (`move`/`click`/`type`/`key`/`scroll`) + `confirm`;
+  o executor mapeia para a ferramenta do SO (`xdotool` por padrão, ou
+  `ANTS_INPUT_TOOL`), sempre por argv (nunca via shell).
 
-A blacklist dura recusa sozinha qualquer caminho crítico, mesmo listado. Abrir app
-e capturar tela são executados pelo próprio SO (comando), a lógica de I/O
-type-checada em isolamento; a **decisão de segurança** de todas as 5 capacidades
-está provada no core.
+A blacklist dura recusa sozinha qualquer caminho crítico, mesmo listado. Tela, app
+e entrada são executados pelo próprio SO (comando), a lógica de I/O type-checada em
+isolamento; a **decisão de segurança** das **6 capacidades** está provada no core.
 
 ## Handshake do segredo da ponte (9.20)
 
@@ -106,7 +110,7 @@ O elo que faltava entre a interface e o `la_execute` está ligado:
 
 - **Backend** — `POST /local-agent/grant` (`backend/api/routes/local_agent.py`,
   autenticado pelo dono) **assina** um grant curto para uma capacidade+recurso.
-  Emite as 5 capacidades do corpo (arquivo, comando, **tela**, **app**);
+  Emite as 6 capacidades do corpo (arquivo, comando, **tela**, **app**, **entrada**);
   `CAN_BROWSER` fica de fora (é capacidade de servidor, não do corpo). TTL curto e
   com teto. `GET /local-agent/status` diz à UI se o corpo está presente.
 - **Interface** — `web/js/local_agent_ui.js` (aditivo) expõe
@@ -146,14 +150,14 @@ divergir em silêncio.
   executado em isolamento** (segredo de 64 hex, idempotente) contra o `getrandom`
   real; o `scripts/tauri_doctor.sh` confirmou aqui, honestamente, que faltam
   `webkit2gtk-4.1`/`gtk-3`/`patchelf` neste sandbox.
-- **Tela e controle de app** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`) — **ligados
-  (9.22)**. A autorização das 5 capacidades está provada por `cargo test` (26
-  testes) e a lógica de I/O type-checada em isolamento. O que NÃO dá para verificar
-  aqui é a captura/abertura REAL (precisa de um monitor e de app instalado na
-  máquina do dono): a foto é tirada pelo comando do SO (`gnome-screenshot`/
-  `screencapture`, ou `ANTS_SCREENSHOT_CMD`) e o app é aberto por `spawn`.
-  Controle fino de entrada (mover mouse/digitar) é uma capacidade futura distinta,
-  não incluída aqui.
+- **Tela, app e entrada** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`/`CAN_CONTROL_INPUT`)
+  — **ligados**. A autorização das **6 capacidades** está provada por `cargo test`
+  (28 testes) e a lógica de I/O type-checada em isolamento. O que NÃO dá para
+  verificar aqui é a ação REAL (precisa de um monitor, app instalado e a ferramenta
+  de entrada na máquina do dono): a foto é tirada por comando do SO
+  (`gnome-screenshot`/`screencapture` ou `ANTS_SCREENSHOT_CMD`), o app por `spawn`,
+  e a entrada por `xdotool`/`ANTS_INPUT_TOOL`. A **decisão de segurança** — a parte
+  que importa — está 100% provada.
 - O **transporte real** Render↔Tauri e o handshake de *device identity* ainda não
   existem; hoje o corpo e o cérebro compartilham `ANTS_BRIDGE_SECRET` via ambiente
   no modo nativo (sidecar).

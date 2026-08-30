@@ -134,6 +134,49 @@ fn screenshot_argv(out: &str) -> Vec<String> {
     }
 }
 
+/// Mapeia a ação de entrada JÁ VALIDADA pelo core (verbo + params) para a
+/// ferramenta de entrada do SO. Padrão `xdotool` (Linux); troque o binário por
+/// `ANTS_INPUT_TOOL` num ambiente xdotool-compatível. Nunca via shell.
+fn input_argv(action: &[String]) -> Result<Vec<String>, String> {
+    let tool = std::env::var("ANTS_INPUT_TOOL").ok()
+        .filter(|t| !t.trim().is_empty())
+        .unwrap_or_else(|| "xdotool".to_string());
+    let verb = action.first().map(|s| s.as_str()).unwrap_or("");
+    let rest = &action[1.min(action.len())..];
+    let mut argv = vec![tool];
+    match verb {
+        "move" => {
+            argv.push("mousemove".into());
+            argv.extend(rest.iter().take(2).cloned());
+        }
+        "click" => {
+            let btn = match rest.first().map(|s| s.as_str()) {
+                Some("right") => "3",
+                Some("middle") => "2",
+                _ => "1",
+            };
+            argv.push("click".into());
+            argv.push(btn.into());
+        }
+        "scroll" => {
+            let dir = if rest.first().map(|s| s.as_str()) == Some("down") { "5" } else { "4" };
+            argv.push("click".into());
+            argv.push(dir.into());
+        }
+        "type" => {
+            argv.push("type".into());
+            argv.push("--".into());
+            argv.push(rest.join(" "));
+        }
+        "key" => {
+            argv.push("key".into());
+            argv.extend(rest.iter().cloned());
+        }
+        other => return Err(format!("verbo de entrada sem mapeamento: {other}")),
+    }
+    Ok(argv)
+}
+
 /// Comando invocado pela interface (native_bridge.js → `la_execute`).
 /// `token` é o grant assinado pelo cérebro; `args` traz content/confirm/command.
 #[cfg_attr(mobile, allow(dead_code))]
@@ -249,6 +292,23 @@ fn la_execute(
             Ok(serde_json::json!({
                 "ok": true, "executed": true, "capability": action.capability,
                 "app": action.argv, "pid": child.id(),
+            }))
+        }
+        "CAN_CONTROL_INPUT" => {
+            // Entrada sintética via ferramenta do SO (argv já validado no core).
+            let argv = input_argv(&action.argv)?;
+            let (bin, rest) = argv
+                .split_first()
+                .ok_or_else(|| "entrada: comando vazio".to_string())?;
+            let out = std::process::Command::new(bin)
+                .args(rest)
+                .output()
+                .map_err(|e| e.to_string())?;
+            Ok(serde_json::json!({
+                "ok": out.status.success(), "executed": true,
+                "capability": action.capability, "action": action.argv,
+                "code": out.status.code(),
+                "stderr": String::from_utf8_lossy(&out.stderr),
             }))
         }
         other => Err(format!("capacidade sem executor nativo: {other}")),

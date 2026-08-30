@@ -42,14 +42,33 @@ def test_grant_recusa_capacidade_sem_executor_nativo():
     assert "não executável" in r.json()["detail"]
 
 
-def test_grant_emite_tela_e_app():
-    # 100% do corpo: tela e app agora são emitidas e verificáveis.
+def test_grant_emite_tela_app_e_entrada():
+    # 100% do corpo: tela, app e controle de entrada emitidos e verificáveis.
     for cap, res in (("CAN_SCREENSHOT", "/home/dono/Imagens/t.png"),
-                     ("CAN_CONTROL_APP", "firefox")):
+                     ("CAN_CONTROL_APP", "firefox"),
+                     ("CAN_CONTROL_INPUT", "click left")):
         r = client.post("/local-agent/grant", json={"capability": cap, "resource": res})
         assert r.status_code == 200, r.text
         ok, grant = CT.verify_command(r.json()["token"])
         assert ok and grant.capability == cap
+
+
+def test_entrada_e_validada_e_delegada_nunca_executada_no_servidor():
+    # O servidor VALIDA a corrente (grant + escopo) e delega ao corpo nativo;
+    # nunca sintetiza entrada. Envelope autorizado com executed=False.
+    from backend.local_agent.executor import execute_local
+    from backend.permissions.device_scopes import get_device_scopes
+
+    get_device_scopes().grant("control_input")
+    try:
+        token = client.post("/local-agent/grant",
+                            json={"capability": "CAN_CONTROL_INPUT",
+                                  "resource": "type ola"}).json()["token"]
+        res = execute_local(token, args={"confirm": True})
+        assert res["allowed"] is True and res["executed"] is False
+        assert res["capability"] == "CAN_CONTROL_INPUT"
+    finally:
+        get_device_scopes().revoke("control_input")
 
 
 def test_grant_exige_recurso():

@@ -31,7 +31,12 @@ pub const CAPABILITIES: &[&str] = &[
     "CAN_BROWSER",
     "CAN_RUN_COMMAND",
     "CAN_CONTROL_APP",
+    "CAN_CONTROL_INPUT",
 ];
+
+/// Verbos de entrada sintética permitidos (controle fino). Nada fora desta lista
+/// é aceito — a entrada é a capacidade mais poderosa, então o vocabulário é fechado.
+pub const INPUT_VERBS: &[&str] = &["move", "click", "type", "key", "scroll"];
 
 /// Um pedido de capacidade assinado — dados, jamais execução.
 #[derive(Debug, Clone, Deserialize)]
@@ -188,6 +193,37 @@ pub fn authorize(grant: &Grant, args: &Args, guard: &PathGuard,
             }
             Ok(mk(String::new(), true, argv))
         }
+        "CAN_CONTROL_INPUT" => {
+            // Entrada sintética (mover/clicar/digitar/tecla) é a capacidade mais
+            // poderosa: exige confirm E um verbo do vocabulário fechado.
+            if !args.confirm {
+                return Err("controle de entrada exige confirm:true explícito do dono".to_string());
+            }
+            let argv = command_guard::to_argv(&grant.resource);
+            let verb = argv.first().cloned().unwrap_or_default().to_lowercase();
+            if verb.is_empty() {
+                return Err("ação de entrada vazia".to_string());
+            }
+            if !INPUT_VERBS.contains(&verb.as_str()) {
+                return Err(format!("verbo de entrada não permitido: {verb}"));
+            }
+            // Validação mínima por verbo (o executor mapeia p/ a ferramenta do SO).
+            match verb.as_str() {
+                "move" => {
+                    if argv.len() < 3 || argv[1].parse::<i64>().is_err()
+                        || argv[2].parse::<i64>().is_err() {
+                        return Err("move exige duas coordenadas inteiras (x y)".to_string());
+                    }
+                }
+                "type" | "key" => {
+                    if argv.len() < 2 {
+                        return Err(format!("{verb} exige um argumento"));
+                    }
+                }
+                _ => {}
+            }
+            Ok(mk(String::new(), true, argv))
+        }
         other => Err(format!("capacidade ainda não ligada no corpo local: {other}")),
     }
 }
@@ -336,6 +372,34 @@ mod tests {
                            &Args { confirm: true, ..Default::default() }, &g, &apps)
             .expect("app na allowlist deveria abrir");
         assert_eq!(ok.argv, vec!["firefox", "https://x"]);
+    }
+
+    #[test]
+    fn entrada_exige_confirm_e_verbo_valido() {
+        let g = PathGuard::new();
+        // sem confirm → recusa
+        assert!(authorize(&grant("CAN_CONTROL_INPUT", "click left"),
+                          &Args { confirm: false, ..Default::default() }, &g, NO_APPS).is_err());
+        // verbo fora do vocabulário → recusa mesmo confirmado
+        assert!(authorize(&grant("CAN_CONTROL_INPUT", "format c:"),
+                          &Args { confirm: true, ..Default::default() }, &g, NO_APPS).is_err());
+        // clique válido + confirm → ok
+        let ok = authorize(&grant("CAN_CONTROL_INPUT", "click left"),
+                           &Args { confirm: true, ..Default::default() }, &g, NO_APPS)
+            .expect("click confirmado deveria passar");
+        assert_eq!(ok.argv, vec!["click", "left"]);
+    }
+
+    #[test]
+    fn entrada_move_exige_coordenadas() {
+        let g = PathGuard::new();
+        let a = Args { confirm: true, ..Default::default() };
+        // sem coordenadas numéricas → recusa
+        assert!(authorize(&grant("CAN_CONTROL_INPUT", "move aqui"), &a, &g, NO_APPS).is_err());
+        // com coordenadas → ok
+        let ok = authorize(&grant("CAN_CONTROL_INPUT", "move 100 200"), &a, &g, NO_APPS)
+            .expect("move com coordenadas deveria passar");
+        assert_eq!(ok.argv, vec!["move", "100", "200"]);
     }
 
     #[test]

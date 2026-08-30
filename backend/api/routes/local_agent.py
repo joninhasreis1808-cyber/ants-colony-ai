@@ -29,7 +29,7 @@ router = APIRouter(prefix="/local-agent", tags=["local-agent"])
 # arquivo (ler/escrever), comando, TELA (captura) e APP (abrir). CAN_BROWSER é
 # uma capacidade de servidor (web_navigator), não do corpo nativo — fica de fora.
 NATIVE_CAPS = ("CAN_READ_FILES", "CAN_WRITE_FILES", "CAN_RUN_COMMAND",
-               "CAN_SCREENSHOT", "CAN_CONTROL_APP")
+               "CAN_SCREENSHOT", "CAN_CONTROL_APP", "CAN_CONTROL_INPUT")
 _MAX_TTL = 300.0            # teto de 5 min para um grant
 
 

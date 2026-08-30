@@ -26,16 +26,30 @@ app/
     binaries/             sidecar ants_backend-<target-triple> (gerado)
 ```
 
+## Segurança da ponte (handshake do segredo)
+
+O corpo nativo só age com um **grant assinado** pelo cérebro (o backend). Para os
+dois lados falarem a mesma língua, eles compartilham um segredo:
+
+- No desktop, o processo Tauri **gera um `ANTS_BRIDGE_SECRET` efêmero por execução**
+  (RNG do SO) e o entrega ao sidecar Python via ambiente (`src-tauri/src/lib.rs`,
+  `ensure_bridge_secret`). O `la_execute` (Rust) e o `capability_tokens` (Python)
+  usam o mesmo valor; o segredo é **novo a cada abertura e nunca vai para o disco**.
+- No Python, o sidecar semeia o **Secret Vault** com esse segredo (mestre `bridge`),
+  habilitando segredos **derivados por dispositivo** (`derive_bridge_secret`).
+
 ## Build
 
 Da raiz do repositório:
 
 ```bash
-bash scripts/build_app.sh      # sidecar + app nativo da plataforma atual
+bash scripts/tauri_doctor.sh   # 1) pré-voo: confere toolchain + libs do SO
+bash scripts/build_app.sh      # 2) sidecar + app nativo da plataforma atual
 ```
 
-Pré-requisitos: Rust, Node e (no Linux) `webkit2gtk-4.1`, `libsoup-3.0`,
-`librsvg2`, `patchelf`.
+O `tauri_doctor.sh` diz exatamente o que instalar se faltar algo. Pré-requisitos:
+Rust, Node e (no Linux) `webkit2gtk-4.1`, `gtk-3`, `libsoup-3.0`, `librsvg2`,
+`patchelf`.
 
 ## Mobile
 

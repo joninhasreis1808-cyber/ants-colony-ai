@@ -25,9 +25,23 @@ def _prepare_native_data_dir() -> None:
     os.environ.setdefault("ANTS_AUDIT_LOG", str(Path(base) / "device_audit.jsonl"))
 
 
+def seed_secret_vault() -> bool:
+    """Adota o segredo da ponte que o app Tauri passou (handshake 9.20).
+
+    O processo Tauri gera `ANTS_BRIDGE_SECRET` e o entrega ao sidecar; aqui ele
+    entra no Secret Vault como mestre 'bridge', habilitando a derivação por
+    dispositivo. O `capability_tokens` já lê o mesmo env — os dois lados falam a
+    mesma língua. Devolve True se o mestre da ponte ficou disponível.
+    """
+    from backend.security.secret_vault import get_secret_vault
+    vault = get_secret_vault()           # semeia de ANTS_BRIDGE_SECRET/ANTS_API_TOKEN
+    return vault.exists("bridge")
+
+
 def main() -> None:
     os.environ["ANTS_RUNTIME"] = "native"
     _prepare_native_data_dir()
+    seed_secret_vault()
     import uvicorn
     port = int(os.environ.get("ANTS_PORT", os.environ.get("PORT", "8765")))
     uvicorn.run("backend.api.main:app", host="127.0.0.1", port=port,

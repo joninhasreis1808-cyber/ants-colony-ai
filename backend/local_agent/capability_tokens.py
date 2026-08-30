@@ -29,6 +29,7 @@ from backend.core import new_id
 CAPABILITIES = frozenset({
     "CAN_READ_FILES", "CAN_WRITE_FILES", "CAN_SCREENSHOT",
     "CAN_BROWSER", "CAN_RUN_COMMAND", "CAN_CONTROL_APP",
+    "CAN_CONTROL_INPUT",
 })
 
 _DEFAULT_TTL = 30.0           # segundos — grants são curtos por segurança

@@ -26,7 +26,8 @@ from backend.local_agent.capability_tokens import verify_command
 # Capacidades de ARQUIVO: executadas (gated) como ponte de referência.
 _FILE_CAPS = frozenset({"CAN_READ_FILES", "CAN_WRITE_FILES"})
 # Capacidades de DISPOSITIVO: só validadas + delegadas ao agente nativo.
-_DEVICE_CAPS = frozenset({"CAN_SCREENSHOT", "CAN_CONTROL_APP", "CAN_RUN_COMMAND"})
+_DEVICE_CAPS = frozenset({"CAN_SCREENSHOT", "CAN_CONTROL_APP", "CAN_RUN_COMMAND",
+                          "CAN_CONTROL_INPUT"})
 _OPEN = _FILE_CAPS | _DEVICE_CAPS
 
 # Capacidade de dispositivo → escopo do dono exigido (device_scopes).
@@ -34,6 +35,7 @@ _DEVICE_SCOPE = {
     "CAN_SCREENSHOT": "screen_capture",
     "CAN_CONTROL_APP": "run_apps",
     "CAN_RUN_COMMAND": "system_commands",
+    "CAN_CONTROL_INPUT": "control_input",
 }
 
 # Trilha de auditoria (toda tentativa entra aqui — Regra: nada sem registro).

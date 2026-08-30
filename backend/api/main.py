@@ -25,6 +25,7 @@ from backend.api.routes import memory as memory_routes
 from backend.api.routes import perception as perception_routes
 from backend.api.routes import permissions as permission_routes
 from backend.api.routes import device as device_routes
+from backend.api.routes import local_agent as local_agent_routes
 from backend.api.routes import nervous as nervous_routes
 from backend.api.routes import tools as tools_routes
 from backend.api.routes import mission as mission_routes
@@ -124,6 +125,7 @@ app.include_router(perception_routes.router)
 app.include_router(action_routes.router)
 app.include_router(permission_routes.router)
 app.include_router(device_routes.router)
+app.include_router(local_agent_routes.router)
 app.include_router(memory_routes.router)
 app.include_router(factory_routes.router)
 app.include_router(bio_routes.router)

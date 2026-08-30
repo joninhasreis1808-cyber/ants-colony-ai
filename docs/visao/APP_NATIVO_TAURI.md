@@ -86,6 +86,25 @@ mesmo valor; o sidecar semeia o **Secret Vault** com ele (mestre `bridge`), para
 segredos **derivados por dispositivo**. O segredo é novo a cada abertura e **nunca
 é persistido**. Prova (lado Python): `tests/test_bridge_handshake_920.py`.
 
+## O fio UI → corpo (9.21 · último fio)
+
+O elo que faltava entre a interface e o `la_execute` está ligado:
+
+- **Backend** — `POST /local-agent/grant` (`backend/api/routes/local_agent.py`,
+  autenticado pelo dono) **assina** um grant curto para uma capacidade+recurso.
+  Só emite as capacidades que o corpo nativo REALMENTE executa hoje
+  (`CAN_READ_FILES`/`CAN_WRITE_FILES`/`CAN_RUN_COMMAND`); tela/app são recusadas
+  com honestidade. TTL curto e com teto. `GET /local-agent/status` diz à UI se o
+  corpo está presente.
+- **Interface** — `web/js/local_agent_ui.js` (aditivo) expõe
+  `window.AntLocalAgent.run(capability, opts)`: pede o grant ao backend e o entrega
+  ao corpo via `AntNative.execute`. Um painel mínimo "Corpo Local" aparece **só no
+  modo nativo**; no web fica dormente (honesto). Não toca nos JS legados.
+- **Prova** — `tests/test_local_agent_grant_921.py`: o grant do endpoint é
+  verificado pelo corpo e, no fio completo (endpoint → executor real, sob escopo +
+  path_guard), **lê um arquivo de verdade**. O corpo nativo (Rust) percorre o mesmo
+  caminho, provado em `native_flow.rs`.
+
 ## Build e execução (numa máquina de verdade)
 
 Pré-requisitos: Rust (`rustup`), Node (`npm`), e as libs de sistema do Tauri.

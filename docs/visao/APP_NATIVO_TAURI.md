@@ -62,19 +62,33 @@ fn la_execute(token: String, args: Option<serde_json::Value>) -> Result<serde_js
     let secret = std::env::var("ANTS_BRIDGE_SECRET").unwrap_or_default();
     // ... traduz args JSON → ants_local_agent_core::Args ...
     let guard = build_path_guard();              // pastas do dono (ANTS_ALLOWED_DIRS)
+    let apps  = build_app_allowlist();           // apps do dono (ANTS_ALLOWED_APPS)
     let action = ants_local_agent_core::verify_and_authorize(
-        &token, secret.as_bytes(), &core_args, &guard)?;   // 1ª + 2ª trava (core testado)
+        &token, secret.as_bytes(), &core_args, &guard, &apps)?;  // 1ª + 2ª trava (core testado)
     match action.capability.as_str() {
         "CAN_READ_FILES"  => { /* std::fs::read_to_string */ }
         "CAN_WRITE_FILES" => { /* dry-run, ou std::fs::write se confirm */ }
         "CAN_RUN_COMMAND" => { /* std::process::Command sobre argv já validado */ }
+        "CAN_SCREENSHOT"  => { /* comando do SO grava a captura na pasta autorizada */ }
+        "CAN_CONTROL_APP" => { /* abre o app da allowlist (spawn) */ }
         other => Err(format!("capacidade sem executor nativo: {other}")),
     }
 }
 ```
 
-As pastas autorizadas vêm de `ANTS_ALLOWED_DIRS` (separadas por `:`); a blacklist
-dura recusa sozinha qualquer caminho crítico, mesmo listado.
+**100% das capacidades do corpo (9.22).** As travas do dono, todas provadas por
+`cargo test`:
+- **arquivo** (ler/escrever): caminho na whitelist `ANTS_ALLOWED_DIRS`;
+- **comando**: allowlist do `command_guard` + `confirm`;
+- **tela** (`CAN_SCREENSHOT`): a captura só grava DENTRO de uma pasta autorizada
+  (privacidade); o SO tira a foto via comando (padrão por SO ou `ANTS_SCREENSHOT_CMD`);
+- **app** (`CAN_CONTROL_APP`): o app precisa estar em `ANTS_ALLOWED_APPS` E ter
+  `confirm:true`; é aberto por `spawn` (nunca via shell).
+
+A blacklist dura recusa sozinha qualquer caminho crítico, mesmo listado. Abrir app
+e capturar tela são executados pelo próprio SO (comando), a lógica de I/O
+type-checada em isolamento; a **decisão de segurança** de todas as 5 capacidades
+está provada no core.
 
 ## Handshake do segredo da ponte (9.20)
 
@@ -92,10 +106,9 @@ O elo que faltava entre a interface e o `la_execute` está ligado:
 
 - **Backend** — `POST /local-agent/grant` (`backend/api/routes/local_agent.py`,
   autenticado pelo dono) **assina** um grant curto para uma capacidade+recurso.
-  Só emite as capacidades que o corpo nativo REALMENTE executa hoje
-  (`CAN_READ_FILES`/`CAN_WRITE_FILES`/`CAN_RUN_COMMAND`); tela/app são recusadas
-  com honestidade. TTL curto e com teto. `GET /local-agent/status` diz à UI se o
-  corpo está presente.
+  Emite as 5 capacidades do corpo (arquivo, comando, **tela**, **app**);
+  `CAN_BROWSER` fica de fora (é capacidade de servidor, não do corpo). TTL curto e
+  com teto. `GET /local-agent/status` diz à UI se o corpo está presente.
 - **Interface** — `web/js/local_agent_ui.js` (aditivo) expõe
   `window.AntLocalAgent.run(capability, opts)`: pede o grant ao backend e o entrega
   ao corpo via `AntNative.execute`. Um painel mínimo "Corpo Local" aparece **só no
@@ -133,9 +146,14 @@ divergir em silêncio.
   executado em isolamento** (segredo de 64 hex, idempotente) contra o `getrandom`
   real; o `scripts/tauri_doctor.sh` confirmou aqui, honestamente, que faltam
   `webkit2gtk-4.1`/`gtk-3`/`patchelf` neste sandbox.
-- **Tela e controle de app** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`) ainda não têm
-  executor nativo: `authorize` os recusa com honestidade ("capacidade ainda não
-  ligada"). Ligados quando o dono autorizar, um por vez.
+- **Tela e controle de app** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`) — **ligados
+  (9.22)**. A autorização das 5 capacidades está provada por `cargo test` (26
+  testes) e a lógica de I/O type-checada em isolamento. O que NÃO dá para verificar
+  aqui é a captura/abertura REAL (precisa de um monitor e de app instalado na
+  máquina do dono): a foto é tirada pelo comando do SO (`gnome-screenshot`/
+  `screencapture`, ou `ANTS_SCREENSHOT_CMD`) e o app é aberto por `spawn`.
+  Controle fino de entrada (mover mouse/digitar) é uma capacidade futura distinta,
+  não incluída aqui.
 - O **transporte real** Render↔Tauri e o handshake de *device identity* ainda não
   existem; hoje o corpo e o cérebro compartilham `ANTS_BRIDGE_SECRET` via ambiente
   no modo nativo (sidecar).

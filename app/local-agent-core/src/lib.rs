@@ -101,13 +101,22 @@ pub struct AuthorizedAction {
     pub argv: Vec<String>,
 }
 
+/// Nome do executável/app: última parte do caminho, minúsculo (POSIX e Windows).
+fn base_name(arg0: &str) -> String {
+    arg0.rsplit(['/', '\\']).next().unwrap_or(arg0).to_lowercase()
+}
+
 /// Segunda trava (a 1ª é `verify_grant`): mesmo com grant válido, o pedido só
 /// passa se respeitar escopo/whitelist do dono — espelho fiel de `executor.py`.
 ///
 /// • ARQUIVO: caminho precisa estar na whitelist e fora da blacklist (path_guard).
 /// • COMANDO: precisa passar na allowlist E ter `confirm:true` explícito.
-/// • Demais (tela/app): não ligadas no corpo ainda — recusa honesta.
-pub fn authorize(grant: &Grant, args: &Args, guard: &PathGuard) -> Result<AuthorizedAction, String> {
+/// • TELA: o destino da captura precisa estar numa pasta autorizada (privacidade).
+/// • APP: o app precisa estar na allowlist do dono E ter `confirm:true`.
+///
+/// `apps` é a allowlist de apps que o dono autorizou (ANTS_ALLOWED_APPS).
+pub fn authorize(grant: &Grant, args: &Args, guard: &PathGuard,
+                 apps: &[String]) -> Result<AuthorizedAction, String> {
     let mk = |content: String, confirm: bool, argv: Vec<String>| AuthorizedAction {
         capability: grant.capability.clone(),
         resource: grant.resource.clone(),
@@ -152,6 +161,33 @@ pub fn authorize(grant: &Grant, args: &Args, guard: &PathGuard) -> Result<Author
             }
             Ok(mk(String::new(), true, verdict.argv))
         }
+        "CAN_SCREENSHOT" => {
+            // A captura só pode ser gravada DENTRO de uma pasta autorizada — a
+            // tela é sensível; o arquivo nunca vaza para fora do escopo do dono.
+            if !guard.is_allowed(&grant.resource) {
+                return Err(format!(
+                    "destino da captura fora das pastas autorizadas: {}",
+                    grant.resource
+                ));
+            }
+            Ok(mk(String::new(), args.confirm, Vec::new()))
+        }
+        "CAN_CONTROL_APP" => {
+            // Abrir um app é sensível: exige confirm E app na allowlist do dono.
+            if !args.confirm {
+                return Err("abrir app exige confirm:true explícito do dono".to_string());
+            }
+            let argv = command_guard::to_argv(&grant.resource);
+            let app = argv.first().cloned().unwrap_or_default();
+            let name = base_name(&app);
+            if name.is_empty() {
+                return Err("app vazio".to_string());
+            }
+            if !apps.iter().any(|a| base_name(a) == name) {
+                return Err(format!("app '{name}' fora da allowlist do dono"));
+            }
+            Ok(mk(String::new(), true, argv))
+        }
         other => Err(format!("capacidade ainda não ligada no corpo local: {other}")),
     }
 }
@@ -163,9 +199,10 @@ pub fn verify_and_authorize(
     secret: &[u8],
     args: &Args,
     guard: &PathGuard,
+    apps: &[String],
 ) -> Result<AuthorizedAction, String> {
     let grant = verify_grant(token, secret)?;
-    authorize(&grant, args, guard)
+    authorize(&grant, args, guard, apps)
 }
 
 #[cfg(test)]
@@ -213,6 +250,8 @@ mod tests {
         }
     }
 
+    const NO_APPS: &[String] = &[];
+
     #[test]
     fn ler_dentro_da_whitelist_e_autorizado() {
         let mut g = PathGuard::new();
@@ -221,6 +260,7 @@ mod tests {
             &grant("CAN_READ_FILES", "/home/dono/Documentos/nota.txt"),
             &Args::default(),
             &g,
+            NO_APPS,
         );
         assert!(a.is_ok());
     }
@@ -232,6 +272,7 @@ mod tests {
             &grant("CAN_READ_FILES", "/home/dono/Documentos/nota.txt"),
             &Args::default(),
             &g,
+            NO_APPS,
         );
         assert!(a.is_err());
     }
@@ -239,24 +280,18 @@ mod tests {
     #[test]
     fn comando_exige_allowlist_e_confirm() {
         let g = PathGuard::new();
-        // sem confirm → recusa mesmo na whitelist
         let sem = authorize(
             &grant("CAN_RUN_COMMAND", "echo oi"),
-            &Args {
-                confirm: false,
-                ..Default::default()
-            },
+            &Args { confirm: false, ..Default::default() },
             &g,
+            NO_APPS,
         );
         assert!(sem.is_err());
-        // com confirm e binário permitido → ok, com argv pronto
         let com = authorize(
             &grant("CAN_RUN_COMMAND", "echo oi"),
-            &Args {
-                confirm: true,
-                ..Default::default()
-            },
+            &Args { confirm: true, ..Default::default() },
             &g,
+            NO_APPS,
         )
         .expect("echo confirmado deveria passar");
         assert_eq!(com.argv, vec!["echo", "oi"]);
@@ -267,19 +302,47 @@ mod tests {
         let g = PathGuard::new();
         let a = authorize(
             &grant("CAN_RUN_COMMAND", "curl http://x"),
-            &Args {
-                confirm: true,
-                ..Default::default()
-            },
+            &Args { confirm: true, ..Default::default() },
             &g,
+            NO_APPS,
         );
         assert!(a.is_err());
     }
 
     #[test]
-    fn capacidade_nao_ligada_recusada() {
+    fn tela_grava_so_em_pasta_autorizada() {
+        let mut g = PathGuard::new();
+        g.allow("/home/dono/Imagens");
+        // destino autorizado → ok
+        assert!(authorize(&grant("CAN_SCREENSHOT", "/home/dono/Imagens/tela.png"),
+                          &Args::default(), &g, NO_APPS).is_ok());
+        // destino fora da whitelist → recusa (a tela é sensível)
+        assert!(authorize(&grant("CAN_SCREENSHOT", "/etc/tela.png"),
+                          &Args::default(), &g, NO_APPS).is_err());
+    }
+
+    #[test]
+    fn abrir_app_exige_allowlist_e_confirm() {
         let g = PathGuard::new();
-        assert!(authorize(&grant("CAN_SCREENSHOT", "-"), &Args::default(), &g).is_err());
+        let apps = vec!["firefox".to_string(), "code".to_string()];
+        // sem confirm → recusa
+        assert!(authorize(&grant("CAN_CONTROL_APP", "firefox"),
+                          &Args { confirm: false, ..Default::default() }, &g, &apps).is_err());
+        // app fora da allowlist → recusa mesmo confirmado
+        assert!(authorize(&grant("CAN_CONTROL_APP", "rm"),
+                          &Args { confirm: true, ..Default::default() }, &g, &apps).is_err());
+        // app na allowlist + confirm → ok, argv pronto
+        let ok = authorize(&grant("CAN_CONTROL_APP", "firefox https://x"),
+                           &Args { confirm: true, ..Default::default() }, &g, &apps)
+            .expect("app na allowlist deveria abrir");
+        assert_eq!(ok.argv, vec!["firefox", "https://x"]);
+    }
+
+    #[test]
+    fn capacidade_desconhecida_recusada() {
+        let g = PathGuard::new();
+        // CAN_BROWSER não tem executor no corpo → recusa honesta
+        assert!(authorize(&grant("CAN_BROWSER", "-"), &Args::default(), &g, NO_APPS).is_err());
     }
 
     #[test]
@@ -287,7 +350,7 @@ mod tests {
         // Token de ouro (CAN_READ_FILES /tmp/nota.txt) + /tmp autorizado ⇒ ok.
         let mut g = PathGuard::new();
         g.allow("/tmp");
-        let a = verify_and_authorize(GOLDEN, SECRET, &Args::default(), &g)
+        let a = verify_and_authorize(GOLDEN, SECRET, &Args::default(), &g, NO_APPS)
             .expect("grant válido dentro da whitelist deveria autorizar");
         assert_eq!(a.capability, "CAN_READ_FILES");
         assert_eq!(a.resource, "/tmp/nota.txt");

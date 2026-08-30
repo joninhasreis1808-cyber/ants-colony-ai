@@ -227,11 +227,27 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # real de proveniência, aditivo. Torna explícita a degradação implícita.
         from backend.cognitive.fallback_chain import FallbackChain
         prov = result.get("provenance") or {}
-        result["fallback"] = FallbackChain.classify(
+        fallback = FallbackChain.classify(
             prov.get("source"), result.get("confidence"),
             evidence_count=len(prov.get("urls") or []),
-        ).to_dict()
+        )
+        result["fallback"] = fallback.to_dict()
+        # Laço vivo (FASE 6 · integração): alimenta o calibrador de confiança com
+        # esta missão. "Acerto" = sinal de auto-consistência da colônia (resposta
+        # ancorada e sem escalar ao humano) — NÃO é verdade externa; é a colônia
+        # aprendendo se a confiança que declara bate com o próprio grounding.
+        self._feed_calibrator(result.get("confidence"), prov.get("source"),
+                              fallback.escalate_human)
         return result
+
+    @staticmethod
+    def _feed_calibrator(confidence, source, escalate_human) -> None:
+        """Registra (confiança prevista, acerto auto-consistente) no calibrador vivo."""
+        if not isinstance(confidence, (int, float)):
+            return
+        from backend.evaluation.confidence_calibration import get_calibrator
+        grounded = source not in (None, "none")
+        get_calibrator().record(float(confidence), correct=bool(grounded and not escalate_human))
 
     def _resolve_answer(
         self, task_id: str, decision: dict[str, Any], created: Any

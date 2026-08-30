@@ -31,9 +31,16 @@ def _forca_rules(monkeypatch):
 
 
 class FakeRouter:
-    """Router que devolve evidência real (simula a web da máquina do dono)."""
+    """Router que devolve evidência real (simula a web da máquina do dono).
+
+    A URL é derivada por um hash ESTÁVEL da sub-pergunta (não `hash()`, que é
+    randomizado por processo via PYTHONHASHSEED) — assim cada sub-pergunta gera
+    uma fonte distinta de forma determinística, e o teste não depende do seed.
+    """
     async def search(self, query, limit=5):
-        return [SearchResult(title=f"Sobre {query}", url=f"https://fonte-{abs(hash(query)) % 3}.org/x",
+        import hashlib
+        slug = hashlib.sha1(query.encode("utf-8")).hexdigest()[:8]
+        return [SearchResult(title=f"Sobre {query}", url=f"https://fonte-{slug}.org/x",
                              snippet=f"fato relevante sobre {query}", source="fake")], ["fake"]
 
 

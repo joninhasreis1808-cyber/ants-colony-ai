@@ -46,16 +46,40 @@ mod backend {
 
     /// Sobe o sidecar Python (porta dinâmica + runtime nativo) e o guarda
     /// para encerrar ao fechar o app.
+    ///
+    /// Handshake do segredo da ponte (9.20): gera um `ANTS_BRIDGE_SECRET`
+    /// efêmero por execução e o compartilha com o sidecar E com o `la_execute`
+    /// (mesmo processo). Sem isso, o corpo nativo recusaria todo grant ("ponte
+    /// sem segredo"). O segredo é novo a cada abertura e nunca é persistido.
     pub fn spawn(app: &App, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+        let secret = super::ensure_bridge_secret();
         let sidecar = app
             .shell()
             .sidecar("ants_backend")?
             .env("ANTS_PORT", port.to_string())
-            .env("ANTS_RUNTIME", "native");
+            .env("ANTS_RUNTIME", "native")
+            .env("ANTS_BRIDGE_SECRET", &secret);
         let (_rx, child) = sidecar.spawn()?;
         app.manage(Backend(Mutex::new(Some(child))));
         Ok(())
     }
+}
+
+/// Garante um segredo de ponte efêmero, compartilhado entre o `la_execute`
+/// (este processo) e o sidecar Python. Gerado uma vez por execução via RNG do
+/// SO; guardado no ambiente do processo; nunca escrito em disco.
+#[cfg(desktop)]
+fn ensure_bridge_secret() -> String {
+    if let Ok(existing) = std::env::var("ANTS_BRIDGE_SECRET") {
+        if !existing.is_empty() {
+            return existing;
+        }
+    }
+    let mut buf = [0u8; 32];
+    getrandom::getrandom(&mut buf).expect("RNG do sistema operacional indisponível");
+    let secret: String = buf.iter().map(|b| format!("{b:02x}")).collect();
+    std::env::set_var("ANTS_BRIDGE_SECRET", &secret);
+    secret
 }
 
 // ---------------------------------------------------------------------------

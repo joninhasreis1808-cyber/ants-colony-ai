@@ -19,6 +19,7 @@ tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 tauri-plugin-notification = "2"
 serde_json = "1"
+getrandom = "0.2"   # segredo de ponte efêmero (RNG do SO) no handshake do sidecar
 # Núcleo do corpo local: verifica o grant do cérebro e aplica as travas
 # (path_guard + command_guard) — provado por `cargo test` no próprio crate.
 ants-local-agent-core = { path = "../local-agent-core" }

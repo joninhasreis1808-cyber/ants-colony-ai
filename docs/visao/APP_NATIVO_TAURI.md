@@ -76,17 +76,29 @@ fn la_execute(token: String, args: Option<serde_json::Value>) -> Result<serde_js
 As pastas autorizadas vêm de `ANTS_ALLOWED_DIRS` (separadas por `:`); a blacklist
 dura recusa sozinha qualquer caminho crítico, mesmo listado.
 
+## Handshake do segredo da ponte (9.20)
+
+Para o corpo aceitar um grant, os dois lados precisam do mesmo segredo. No
+desktop, o processo Tauri **gera um `ANTS_BRIDGE_SECRET` efêmero por execução**
+(RNG do SO, `ensure_bridge_secret` em `src-tauri/src/lib.rs`) e o passa ao sidecar
+Python via ambiente. O `la_execute` (Rust) e o `capability_tokens` (Python) usam o
+mesmo valor; o sidecar semeia o **Secret Vault** com ele (mestre `bridge`), para
+segredos **derivados por dispositivo**. O segredo é novo a cada abertura e **nunca
+é persistido**. Prova (lado Python): `tests/test_bridge_handshake_920.py`.
+
 ## Build e execução (numa máquina de verdade)
 
-Pré-requisitos: Rust (`rustup`), Node (`npm`), e as libs de sistema do Tauri
-(Linux: `webkit2gtk`, `gtk-3`, etc.; Windows/macOS: ver docs do Tauri). Depois:
+Pré-requisitos: Rust (`rustup`), Node (`npm`), e as libs de sistema do Tauri.
+**Comece pelo doctor** — ele diz exatamente o que falta no seu SO:
 
 ```bash
-cd app
-npm install
-npm run tauri dev      # desenvolvimento
-npm run tauri build    # binário nativo do Ant's
+bash scripts/tauri_doctor.sh   # pré-voo: toolchain + libs de sistema
+bash scripts/build_app.sh      # sidecar (PyInstaller) + app nativo
 ```
+
+A configuração do app é guardada por um teste de coerência
+(`tests/test_tauri_config_920.py`): sidecar, ícones, front e scripts não podem
+divergir em silêncio.
 
 ## O que NÃO foi verificado (Regra 5)
 
@@ -97,7 +109,11 @@ npm run tauri build    # binário nativo do Ant's
   `la_execute` sem prova, seu corpo (menos o atributo `#[tauri::command]`, a única
   parte que exige GTK) foi **type-checado isoladamente** contra o core real
   (`cargo check` limpo) e sua lógica de I/O está provada por `tests/native_flow.rs`.
-  Só a casca gráfica do Tauri fica por compilar numa máquina com as libs.
+  Só a casca gráfica do Tauri fica por compilar numa máquina com as libs. O
+  `ensure_bridge_secret` (handshake) segue a mesma disciplina: **type-checado e
+  executado em isolamento** (segredo de 64 hex, idempotente) contra o `getrandom`
+  real; o `scripts/tauri_doctor.sh` confirmou aqui, honestamente, que faltam
+  `webkit2gtk-4.1`/`gtk-3`/`patchelf` neste sandbox.
 - **Tela e controle de app** (`CAN_SCREENSHOT`/`CAN_CONTROL_APP`) ainda não têm
   executor nativo: `authorize` os recusa com honestidade ("capacidade ainda não
   ligada"). Ligados quando o dono autorizar, um por vez.

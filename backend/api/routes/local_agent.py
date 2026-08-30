@@ -25,9 +25,11 @@ from backend.local_agent.runtime import is_native, runtime_name
 
 router = APIRouter(prefix="/local-agent", tags=["local-agent"])
 
-# Capacidades que o `la_execute` do app nativo sabe executar hoje. Só estas são
-# emitidas — tela/app (CAN_SCREENSHOT/CAN_CONTROL_APP) ainda não têm executor.
-NATIVE_CAPS = ("CAN_READ_FILES", "CAN_WRITE_FILES", "CAN_RUN_COMMAND")
+# Capacidades que o `la_execute` do app nativo sabe executar hoje. 100% do corpo:
+# arquivo (ler/escrever), comando, TELA (captura) e APP (abrir). CAN_BROWSER é
+# uma capacidade de servidor (web_navigator), não do corpo nativo — fica de fora.
+NATIVE_CAPS = ("CAN_READ_FILES", "CAN_WRITE_FILES", "CAN_RUN_COMMAND",
+               "CAN_SCREENSHOT", "CAN_CONTROL_APP")
 _MAX_TTL = 300.0            # teto de 5 min para um grant
 
 

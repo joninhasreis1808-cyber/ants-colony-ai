@@ -103,6 +103,37 @@ fn build_path_guard() -> ants_local_agent_core::PathGuard {
     guard
 }
 
+/// Apps que o dono autorizou abrir (`ANTS_ALLOWED_APPS`, separados por `:`).
+/// Sem lista ⇒ nenhum app pode ser aberto (padrão seguro).
+fn build_app_allowlist() -> Vec<String> {
+    std::env::var("ANTS_ALLOWED_APPS")
+        .unwrap_or_default()
+        .split(':')
+        .filter(|a| !a.is_empty())
+        .map(|a| a.to_string())
+        .collect()
+}
+
+/// Comando que TIRA a captura de tela, gravando em `out`. Configurável por
+/// `ANTS_SCREENSHOT_CMD` (use `{out}` no lugar do arquivo); senão, um padrão por
+/// SO. Nunca via shell — argv direto. Na captura o SO faz o trabalho pesado.
+fn screenshot_argv(out: &str) -> Vec<String> {
+    if let Ok(tmpl) = std::env::var("ANTS_SCREENSHOT_CMD") {
+        if !tmpl.trim().is_empty() {
+            return tmpl
+                .split_whitespace()
+                .map(|t| if t == "{out}" { out.to_string() } else { t.to_string() })
+                .collect();
+        }
+    }
+    if cfg!(target_os = "macos") {
+        vec!["screencapture".into(), "-x".into(), out.into()]
+    } else {
+        // Linux (GNOME) por padrão; outros ambientes: defina ANTS_SCREENSHOT_CMD.
+        vec!["gnome-screenshot".into(), "-f".into(), out.into()]
+    }
+}
+
 /// Comando invocado pela interface (native_bridge.js → `la_execute`).
 /// `token` é o grant assinado pelo cérebro; `args` traz content/confirm/command.
 #[cfg_attr(mobile, allow(dead_code))]
@@ -133,11 +164,13 @@ fn la_execute(
 
     // 1ª + 2ª trava, no core testado: assinatura/prazo + escopo/allowlist/confirm.
     let guard = build_path_guard();
+    let apps = build_app_allowlist();
     let action = ants_local_agent_core::verify_and_authorize(
         &token,
         secret.as_bytes(),
         &core_args,
         &guard,
+        &apps,
     )?;
 
     // 3ª etapa: I/O real do corpo local, só depois de autorizado.
@@ -182,6 +215,40 @@ fn la_execute(
                 "code": out.status.code(),
                 "stdout": String::from_utf8_lossy(&out.stdout),
                 "stderr": String::from_utf8_lossy(&out.stderr),
+            }))
+        }
+        "CAN_SCREENSHOT" => {
+            // A tela é capturada pelo próprio SO (comando), gravando na pasta
+            // autorizada; o core já garantiu que o destino é permitido.
+            let argv = screenshot_argv(&action.resource);
+            let (bin, rest) = argv
+                .split_first()
+                .ok_or_else(|| "screenshot: comando vazio".to_string())?;
+            let out = std::process::Command::new(bin)
+                .args(rest)
+                .output()
+                .map_err(|e| e.to_string())?;
+            Ok(serde_json::json!({
+                "ok": out.status.success(), "executed": true,
+                "capability": action.capability, "resource": action.resource,
+                "code": out.status.code(),
+                "stderr": String::from_utf8_lossy(&out.stderr),
+            }))
+        }
+        "CAN_CONTROL_APP" => {
+            // Abre o app (já validado na allowlist do dono). Não espera: apps
+            // são processos longos — devolve o PID e segue.
+            let (bin, rest) = action
+                .argv
+                .split_first()
+                .ok_or_else(|| "app vazio".to_string())?;
+            let child = std::process::Command::new(bin)
+                .args(rest)
+                .spawn()
+                .map_err(|e| e.to_string())?;
+            Ok(serde_json::json!({
+                "ok": true, "executed": true, "capability": action.capability,
+                "app": action.argv, "pid": child.id(),
             }))
         }
         other => Err(format!("capacidade sem executor nativo: {other}")),

@@ -36,7 +36,7 @@ fn ler_arquivo_de_verdade_apos_autorizar() {
     let path = tmp("ants_native_read.txt");
     std::fs::write(&path, b"colonia viva").unwrap();
 
-    let action = authorize(&grant("CAN_READ_FILES", &path), &Args::default(), &allow_tmp())
+    let action = authorize(&grant("CAN_READ_FILES", &path), &Args::default(), &allow_tmp(), &[])
         .expect("dentro da whitelist, deveria autorizar");
     // O que o la_execute faz em seguida:
     let body = std::fs::read_to_string(&action.resource).unwrap();
@@ -59,6 +59,7 @@ fn escrever_respeita_dry_run_e_confirm() {
             ..Default::default()
         },
         &allow_tmp(),
+        &[],
     )
     .unwrap();
     assert!(!prev.confirm);
@@ -73,6 +74,7 @@ fn escrever_respeita_dry_run_e_confirm() {
             ..Default::default()
         },
         &allow_tmp(),
+        &[],
     )
     .unwrap();
     assert!(go.confirm);
@@ -91,6 +93,7 @@ fn rodar_comando_de_verdade_sob_allowlist() {
             ..Default::default()
         },
         &PathGuard::new(),
+        &[],
     )
     .expect("echo confirmado deveria passar na allowlist");
 
@@ -112,6 +115,7 @@ fn comando_perigoso_nunca_chega_a_rodar() {
                 ..Default::default()
             },
             &PathGuard::new(),
+            &[],
         );
         assert!(r.is_err(), "comando perigoso deveria ser recusado: {cmd}");
     }

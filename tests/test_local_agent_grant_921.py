@@ -35,11 +35,21 @@ def test_grant_assina_token_que_o_corpo_verifica():
 
 
 def test_grant_recusa_capacidade_sem_executor_nativo():
-    # tela ainda não tem executor nativo → não emite grant (honestidade)
+    # CAN_BROWSER é capacidade de servidor, não do corpo → não emite grant.
     r = client.post("/local-agent/grant",
-                    json={"capability": "CAN_SCREENSHOT", "resource": "-"})
+                    json={"capability": "CAN_BROWSER", "resource": "-"})
     assert r.status_code == 400
     assert "não executável" in r.json()["detail"]
+
+
+def test_grant_emite_tela_e_app():
+    # 100% do corpo: tela e app agora são emitidas e verificáveis.
+    for cap, res in (("CAN_SCREENSHOT", "/home/dono/Imagens/t.png"),
+                     ("CAN_CONTROL_APP", "firefox")):
+        r = client.post("/local-agent/grant", json={"capability": cap, "resource": res})
+        assert r.status_code == 200, r.text
+        ok, grant = CT.verify_command(r.json()["token"])
+        assert ok and grant.capability == cap
 
 
 def test_grant_exige_recurso():

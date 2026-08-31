@@ -1,0 +1,45 @@
+/* Ant's — live_cognition.css (9.25): estilo ESCOPADO do painel "Cognição ao Vivo".
+ * Todos os seletores começam em #ants-cognition — não vaza para o layout legado.
+ * Usa os tokens do design system (design_system.css) para ficar coerente. */
+#ants-cognition {
+  position: fixed; left: 14px; bottom: 14px; z-index: 9998; width: 300px;
+  background: var(--ant-bg-surface, #1e1810); color: var(--ant-text, #ece3d2);
+  border: 1px solid var(--border, #3a2f1c); border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+  font: 12px/1.45 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  overflow: hidden;
+}
+#ants-cognition .lc-head {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 9px 12px; background: var(--surface2, #251d12);
+  border-bottom: 1px solid var(--border, #3a2f1c); user-select: none;
+}
+#ants-cognition .lc-title { font-weight: 600; letter-spacing: .02em; }
+#ants-cognition .lc-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--leaf, #6aa15a);
+}
+#ants-cognition .lc-caret { margin-left: auto; opacity: .7; }
+#ants-cognition .lc-body { padding: 10px 12px; display: grid; gap: 8px; }
+#ants-cognition[data-collapsed="1"] .lc-body { display: none; }
+#ants-cognition .lc-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#ants-cognition .lc-label { color: var(--ant-text-secondary, #a89a80); min-width: 62px; }
+#ants-cognition .lc-ladder { display: flex; gap: 4px; }
+#ants-cognition .lc-step {
+  padding: 2px 7px; border-radius: 999px; font-size: 11px;
+  border: 1px solid var(--border, #3a2f1c); color: var(--ant-text-secondary, #a89a80);
+}
+#ants-cognition .lc-step[data-on="1"] {
+  background: var(--amber, #d4a017); color: #100e08; border-color: var(--amber, #d4a017);
+}
+#ants-cognition .lc-chip {
+  padding: 2px 8px; border-radius: 999px; font-size: 11px;
+  background: var(--surface2, #251d12); border: 1px solid var(--border, #3a2f1c);
+}
+#ants-cognition .lc-chip.warn { background: var(--err, #c25a4e); color: #fff; border-color: var(--err, #c25a4e); }
+#ants-cognition .lc-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+#ants-cognition .lc-tag { font-size: 11px; color: var(--ant-text-secondary, #a89a80); }
+#ants-cognition .lc-bar {
+  height: 6px; border-radius: 3px; background: var(--surface2, #251d12); overflow: hidden;
+}
+#ants-cognition .lc-bar > i { display: block; height: 100%; background: var(--leaf, #6aa15a); }
+#ants-cognition .lc-muted { color: var(--ant-text-secondary, #a89a80); }

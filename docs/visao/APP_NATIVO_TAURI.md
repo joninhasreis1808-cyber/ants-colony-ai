@@ -158,6 +158,13 @@ divergir em silêncio.
   (`gnome-screenshot`/`screencapture` ou `ANTS_SCREENSHOT_CMD`), o app por `spawn`,
   e a entrada por `xdotool`/`ANTS_INPUT_TOOL`. A **decisão de segurança** — a parte
   que importa — está 100% provada.
-- O **transporte real** Render↔Tauri e o handshake de *device identity* ainda não
-  existem; hoje o corpo e o cérebro compartilham `ANTS_BRIDGE_SECRET` via ambiente
-  no modo nativo (sidecar).
+- **Identidade de dispositivo — ligada (9.25).** `backend/local_agent/device_identity.py`
+  dá a cada dispositivo um segredo **derivado** do mestre do cofre (não o mestre
+  compartilhado); `capability_tokens.sign_for_device`/`verify_for_device` ligam o
+  grant a UM dispositivo (o grant de A é recusado por B). O dono pareia via
+  `POST /device-identity/register` (recebe o segredo uma vez); `POST /local-agent/grant`
+  aceita `device_id`. Provado em `tests/test_device_identity_925.py`.
+- O **transporte real pela rede** (Render↔Tauri via TLS/WebSocket) é a **camada de
+  deployment** que falta: o contrato de autenticação (segredo por dispositivo +
+  nonce + TTL) está pronto e provado; ligar o soquete seguro é passo de
+  implantação, não de código verificável aqui.

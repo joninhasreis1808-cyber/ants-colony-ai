@@ -37,6 +37,7 @@ class GrantBody(BaseModel):
     capability: str
     resource: str
     ttl_seconds: float | None = None
+    device_id: str | None = None      # liga o grant a um dispositivo pareado
 
 
 @router.get("/status")
@@ -58,6 +59,14 @@ async def grant(body: GrantBody) -> dict[str, Any]:
         raise HTTPException(400, "recurso (caminho/comando) é obrigatório")
     ttl = CT._DEFAULT_TTL if body.ttl_seconds is None else float(body.ttl_seconds)
     ttl = max(1.0, min(ttl, _MAX_TTL))         # clampa entre 1s e o teto
-    token = CT.sign_command(cap, body.resource, ttl_seconds=ttl)
+    dev = (body.device_id or "").strip()
+    if dev:
+        # Ponte remota: grant ligado a UM dispositivo pareado (segredo derivado).
+        from backend.local_agent.device_identity import get_device_registry
+        if not get_device_registry().is_registered(dev):
+            raise HTTPException(400, f"dispositivo não pareado: {dev!r}")
+        token = CT.sign_for_device(cap, body.resource, dev, ttl_seconds=ttl)
+    else:
+        token = CT.sign_command(cap, body.resource, ttl_seconds=ttl)
     return {"token": token, "capability": cap, "resource": body.resource,
-            "expires_in": ttl, "runtime": runtime_name()}
+            "expires_in": ttl, "runtime": runtime_name(), "device_id": dev or None}

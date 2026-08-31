@@ -118,3 +118,24 @@ def verify_command(token: str, *, secret: Optional[bytes] = None,
         capability=p["capability"], resource=p.get("resource", ""),
         nonce=nonce, issued_at=float(p.get("issued_at", 0)),
         expires_at=float(p["expires_at"]))
+
+
+# --- Ponte remota (9.25): grants ligados a UM dispositivo -------------------
+
+def sign_for_device(capability: str, resource: str, device_id: str, *,
+                    ttl_seconds: float = _DEFAULT_TTL) -> str:
+    """Assina um grant com o segredo DERIVADO do dispositivo (não o mestre).
+
+    Um grant assinado para o dispositivo A só é aceito por quem tem o segredo de
+    A — o corpo B, com outro derivado, recusa. Liga o grant à identidade.
+    """
+    from backend.local_agent.device_identity import device_secret
+    return sign_command(capability, resource, ttl_seconds=ttl_seconds,
+                        secret=device_secret(device_id))
+
+
+def verify_for_device(token: str, device_id: str, *,
+                      seen: Optional[set] = None) -> tuple[bool, object]:
+    """Verifica um grant contra o segredo derivado de UM dispositivo."""
+    from backend.local_agent.device_identity import device_secret
+    return verify_command(token, secret=device_secret(device_id), seen=seen)

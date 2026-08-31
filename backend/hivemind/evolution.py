@@ -198,6 +198,34 @@ class EvolutionLedger:
         elif p.kind == "deprioritize_route":
             get_strategy_memory().record_success(p.goal_signature, p.route, 1.0)
 
+    def observe_mission(self, goal_signature: str, success: bool,
+                        route: Optional[str] = None) -> list[dict]:
+        """Fecha o laço vivo (FASE 6): uma missão real realimenta os canários.
+
+        Cada missão de um tipo de objetivo é evidência sobre a evolução APLICADA
+        para aquele tipo: registra o desfecho no canário das propostas com a mesma
+        `goal_signature` (ainda em rollout) e, com amostra suficiente, avalia
+        (promove ou faz rollback). Honesto: é um canário de nível de tipo-de-
+        objetivo, não um A/B por rota. Devolve os veredictos disparados.
+        """
+        out: list[dict] = []
+        for pid, p in list(self._items.items()):
+            if p.status != ProposalStatus.APPLIED.value or not p.canary:
+                continue
+            if p.goal_signature != goal_signature:
+                continue
+            from backend.evaluation.canary import CanaryController
+            ctrl = CanaryController.from_state(p.canary)
+            if ctrl.rolled_back or ctrl.is_full:
+                continue                       # canário já finalizado
+            self.observe_canary(pid, bool(success))
+            ctrl = CanaryController.from_state(self._items[pid].canary)
+            if ctrl.samples >= ctrl._min:      # amostra suficiente → decide
+                verdict = self.evaluate_canary(pid)
+                out.append({"id": pid, "verdict": verdict.get("verdict"),
+                            "route": route})
+        return out
+
 
 def propose_from_experience(error_mem=None, strategy_mem=None,
                             ledger: Optional[EvolutionLedger] = None,

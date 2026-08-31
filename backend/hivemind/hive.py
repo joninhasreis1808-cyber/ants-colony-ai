@@ -238,7 +238,26 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # aprendendo se a confiança que declara bate com o próprio grounding.
         self._feed_calibrator(result.get("confidence"), prov.get("source"),
                               fallback.escalate_human)
+        # Laço vivo (FASE 6 · gatilho do canário): a missão realimenta os canários
+        # das evoluções aplicadas para este tipo de objetivo — fecha o ciclo
+        # propor→aprovar→aplicar→observar→promover/reverter, sozinho.
+        grounded = prov.get("source") not in (None, "none")
+        self._observe_evolution(task_id, bool(grounded and not fallback.escalate_human),
+                                prov.get("source"))
         return result
+
+    def _observe_evolution(self, task_id: str, success: bool, source) -> None:
+        """Realimenta os canários da evolução com o desfecho desta missão."""
+        try:
+            task = self.memory.get_task(task_id) or {}
+            goal = task.get("goal", "")
+            if not goal:
+                return
+            from backend.cognition.experience import signature
+            from backend.hivemind.evolution import get_evolution_ledger
+            get_evolution_ledger().observe_mission(signature(goal), success, route=source)
+        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            pass
 
     @staticmethod
     def _feed_calibrator(confidence, source, escalate_human) -> None:

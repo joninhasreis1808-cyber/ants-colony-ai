@@ -162,7 +162,31 @@ class Hivemind(MemoryMixin, SwarmMixin):
         task.touch(TaskStatus.DONE)
         self._remember_outcome(task)
         self._record_trust(bots, success=True)  # confiança conquistada
+        # Laço vivo (A5): a colônia registra o PRÓPRIO desempenho nesta missão —
+        # rota, castas, desfecho e duração. É o que a Rainha vai consultar na
+        # próxima formação. Dado puro; nenhuma linha de código se altera.
+        self._observe_self_performance(task, bots)
         self.lifecycle.maintain()  # hiberna ociosos (poupa recursos)
+
+    def _observe_self_performance(self, task: Task, bots: list) -> None:
+        """Grava tempo/rota, sucesso/casta desta missão na meta-cognição (A5)."""
+        try:
+            from backend.cognition.experience import signature
+            from backend.cognitive.self_performance import get_self_performance
+            result = task.result or {}
+            prov = result.get("provenance") or {}
+            fb = result.get("fallback") or {}
+            grounded = prov.get("source") not in (None, "none")
+            escalou = bool(fb.get("escalate_human"))
+            get_self_performance().record(
+                signature=signature(task.goal or ""),
+                route=prov.get("source") or "none",
+                castes=[b.name for b in bots],
+                success=bool(grounded and not escalou),
+                duration=max(0.0, task.updated_at - task.created_at),
+            )
+        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            pass
 
     def _compile_result(self, task_id: str) -> dict[str, Any]:
         """Reúne o produto final a partir do contexto compartilhado.

@@ -89,12 +89,35 @@ _SKELETONS = {
 }
 
 
+def _apply_experiment(routes: list, goal: str) -> list:
+    """Soma ao `Route.bias` o viés do experimento A/B em curso (A4).
+
+    A atribuição do braço é determinística (hash do objetivo), então é ELA que
+    causa a rota — A/B de verdade, não observação passiva. Sem experimento
+    iniciado o dicionário vem vazio e nada muda; e como o viés entra no `bias`,
+    uma rota indisponível continua indisponível (`Route.score()` zera).
+    """
+    try:
+        from backend.evaluation.ab_experiment import get_ab_registry
+        bias = get_ab_registry().bias_for(goal)
+        if not bias:
+            return routes
+        for r in routes:
+            if r.name in bias:
+                r.bias = round(r.bias + bias[r.name], 4)
+        routes.sort(key=lambda r: r.score(), reverse=True)
+    except Exception:  # noqa: BLE001 - o experimento nunca derruba o plano
+        pass
+    return routes
+
+
 class HierarchicalPlanner:
     """Decompõe um objetivo em um TaskGraph seguindo a melhor rota disponível."""
 
     def plan(self, goal: str, context: dict | None = None) -> Plan:
         routes = get_cartographer().discover(goal, context)
         apply_experience(routes, goal)          # viés da experiência (B3) na escolha
+        _apply_experiment(routes, goal)         # viés do A/B em curso (A4), se houver
         route = get_cartographer().choose(routes)
         if route is None:                       # nada disponível → raciocínio puro
             route = [r for r in routes if r.name == "reasoning"][0]

@@ -257,7 +257,7 @@ def propose_from_experience(error_mem=None, strategy_mem=None,
                 title=f"Despriorizar a rota '{route}' para objetivos como «{sig}»",
                 rationale=f"A rota falhou {n}× em objetivos parecidos.",
                 goal_signature=sig, route=route, risk="low",
-                evidence=[f"{n} falhas registradas"])))
+                evidence=[f"{n} falhas registradas"] + _causal_evidence(route))))
     for (sig, route), n in _tally(sm._log).items():
         if n >= threshold:
             out.append(led.propose(EvolutionProposal(
@@ -265,8 +265,25 @@ def propose_from_experience(error_mem=None, strategy_mem=None,
                 title=f"Promover a rota '{route}' para objetivos como «{sig}»",
                 rationale=f"A rota venceu {n}× em objetivos parecidos.",
                 goal_signature=sig, route=route, risk="low",
-                evidence=[f"{n} sucessos registrados"])))
+                evidence=[f"{n} sucessos registrados"] + _causal_evidence(route))))
     return out
+
+
+def _causal_evidence(route: str) -> list[str]:
+    """O Learner consulta o grafo causal antes de propor (A2).
+
+    Se o grafo já observou o que a fonte daquela rota costuma causar, anexa isso
+    como evidência legível. Sem observação, devolve lista vazia — nunca inventa.
+    """
+    try:
+        from backend.evaluation.causal_graph import get_causal_graph
+        efeitos = get_causal_graph().effects_of(f"fonte:{route}")
+        if not efeitos:
+            return []
+        top = max(efeitos.items(), key=lambda kv: kv[1])
+        return [f"causal: 'fonte:{route}' → '{top[0]}' em {top[1]} observação(ões)"]
+    except Exception:  # noqa: BLE001 - evidência causal é opcional
+        return []
 
 
 _LEDGER: Optional[EvolutionLedger] = None

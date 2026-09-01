@@ -244,7 +244,43 @@ class Hivemind(MemoryMixin, SwarmMixin):
         grounded = prov.get("source") not in (None, "none")
         self._observe_evolution(task_id, bool(grounded and not fallback.escalate_human),
                                 prov.get("source"))
+        # Laço vivo (A2): a missão registra as relações CAUSA→EFEITO que ela
+        # própria demonstrou — o grafo causal deixa de ser biblioteca e vira
+        # memória viva que o Learner consulta antes de propor estratégia.
+        self._observe_causal(task_id, prov, fallback, result.get("confidence"))
         return result
+
+    def _observe_causal(self, task_id: str, prov: dict, fallback, confidence) -> None:
+        """Registra no grafo causal o que ESTA missão demonstrou (nunca inventa).
+
+        Só relações que os sinais reais sustentam: a fonte que ancorou (ou não) o
+        desfecho, o degrau de fallback alcançado, e — quando a web falhou — o
+        bloqueio que empurrou a colônia para a fonte alternativa.
+        """
+        try:
+            from backend.cognition.experience import signature
+            from backend.evaluation.causal_graph import get_causal_graph
+            task = self.memory.get_task(task_id) or {}
+            goal = task.get("goal", "")
+            ctx = signature(goal) if goal else None
+            source = prov.get("source") or "none"
+            grounded = source != "none"
+            desfecho = "desfecho:ancorado" if grounded else "desfecho:sem_base"
+            conf = confidence if isinstance(confidence, (int, float)) else None
+            n_urls = len(prov.get("urls") or [])
+            g = get_causal_graph()
+            g.observe(f"fonte:{source}", desfecho, context=ctx,
+                      confidence=conf, evidence=n_urls)
+            g.observe(f"fallback:{fallback.reached.value}", desfecho, context=ctx,
+                      confidence=conf, evidence=n_urls)
+            web = str(prov.get("web") or "")
+            if "bloqueado" in web or "erro" in web:
+                g.observe("web:bloqueada", f"fonte:{source}", context=ctx,
+                          confidence=conf)
+            if fallback.escalate_human:
+                g.observe(desfecho, "escalou:humano", context=ctx, confidence=conf)
+        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            pass
 
     def _observe_evolution(self, task_id: str, success: bool, source) -> None:
         """Realimenta os canários da evolução com o desfecho desta missão."""

@@ -230,6 +230,15 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         mission.touch(MissionState.DONE)
         get_strategy_memory().record_success(goal, plan.route.name,
                                              quality=max(0.1, progress))
+    # 4b) A/B em curso (A4): esta missão é uma amostra do braço que ela recebeu.
+    # É aqui que o experimento fecha o laço — o planejador atribuiu a rota, o
+    # desfecho volta para o mesmo braço.
+    try:
+        from backend.evaluation.ab_experiment import get_ab_registry
+        get_ab_registry().observe_mission(
+            goal, not failed, max(0.0, mission.updated_at - mission.created_at))
+    except Exception:  # noqa: BLE001 - o experimento nunca derruba a missão
+        pass
     mission.checkpoint(graph, note="missão encerrada")
     get_mission_store().save(mission)   # persiste o estado final (9.13)
 

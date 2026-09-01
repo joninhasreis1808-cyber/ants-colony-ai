@@ -178,13 +178,19 @@ class Hivemind(MemoryMixin, SwarmMixin):
             fb = result.get("fallback") or {}
             grounded = prov.get("source") not in (None, "none")
             escalou = bool(fb.get("escalate_human"))
+            sucesso = bool(grounded and not escalou)
+            duracao = max(0.0, task.updated_at - task.created_at)
             get_self_performance().record(
                 signature=signature(task.goal or ""),
                 route=prov.get("source") or "none",
                 castes=[b.name for b in bots],
-                success=bool(grounded and not escalou),
-                duration=max(0.0, task.updated_at - task.created_at),
+                success=sucesso,
+                duration=duracao,
             )
+            # Laço vivo (A4): a mesma missão é uma amostra do A/B em curso para
+            # este tipo de objetivo — creditada ao braço que ela recebeu.
+            from backend.evaluation.ab_experiment import get_ab_registry
+            get_ab_registry().observe_mission(task.goal or "", sucesso, duracao)
         except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
             pass
 

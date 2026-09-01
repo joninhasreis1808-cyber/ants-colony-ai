@@ -35,11 +35,13 @@ class DeliberationPolicy:
     require_confirmation: bool  # exigir OK humano antes de executar?
     min_alternatives: int     # quantos planos comparar no mínimo
     reason: str
+    simulations: int = 1      # quantos CENÁRIOS simular (A1): 1/3/5 por modo
 
     def to_dict(self) -> dict:
         return {"mode": self.mode.value, "simulate": self.simulate,
                 "require_confirmation": self.require_confirmation,
-                "min_alternatives": self.min_alternatives, "reason": self.reason}
+                "min_alternatives": self.min_alternatives,
+                "simulations": self.simulations, "reason": self.reason}
 
 
 # Confiança abaixo disto puxa uma ação de risco baixo para DELIBERATE (pensar
@@ -62,16 +64,16 @@ def decide(risk: str = "low", *, sensitive: bool = False,
     if r == "high" or sensitive:
         return DeliberationPolicy(
             DeliberationMode.CRITICAL, simulate=True, require_confirmation=True,
-            min_alternatives=2,
-            reason=("ação crítica (risco alto ou sensível) — simula e exige "
-                    "confirmação humana; nunca age sozinho"))
+            min_alternatives=2, simulations=5,
+            reason=("ação crítica (risco alto ou sensível) — simula 5 cenários e "
+                    "exige confirmação humana; nunca age sozinho"))
     if r == "medium" or low_conf:
         why = "risco médio" if r == "medium" else f"confiança {confidence:.2f} baixa"
         return DeliberationPolicy(
             DeliberationMode.DELIBERATE, simulate=True, require_confirmation=False,
-            min_alternatives=2,
-            reason=f"{why} — simula/pondera alternativas antes de agir")
+            min_alternatives=2, simulations=3,
+            reason=f"{why} — simula 3 cenários e pondera alternativas antes de agir")
     return DeliberationPolicy(
         DeliberationMode.FAST, simulate=False, require_confirmation=False,
-        min_alternatives=1,
+        min_alternatives=1, simulations=1,
         reason="baixo risco e confiança suficiente — reflexo direto")

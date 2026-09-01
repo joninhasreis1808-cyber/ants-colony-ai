@@ -48,7 +48,16 @@ class Recruiter:
         return self._order(chosen, needs)
 
     def _order(self, bots: list[Bot], needs: list[str]) -> list[Bot]:
-        """Ordena os bots recrutados segundo o fluxo natural de trabalho."""
+        """Ordena os bots recrutados segundo o fluxo natural de trabalho.
+
+        A Rainha consulta o desempenho próprio da colônia (A5) ANTES de fechar a
+        formação: dentro de um MESMO estágio, quem historicamente sai melhor vai
+        na frente. O viés nunca atravessa estágios — o fluxo natural
+        (perceber → extrair → interpretar → criar → decidir → aprender) é
+        inviolável. E **sem histórico o viés é zero**: `formation_hint()` devolve
+        `{}`, todos empatam em 0.0 e a ordenação estável do Python preserva
+        exatamente a formação de hoje.
+        """
 
         def rank(bot: Bot) -> int:
             best = len(_STAGE_ORDER)
@@ -60,7 +69,17 @@ class Recruiter:
                     best = min(best, i)
             return best
 
-        return sorted(bots, key=rank)
+        hint = self._formation_hint()
+        return sorted(bots, key=lambda b: (rank(b), -hint.get(b.name, 0.0)))
+
+    @staticmethod
+    def _formation_hint() -> dict[str, float]:
+        """Viés de desempenho por casta. Falha em silêncio -> ordem de hoje."""
+        try:
+            from backend.cognitive.self_performance import get_self_performance
+            return get_self_performance().formation_hint()
+        except Exception:  # noqa: BLE001 - meta-cognição nunca derruba o recrutamento
+            return {}
 
     def infer_needs(self, goal: str) -> list[str]:
         """Delega ao CognitiveRouter a leitura orgânica do objetivo."""

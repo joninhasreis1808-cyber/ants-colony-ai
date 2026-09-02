@@ -1,7 +1,8 @@
 # AUTOAVALIAÇÃO FINAL — FASES C, D, E, F · Roteiro de Maestria v9.25
 
 > **Base medida:** `main` commit `bb77679` · **1171 passed, 5 skipped**
-> **Atualizado em:** `365abc7` · **1176 passed, 5 skipped** (item 4 resolvido)
+> **Atualizado em:** `365abc7` · item 4 resolvido · `6b9e0c3` · item 2 resolvido
+> **Suite atual:** **1183 passed, 5 skipped**
 > **Escopo:** o fechamento do roteiro. As FASES A e B têm autoavaliação própria
 > (`AUTOAVALIACAO_FASE_A.md`, `AUTOAVALIACAO_FASE_B.md`).
 > Tudo abaixo foi **medido neste commit**, não lembrado.
@@ -89,7 +90,20 @@ transporte no meio.
    para o host e as ferramentas do Render MCP desconectaram. Validei dependências,
    boot, rotas, autenticação em modo público, missões e interface — **não**
    latência real, hibernação do free tier, nem rede de verdade.
-2. **O app Tauri não foi compilado nem executado** em nenhum momento.
+2. ~~**O app Tauri não foi compilado nem executado.**~~ **Resolvido**
+   (commit `6b9e0c3`). Este limite era de ambiente, e caiu quando as libs de
+   sistema do GTK/WebKit puderam ser instaladas. Feito de verdade: `cargo test`
+   28/28 no núcleo de segurança, sidecar empacotado (111M) verificado sozinho,
+   app compilado (228M, as 6 capacidades do corpo presentes), app **executado**
+   sob Xvfb lançando o sidecar em porta dinâmica com segredo de ponte efêmero, e
+   uma **missão real rodada dentro do app nativo**. Rodar revelou um defeito que
+   nenhum teste pegava: o corpo se declarava `native: false` para a rota do Local
+   Agent, porque duas leituras de runtime olhavam variáveis diferentes.
+   Corrigido e travado por teste.
+
+   **Ressalva:** rodou sob **Xvfb**, um X virtual — não numa máquina de verdade
+   com GPU, gerenciador de janelas e sessão de usuário. A janela abriu e o laço
+   funcionou; a experiência de uso real continua não verificada.
 3. **O córtex plugável nunca foi exercitado contra um LLM real.** A guarda é
    testada com textos injetados.
 4. ~~**Restam 23 blocos que engolem exceção em silêncio.**~~ **Resolvido**

@@ -286,6 +286,59 @@ def _causal_evidence(route: str) -> list[str]:
         return []
 
 
+def council_advice(p: EvolutionProposal) -> dict:
+    """O Conselho Real (A7) aconselha o dono sobre UMA proposta de evolução.
+
+    Aconselha — não decide. Aplicar continua exigindo aprovação explícita do
+    dono; isto só põe na mesa, de forma auditável, o que os sinais reais dizem.
+
+    As opções são "aplicar" e "nao_aplicar", e cada sinal é espelhado com
+    honestidade entre as duas: o que sustenta uma é exatamente o que enfraquece
+    a outra. Três bases têm dado aqui — apoio causal (A2), sucesso passado (A5)
+    e o histórico de falhas — e os outros três conselheiros **se abstêm**, porque
+    proposta de evolução não tem contagem de fontes, ancoragem nem simulação.
+    Abstenção declarada é melhor que voto de fachada.
+
+    A polaridade acompanha o tipo: numa `promote_route`, sucesso sustenta
+    aplicar; numa `deprioritize_route`, é o fracasso que sustenta aplicar.
+    """
+    from backend.cognition.experience import get_error_memory, get_strategy_memory
+    from backend.cognitive.council_real import OptionEvidence, get_real_council
+    from backend.cognitive.self_performance import get_self_performance
+    from backend.evaluation.causal_graph import get_causal_graph
+
+    efeitos = get_causal_graph().effects_of(f"fonte:{p.route}")
+    ancorou = int(efeitos.get("desfecho:ancorado", 0))
+    sem_base = int(efeitos.get("desfecho:sem_base", 0))
+    taxa = get_self_performance().success_of_route(p.route)
+    falhas = sum(1 for a in get_error_memory()._log if a.route == p.route)
+    acertos = sum(1 for a in get_strategy_memory()._log if a.route == p.route)
+
+    # "pro" = os sinais a favor de mexer nesta rota no sentido que a proposta pede.
+    if p.kind == "deprioritize_route":
+        pro_causal, contra_causal = sem_base, ancorou
+        pro_taxa = None if taxa is None else round(1.0 - taxa, 4)
+        pro_contra, contra_contra = acertos, falhas
+    else:
+        pro_causal, contra_causal = ancorou, sem_base
+        pro_taxa = taxa
+        pro_contra, contra_contra = falhas, acertos
+    contra_taxa = None if pro_taxa is None else round(1.0 - pro_taxa, 4)
+
+    ev = [
+        OptionEvidence("aplicar", causal_support=pro_causal,
+                       past_success=pro_taxa, contradictions=pro_contra),
+        OptionEvidence("nao_aplicar", causal_support=contra_causal,
+                       past_success=contra_taxa, contradictions=contra_contra),
+    ]
+    veredito = get_real_council().convene(
+        f"aplicar a proposta '{p.title}'?", ev).to_dict()
+    veredito["proposal_id"] = p.id
+    veredito["note"] = ("conselho ACONSELHA; aplicar segue exigindo aprovação "
+                        "explícita do dono")
+    return veredito
+
+
 _LEDGER: Optional[EvolutionLedger] = None
 
 

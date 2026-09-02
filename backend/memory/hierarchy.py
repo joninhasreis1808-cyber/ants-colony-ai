@@ -87,18 +87,28 @@ class RetrievalPlanner:
     """Decide QUAL camada consultar, QUANTO e QUANDO PARAR."""
 
     def plan(self, complexity: str = "normal",
-             budget: float = _DEFAULT_BUDGET) -> list[LayerSpec]:
+             budget: float = _DEFAULT_BUDGET,
+             available: Optional[Iterable[str]] = None) -> list[LayerSpec]:
         """Camadas a consultar, respeitando profundidade e orçamento.
 
         Complexidade define até que nível descer; o orçamento corta antes se o
-        custo acumulado estourar. Sempre devolve ao menos L0 (o imediato é o
-        mais barato e nunca deve ser pulado).
+        custo acumulado estourar. Sempre devolve ao menos a primeira camada
+        elegível (a mais barata nunca deve ser pulada).
+
+        `available` limita o plano às camadas que REALMENTE têm de onde recuperar.
+        Sem isso, o orçamento seria gasto com camadas que `execute` iria pular de
+        qualquer jeito — e uma camada cara porém útil (a L4, por exemplo) cairia
+        fora do plano por causa de camadas vazias que vêm antes dela. Omitir o
+        parâmetro mantém o comportamento original: planeja a escada inteira.
         """
         max_level = _MAX_LEVEL.get(complexity, _MAX_LEVEL["normal"])
+        disponiveis = set(available) if available is not None else None
         chosen: list[LayerSpec] = []
         spent = 0.0
         for spec in layers_in_order():
             if spec.level > max_level:
+                continue
+            if disponiveis is not None and spec.key not in disponiveis:
                 continue
             if chosen and spent + spec.recall_cost > budget:
                 break                      # orçamento estourou → para aqui
@@ -117,7 +127,9 @@ class RetrievalPlanner:
         camada cara à toa). Camada sem recaller é simplesmente pulada.
         """
         recallers = recallers or {}
-        plano = self.plan(complexity, budget)
+        # Só planeja o que tem de onde recuperar: orçamento não se gasta com
+        # camada vazia (senão a escada cara e útil cai fora por causa das vazias).
+        plano = self.plan(complexity, budget, available=recallers.keys() or None)
         itens: list[Any] = []
         visitadas: list[str] = []
         gasto = 0.0

@@ -64,6 +64,13 @@ class SelfPerformance:
             return None
         return round(sum(r.duration for r in rel) / len(rel), 4)
 
+    def success_of_route(self, route: str) -> Optional[float]:
+        """Taxa de sucesso das missões que usaram esta rota. Sem missão -> None."""
+        rel = [r for r in self._log if r.route == route]
+        if not rel:
+            return None
+        return round(sum(1 for r in rel if r.success) / len(rel), 4)
+
     def best_route(self, signature: str) -> Optional[str]:
         """Rota com maior taxa de sucesso para este tipo de objetivo."""
         por_rota: dict[str, list[bool]] = {}

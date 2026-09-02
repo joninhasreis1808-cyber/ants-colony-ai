@@ -130,10 +130,29 @@
     return el;
   }
 
+  /* Ultimo conteudo pintado por secao — a base de comparacao do destaque. */
+  var anterior = {};
+
   function pinta(sec, html, vazio) {
     var alvo = document.querySelector('[data-sec="' + sec + '"] .ca-sec-b');
     if (!alvo) return;
-    alvo.innerHTML = html || ('<p class="ca-empty">' + esc(vazio) + "</p>");
+    var novo = html || ('<p class="ca-empty">' + esc(vazio) + "</p>");
+    var antes = anterior[sec];
+    alvo.innerHTML = novo;
+    /* FASE D · movimento que informa: destaca SO as linhas que mudaram de
+     * verdade desde a ultima pintura. Numeros que se mexem em silencio
+     * escondem o aprendizado da colonia; numeros que piscam sem ter mudado
+     * seriam mentira. Na primeira pintura nada pisca — nao havia com o que
+     * comparar. */
+    if (antes !== undefined && antes !== novo) {
+      var linhasAntes = antes.split("</div>");
+      var linhas = alvo.querySelectorAll(".ca-row");
+      for (var i = 0; i < linhas.length; i++) {
+        var atual = linhas[i].outerHTML.replace("</div>", "");
+        if (linhasAntes.indexOf(atual) === -1) linhas[i].classList.add("ca-mudou");
+      }
+    }
+    anterior[sec] = novo;
   }
 
   function carrega() {

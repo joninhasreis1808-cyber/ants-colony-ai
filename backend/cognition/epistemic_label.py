@@ -57,6 +57,7 @@ class EpistemicLabel:
     verification: str
     calibration: str
     recency: str
+    cortex: str = "não usado: a colônia compôs por regras"
     limits: list[str] = field(default_factory=list)
     confidence: Optional[float] = None
     explanation: str = ""
@@ -64,7 +65,8 @@ class EpistemicLabel:
     def to_dict(self) -> dict[str, Any]:
         return {"headline": self.headline, "origin": self.origin,
                 "verification": self.verification, "calibration": self.calibration,
-                "recency": self.recency, "limits": list(self.limits),
+                "recency": self.recency, "cortex": self.cortex,
+                "limits": list(self.limits),
                 "confidence": self.confidence, "explanation": self.explanation}
 
 
@@ -115,6 +117,24 @@ def _recency(grounded: Optional[dict], source: str) -> str:
     return f"registro de {idade:.0f} dias atrás"
 
 
+def _cortex(prov: dict) -> tuple[str, Optional[str]]:
+    """Eixo córtex — um modelo externo encostou nesta resposta? (B6)
+
+    Mesmo aprovada, a síntese de um LLM fica declarada: a verificação reduz o
+    risco de fato inventado, não o elimina. Quem lê decide quanto confiar.
+    """
+    uso = prov.get("cortex")
+    if not uso:
+        return ("não usado: a colônia compôs por regras", None)
+    if not uso.get("used"):
+        motivo = ((uso.get("check") or {}).get("reason")
+                  or "o córtex não devolveu texto aproveitável")
+        return (f"consultado e REJEITADO: {motivo}", None)
+    modelo = uso.get("model") or uso.get("backend")
+    return (f"refinou o texto ({modelo}), verificado contra as evidências",
+            (uso.get("check") or {}).get("unverifiable"))
+
+
 def _headline(source: str, cross: Optional[dict], escalate: bool,
               grounded: Optional[dict]) -> tuple[str, str]:
     """A manchete e a frase que a explica."""
@@ -151,9 +171,12 @@ def build(result: dict[str, Any]) -> EpistemicLabel:
 
     manchete, explicacao = _headline(source, cross, escalate, grounded)
     verificacao, limite_verif = _verification(cross)
+    cortex, limite_cortex = _cortex(prov)
     limites: list[str] = []
     if limite_verif:
         limites.append(limite_verif)
+    if limite_cortex:
+        limites.append(limite_cortex)
     if cross and cross.get("undetectable"):
         limites.append(cross["undetectable"])
     for lacuna in (prov.get("gaps") or []):
@@ -171,6 +194,6 @@ def build(result: dict[str, Any]) -> EpistemicLabel:
     return EpistemicLabel(
         headline=manchete, origin=source, verification=verificacao,
         calibration=_calibration(result.get("calibration")),
-        recency=_recency(grounded, source),
+        recency=_recency(grounded, source), cortex=cortex,
         limits=limites, confidence=result.get("confidence"),
         explanation=explicacao)

@@ -92,9 +92,16 @@ async def run(task: Any, memory: Any, bus: Any, router: Any) -> None:
 
     # 5) Rainha sintetiza (córtex; senão compositor; senão limitação honesta)
     answer, source_kind, conf = None, "web_search", 0.9
+    cortex_use = None
     if enough:
+        # B6: a sintese do cortex externo passa pela GUARDA antes de virar
+        # resposta. Ela pode refinar o texto; nao pode acrescentar fato. Numero
+        # que nao esta em nenhuma evidencia derruba a sintese inteira, e a
+        # colonia volta para a composicao deterministica.
+        from backend.cognition.cortex_guard import guarded_synthesis
         syn = await reasoner.synthesize(topic, evidence)
-        base = syn or ". ".join(e for e in evidence[:3] if e)
+        aprovada, cortex_use = guarded_synthesis(syn, evidence)
+        base = aprovada or ". ".join(e for e in evidence[:3] if e)
         answer = composer.web(base, len(sources), domains)
     if not answer:
         answer = composer.limitation(
@@ -116,6 +123,7 @@ async def run(task: Any, memory: Any, bus: Any, router: Any) -> None:
             "castes": ["rainha", "exploradoras", "operarias", "soldados"],
             "gaps": [] if enough else ["evidência externa insuficiente"],
             "subqueries": subs, "reasoning_backend": backend_name(),
+            "cortex": cortex_use.to_dict() if cortex_use else None,
         },
         "trace": {
             "bots": [{"bot": "rainha", "ok": True, "did": ["planejou e sintetizou"]},

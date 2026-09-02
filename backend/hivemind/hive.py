@@ -10,6 +10,8 @@ bots precisem se conhecer diretamente — eles se comunicam pela memória.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from typing import Any, Optional
 
 from backend.bots.base import Bot
@@ -191,8 +193,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
             # este tipo de objetivo — creditada ao braço que ela recebeu.
             from backend.evaluation.ab_experiment import get_ab_registry
             get_ab_registry().observe_mission(task.goal or "", sucesso, duracao)
-        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
-            pass
+        except Exception as exc:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            swallow("hive._observe_self_performance", exc)
 
     def _compile_result(self, task_id: str) -> dict[str, Any]:
         """Reúne o produto final a partir do contexto compartilhado.
@@ -295,8 +297,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
         try:
             from backend.cognition.epistemic_label import build as _rotulo
             result["epistemic"] = _rotulo(result).to_dict()
-        except Exception:  # noqa: BLE001 - o rótulo nunca derruba a missão
-            pass
+        except Exception as exc:  # noqa: BLE001 - o rótulo nunca derruba a missão
+            swallow("hive._epistemic", exc)
         # Laço vivo (FASE 6 · gatilho do canário): a missão realimenta os canários
         # das evoluções aplicadas para este tipo de objetivo — fecha o ciclo
         # propor→aprovar→aplicar→observar→promover/reverter, sozinho.
@@ -338,8 +340,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
                           confidence=conf)
             if fallback.escalate_human:
                 g.observe(desfecho, "escalou:humano", context=ctx, confidence=conf)
-        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
-            pass
+        except Exception as exc:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            swallow("hive._observe_causal", exc)
 
     def _observe_evolution(self, task_id: str, success: bool, source) -> None:
         """Realimenta os canários da evolução com o desfecho desta missão."""
@@ -351,8 +353,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
             from backend.cognition.experience import signature
             from backend.hivemind.evolution import get_evolution_ledger
             get_evolution_ledger().observe_mission(signature(goal), success, route=source)
-        except Exception:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
-            pass
+        except Exception as exc:  # noqa: BLE001 - nunca derruba a missão pelo laço vivo
+            swallow("hive._observe_evolution", exc)
 
     @staticmethod
     def _feed_calibrator(confidence, source, escalate_human, *,
@@ -422,8 +424,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
             result["calibration"] = {
                 "raw": bruta, "calibrated": corrigida, "applied": True,
                 "reason": razao}
-        except Exception:  # noqa: BLE001 - calibração nunca derruba a missão
-            pass
+        except Exception as exc:  # noqa: BLE001 - calibração nunca derruba a missão
+            swallow("hive._apply_calibration", exc)
 
     def _resolve_answer(
         self, task_id: str, decision: dict[str, Any], created: Any

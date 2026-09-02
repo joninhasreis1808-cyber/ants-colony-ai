@@ -15,6 +15,8 @@ reproduzível.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from dataclasses import dataclass, field
 
 from backend.cognition.cartographer import Route, get_cartographer
@@ -107,8 +109,8 @@ def _apply_experiment(routes: list, goal: str) -> list:
             if r.name in bias:
                 r.bias = round(r.bias + bias[r.name], 4)
         routes.sort(key=lambda r: r.score(), reverse=True)
-    except Exception:  # noqa: BLE001 - o experimento nunca derruba o plano
-        pass
+    except Exception as exc:  # noqa: BLE001 - o experimento nunca derruba o plano
+        swallow("planner._apply_experiment", exc)
     return routes
 
 
@@ -122,7 +124,8 @@ def _apply_feedback(routes: list) -> dict:
     try:
         from backend.cognition.feedback_bias import apply_to_routes
         return apply_to_routes(routes)
-    except Exception:  # noqa: BLE001 - o feedback nunca derruba o plano
+    except Exception as exc:  # noqa: BLE001 - o feedback nunca derruba o plano
+        swallow("planner._apply_feedback", exc)
         return {}
 
 

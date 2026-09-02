@@ -35,6 +35,8 @@ isso. Determinístico, offline, stdlib.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -113,7 +115,8 @@ class MemoryRAG:
         try:
             emb = self._ltm.encoder._embedder.embed(query)  # noqa: SLF001
             pares = self._ltm.store.retrieve_by_embedding(emb, top_k)
-        except Exception:  # noqa: BLE001 - recall falho não derruba a missão
+        except Exception as exc:  # noqa: BLE001 - recall falho não derruba a missão
+            swallow("memory_rag.retrieve", exc)
             return []
         agora = time.time()
         out: list[Passage] = []

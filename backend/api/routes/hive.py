@@ -5,6 +5,8 @@ main.py apenas agregue todos os módulos.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import asyncio
 import time
 from typing import Any
@@ -101,8 +103,8 @@ def _ensure_epistemic(task) -> None:
         Hivemind._apply_calibration(r)          # noqa: SLF001 - mesmo pacote
         r["epistemic"] = build(r).to_dict()
         MEMORY.save_task(task)
-    except Exception:  # noqa: BLE001 - o rótulo nunca derruba a missão
-        pass
+    except Exception as exc:  # noqa: BLE001 - o rótulo nunca derruba a missão
+        swallow("rotas._ensure_epistemic", exc)
 
 
 def _after_mission(task_id: str) -> None:

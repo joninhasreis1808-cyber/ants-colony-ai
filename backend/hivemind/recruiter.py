@@ -8,6 +8,8 @@ criar -> decidir -> aprender).
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from backend.bots.base import Bot
 from backend.hivemind.cognitive_router import CognitiveRouter
 
@@ -78,7 +80,8 @@ class Recruiter:
         try:
             from backend.cognitive.self_performance import get_self_performance
             return get_self_performance().formation_hint()
-        except Exception:  # noqa: BLE001 - meta-cognição nunca derruba o recrutamento
+        except Exception as exc:  # noqa: BLE001 - meta-cognição nunca derruba o recrutamento
+            swallow("recruiter._formation_hint", exc)
             return {}
 
     def infer_needs(self, goal: str) -> list[str]:

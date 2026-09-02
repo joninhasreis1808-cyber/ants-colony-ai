@@ -1,0 +1,90 @@
+/* Ant's — epistemic_card.css (C1 · FASE C).
+ * 100% escopado em .epi-card: nao vaza estilo para nenhum elemento legado.
+ * Usa as variaveis do design system quando existem, com fallback proprio. */
+
+.epi-card {
+  margin: 6px 0 12px;
+  border: 1px solid var(--line, #2a2a2a);
+  border-radius: 10px;
+  background: var(--surface-2, rgba(255, 255, 255, .03));
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.epi-card .epi-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.epi-card .epi-head:hover { background: var(--surface-3, rgba(255, 255, 255, .05)); }
+.epi-card .epi-head:focus-visible { outline: 2px solid var(--accent, #d8a13a); outline-offset: -2px; }
+
+.epi-card .epi-badge {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.epi-card .epi-ok  { color: #2e7d32; }
+.epi-card .epi-mid { color: #2f6f9f; }
+.epi-card .epi-bad { color: #c0392b; }
+
+.epi-card .epi-conf { opacity: .72; flex: 1 1 auto; }
+
+.epi-card .epi-toggle {
+  width: 8px; height: 8px; flex: 0 0 auto;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: .6;
+  transition: transform .15s ease;
+}
+.epi-card.is-collapsed .epi-toggle { transform: rotate(-45deg); }
+
+.epi-card .epi-body {
+  padding: 2px 10px 9px;
+  border-top: 1px solid var(--line, #2a2a2a);
+}
+.epi-card.is-collapsed .epi-body { display: none; }
+
+.epi-card .epi-why {
+  margin: 8px 0;
+  opacity: .85;
+  line-height: 1.45;
+}
+
+.epi-card .epi-row {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  align-items: baseline;
+}
+.epi-card .epi-k {
+  flex: 0 0 96px;
+  opacity: .55;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+.epi-card .epi-v { flex: 1 1 auto; line-height: 1.4; }
+
+.epi-card .epi-row-lim { align-items: flex-start; }
+.epi-card .epi-lims { margin: 0; padding-left: 16px; flex: 1 1 auto; }
+.epi-card .epi-lim { line-height: 1.4; opacity: .8; padding: 1px 0; }
+
+@media (max-width: 520px) {
+  .epi-card .epi-row { flex-direction: column; gap: 1px; }
+  .epi-card .epi-k { flex-basis: auto; }
+}

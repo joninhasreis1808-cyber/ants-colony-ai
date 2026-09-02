@@ -4,6 +4,10 @@ Antes de decisões enormes, a rainha reúne um conselho (planner, researcher,
 critic, verifier, simulator, specialist). Cada membro avalia e vota; a
 decisão exige quórum de 70% e fica registrada com justificativa. Reaproveita
 o mecanismo de quórum já existente na colônia.
+
+`deliberate()` recebe votos prontos de fora — útil quando quem chama já apurou.
+Para o conselho em que os membros formam a PRÓPRIA opinião a partir de sinais
+reais e modelam a mente uns dos outros, use `convene_real()` (A7).
 """
 from __future__ import annotations
 
@@ -38,6 +42,17 @@ class QueenCouncil:
         for member, choice in votes.items():
             if member in _MEMBERS:
                 self._quorum.vote(member, proposal_id, choice)
+
+    @staticmethod
+    def convene_real(question: str, evidence: list) -> dict:
+        """Conselho REAL (A7): cada membro opina sozinho, a partir da evidência.
+
+        Diferente de `deliberate()`, aqui ninguém entrega os votos prontos — os
+        conselheiros leem os sinais, se abstêm quando não têm base, e o conselho
+        declara quantas bases independentes sustentaram a decisão.
+        """
+        from backend.cognitive.council_real import get_real_council
+        return get_real_council().convene(question, evidence).to_dict()
 
     def decide(self, proposal_id: str, question: str) -> CouncilDecision:
         """Fecha a votação e devolve a decisão com o resultado."""

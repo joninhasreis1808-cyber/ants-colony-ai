@@ -59,17 +59,26 @@ class Passage:
 
 @dataclass
 class GroundedAnswer:
-    """Resposta fundamentada na memória própria — ou o silêncio declarado."""
+    """Resposta fundamentada na memória própria — ou o silêncio declarado.
+
+    `answer` é o texto para o humano (com a moldura "Da memória da colônia...");
+    `substance` é o trecho recuperado LIMPO. Quem for comparar conteúdo com
+    outra rota deve usar `substance`: os números da moldura ("1 registro") são
+    fatos sobre a recuperação, e confundi-los com afirmações sobre o mundo cria
+    contradição onde não há.
+    """
 
     sufficient: bool
     reason: str
     answer: Optional[str] = None
     confidence: Optional[float] = None
     passages: list[Passage] = field(default_factory=list)
+    substance: Optional[str] = None   # o trecho SEM a moldura (ver abaixo)
 
     def to_dict(self) -> dict[str, Any]:
         return {"sufficient": self.sufficient, "reason": self.reason,
                 "answer": self.answer, "confidence": self.confidence,
+                "substance": self.substance,
                 "passages": [p.to_dict() for p in self.passages],
                 "source": "own_memory"}
 
@@ -114,7 +123,8 @@ class MemoryRAG:
             True, f"fundamentada em {len(fortes)} memória(s) da própria colônia",
             answer=self._compose(fortes),
             confidence=self._confidence(fortes),
-            passages=fortes)
+            passages=fortes,
+            substance=fortes[0].content.strip())
 
     @staticmethod
     def _compose(fortes: list[Passage]) -> str:

@@ -77,6 +77,34 @@ def _preview(goal: str) -> tuple[str, list[str]]:
     return intent, castes
 
 
+def _ensure_epistemic(task) -> None:
+    """Garante o rótulo epistêmico em QUALQUER caminho de missão.
+
+    Dois caminhos desviam do `Hivemind._compile_result` e por isso nasciam sem
+    nenhum enriquecimento das FASES A/B: a resposta vinda do CACHE e a PESQUISA
+    PROFUNDA. Na prática a interface ficava muda justamente nas respostas mais
+    rápidas — o cartão epistêmico simplesmente não aparecia, sem explicar por quê.
+
+    Achado na validação ponta a ponta pelo navegador: o evento `ants:task-done`
+    chegava com seis chaves e nenhuma delas era `epistemic`.
+
+    A verificação cruzada NÃO é recomposta aqui, e isso é correto: nessas rotas
+    uma só fonte respondeu, então não há segunda opinião para cruzar. O rótulo
+    dirá "não conferido", que é a verdade.
+    """
+    try:
+        r = getattr(task, "result", None)
+        if not r or "epistemic" in r:
+            return
+        from backend.cognition.epistemic_label import build
+        from backend.hivemind.hive import Hivemind
+        Hivemind._apply_calibration(r)          # noqa: SLF001 - mesmo pacote
+        r["epistemic"] = build(r).to_dict()
+        MEMORY.save_task(task)
+    except Exception:  # noqa: BLE001 - o rótulo nunca derruba a missão
+        pass
+
+
 def _after_mission(task_id: str) -> None:
     """Fecha a missão: conclui a formação e roda o auto-sono (9.4 · T-B).
 
@@ -104,6 +132,7 @@ async def _run_task(task: Task) -> None:
     if task.id in _FRESH:
         _FRESH.discard(task.id)
     elif await _answer_from_memory(task):
+        _ensure_epistemic(task)
         _after_mission(task.id)
         return
     # Pesquisa profunda (9.5 · Fase B): loop multi-etapas da colônia, em vez do
@@ -112,6 +141,7 @@ async def _run_task(task: Task) -> None:
         _DEEP.discard(task.id)
         from backend.hivemind import deep_research
         await deep_research.run(task, MEMORY, BUS, ROUTER)
+        _ensure_epistemic(task)
         _after_mission(task.id)
         return
     hive, _ = build_hive(

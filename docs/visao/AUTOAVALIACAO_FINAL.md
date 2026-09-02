@@ -1,6 +1,7 @@
 # AUTOAVALIAÇÃO FINAL — FASES C, D, E, F · Roteiro de Maestria v9.25
 
 > **Base medida:** `main` commit `bb77679` · **1171 passed, 5 skipped**
+> **Atualizado em:** `365abc7` · **1176 passed, 5 skipped** (item 4 resolvido)
 > **Escopo:** o fechamento do roteiro. As FASES A e B têm autoavaliação própria
 > (`AUTOAVALIACAO_FASE_A.md`, `AUTOAVALIACAO_FASE_B.md`).
 > Tudo abaixo foi **medido neste commit**, não lembrado.
@@ -91,10 +92,17 @@ transporte no meio.
 2. **O app Tauri não foi compilado nem executado** em nenhum momento.
 3. **O córtex plugável nunca foi exercitado contra um LLM real.** A guarda é
    testada com textos injetados.
-4. **Restam 23 blocos que engolem exceção em silêncio** no backend. Converti os
-   12 laços vivos das FASES A/B — os que, falhando calados, desligariam recursos
-   sem ninguém notar. Os outros 23 são anteriores a esta jornada e continuam
-   mudos.
+4. ~~**Restam 23 blocos que engolem exceção em silêncio.**~~ **Resolvido**
+   (commit `365abc7`). Duas correções ao que este documento afirmava: o número
+   exato pelo AST era **24**, não 23 — a contagem por `grep` inflava; e eles
+   foram diagnosticados **um a um**, não convertidos em bloco. **19** escondiam
+   falha real e foram declarados (entre eles o botão de pânico, a persistência
+   de permissões e o lançamento de missão). **3** do extractor viraram
+   `ImportError` mudo (ausência esperada das libs opcionais na imagem de nuvem)
+   + exceção real declarada. **2** ficam mudos de propósito, com o motivo
+   escrito no código: `WebSocketDisconnect` (aba fechada é normal) e o parser de
+   números do crítico (fluxo do laço). Um registro cheio de ruído é tão inútil
+   quanto um vazio.
 5. **O detector de contradição do B2 não pega semântica**; a guarda do B6 não
    pega afirmação falsa sem número. Declarados no código, e ainda assim buracos.
 6. **O veto do B5 não cobre o caminho do chat**, onde a rota é emergente.

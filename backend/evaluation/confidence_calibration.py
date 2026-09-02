@@ -22,32 +22,47 @@ class ConfidenceCalibrator:
             raise ValueError("bins deve ser >= 1")
         self._bins = bins
         self._min = min_samples
-        self._count = [0] * bins
-        self._hits = [0] * bins
+        self._count = [0.0] * bins       # massa PONDERADA de observações
+        self._hits = [0.0] * bins
         self._sum_pred = [0.0] * bins
+        self._raw = [0] * bins           # nº bruto de missões, para auditoria
 
     def _bin_of(self, confidence: float) -> int:
         c = 0.0 if confidence < 0 else 1.0 if confidence > 1 else float(confidence)
         idx = int(c * self._bins)
         return min(idx, self._bins - 1)   # 1.0 cai no último bin
 
-    def record(self, predicted: float, correct: bool) -> None:
-        """Registra uma previsão de confiança e se ela se confirmou."""
+    def record(self, predicted: float, correct: bool,
+               weight: float = 1.0) -> None:
+        """Registra uma previsão e se ela se confirmou, com o PESO do sinal.
+
+        O peso vem da força do sinal de acerto (B3): confirmação humana move a
+        calibração mais que auto-consistência, porque vale mais. Peso 1.0 é o
+        padrão e reproduz exatamente o comportamento anterior.
+        """
         b = self._bin_of(predicted)
-        self._count[b] += 1
-        self._sum_pred[b] += max(0.0, min(1.0, float(predicted)))
+        w = max(0.0, float(weight))
+        self._count[b] += w
+        self._raw[b] += 1
+        self._sum_pred[b] += max(0.0, min(1.0, float(predicted))) * w
         if correct:
-            self._hits[b] += 1
+            self._hits[b] += w
 
     @property
     def total(self) -> int:
-        return sum(self._count)
+        """Missões observadas (contagem bruta, não a massa ponderada)."""
+        return sum(self._raw)
+
+    @property
+    def mass(self) -> float:
+        """Massa ponderada acumulada — o que de fato move a calibração."""
+        return round(sum(self._count), 4)
 
     def observed_rate(self, confidence: float) -> float | None:
         """Taxa de acerto REAL observada na faixa desta confiança (ou None)."""
         b = self._bin_of(confidence)
-        if self._count[b] < self._min:
-            return None
+        if self._raw[b] < self._min or self._count[b] <= 0:
+            return None                  # amostra insuficiente -> não corrige
         return self._hits[b] / self._count[b]
 
     def calibrate(self, raw_confidence: float) -> float:
@@ -60,12 +75,12 @@ class ConfidenceCalibrator:
 
         0 = perfeitamente calibrado. Ponderado pela massa de amostras de cada bin.
         """
-        total = self.total
-        if total == 0:
+        total = sum(self._count)
+        if total <= 0:
             return 0.0
         err = 0.0
         for b in range(self._bins):
-            if self._count[b] == 0:
+            if self._count[b] <= 0:
                 continue
             avg_pred = self._sum_pred[b] / self._count[b]
             observed = self._hits[b] / self._count[b]
@@ -76,19 +91,21 @@ class ConfidenceCalibrator:
         """Diagrama de confiabilidade por faixa (para auditoria/UI honesta)."""
         out = []
         for b in range(self._bins):
-            if self._count[b] == 0:
+            if self._count[b] <= 0:
                 continue
             out.append({
                 "bin": b,
                 "predicted": round(self._sum_pred[b] / self._count[b], 4),
                 "observed": round(self._hits[b] / self._count[b], 4),
-                "count": self._count[b],
+                "count": self._raw[b],
+                "weight": round(self._count[b], 4),
             })
         return out
 
     def to_dict(self) -> dict[str, Any]:
-        return {"total": self.total, "ece": self.ece(),
-                "reliability": self.reliability()}
+        return {"total": self.total, "mass": self.mass, "ece": self.ece(),
+                "reliability": self.reliability(),
+                "min_samples": self._min}
 
 
 _INSTANCE: "ConfidenceCalibrator | None" = None

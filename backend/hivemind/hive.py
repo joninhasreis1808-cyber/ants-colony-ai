@@ -280,8 +280,15 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # esta missão. "Acerto" = sinal de auto-consistência da colônia (resposta
         # ancorada e sem escalar ao humano) — NÃO é verdade externa; é a colônia
         # aprendendo se a confiança que declara bate com o próprio grounding.
+        # B3 · calibração com sinais reais. A ordem importa e não é acidental:
+        # o calibrador aprende com a confiança CRUA (a que a colônia declarou por
+        # conta própria) e só DEPOIS corrige o número exibido. Alimentar com o
+        # valor já calibrado fecharia um laço sobre si mesmo.
         self._feed_calibrator(result.get("confidence"), prov.get("source"),
-                              fallback.escalate_human)
+                              fallback.escalate_human,
+                              task_id=task_id,
+                              cross_verdict=(check.verdict if check else None))
+        self._apply_calibration(result)
         # Laço vivo (FASE 6 · gatilho do canário): a missão realimenta os canários
         # das evoluções aplicadas para este tipo de objetivo — fecha o ciclo
         # propor→aprovar→aplicar→observar→promover/reverter, sozinho.
@@ -340,13 +347,75 @@ class Hivemind(MemoryMixin, SwarmMixin):
             pass
 
     @staticmethod
-    def _feed_calibrator(confidence, source, escalate_human) -> None:
-        """Registra (confiança prevista, acerto auto-consistente) no calibrador vivo."""
+    def _feed_calibrator(confidence, source, escalate_human, *,
+                         task_id: str = "", cross_verdict=None) -> None:
+        """Alimenta o calibrador com o MELHOR sinal de acerto disponível (B3).
+
+        Antes havia um sinal só, e o mais fraco: auto-consistência. Agora a
+        colônia usa confirmação humana quando existe, verificação cruzada quando
+        não, e a auto-consistência só como último recurso — declarando sempre
+        qual das três camadas sustentou a observação.
+        """
         if not isinstance(confidence, (int, float)):
             return
         from backend.evaluation.confidence_calibration import get_calibrator
-        grounded = source not in (None, "none")
-        get_calibrator().record(float(confidence), correct=bool(grounded and not escalate_human))
+        from backend.evaluation.correctness_signal import best_signal
+        sinal = best_signal(
+            human=Hivemind._human_verdict(task_id),
+            cross_verdict=cross_verdict,
+            grounded=source not in (None, "none"),
+            escalate_human=bool(escalate_human))
+        get_calibrator().record(float(confidence), correct=sinal.correct,
+                                weight=sinal.weight)
+
+    @staticmethod
+    def _human_verdict(task_id: str):
+        """Veredito humano JÁ registrado para esta missão (quase sempre None).
+
+        Só existe quando o dono avaliou a missão antes de o resultado ser
+        compilado — raro, mas o caminho fica aberto e é o mesmo que o endpoint
+        de feedback usa depois.
+        """
+        try:
+            from backend.evaluation.human_feedback import get_human_feedback
+            return get_human_feedback().verdict(task_id)
+        except Exception:  # noqa: BLE001
+            return None
+
+    @staticmethod
+    def _apply_calibration(result: dict[str, Any]) -> None:
+        """Corrige a confiança exibida pela taxa de acerto REAL da faixa (B3).
+
+        Só corrige onde há amostra suficiente. Sem amostra, o número passa
+        intacto — e a seção declara que não houve correção, em vez de sumir.
+        """
+        try:
+            bruta = result.get("confidence")
+            if not isinstance(bruta, (int, float)):
+                return
+            from backend.evaluation.confidence_calibration import get_calibrator
+            cal = get_calibrator()
+            taxa = cal.observed_rate(float(bruta))
+            if taxa is None:
+                result["calibration"] = {
+                    "raw": bruta, "calibrated": bruta, "applied": False,
+                    "reason": ("sem amostra suficiente nesta faixa - a confiança "
+                               "passa intacta em vez de ser corrigida no chute")}
+                return
+            corrigida = round(max(0.0, min(1.0, taxa)), 4)
+            result["confidence"] = corrigida
+            if abs(corrigida - float(bruta)) < 5e-5:
+                razao = (f"a confiança declarada bate com a realidade medida "
+                         f"nesta faixa ({corrigida:.0%}) - nada a corrigir")
+            else:
+                razao = (f"nesta faixa a colônia acertou {corrigida:.0%} das "
+                         f"vezes de verdade, e não os {float(bruta):.0%} que "
+                         f"ela declarou")
+            result["calibration"] = {
+                "raw": bruta, "calibrated": corrigida, "applied": True,
+                "reason": razao}
+        except Exception:  # noqa: BLE001 - calibração nunca derruba a missão
+            pass
 
     def _resolve_answer(
         self, task_id: str, decision: dict[str, Any], created: Any

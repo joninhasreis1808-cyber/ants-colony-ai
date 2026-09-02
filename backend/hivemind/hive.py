@@ -266,6 +266,16 @@ class Hivemind(MemoryMixin, SwarmMixin):
             evidence_count=len(prov.get("urls") or []),
         )
         result["fallback"] = fallback.to_dict()
+        # B2 · verificação cruzada: as rotas que responderam se conferem entre
+        # si. Concordância independente sobe pouco a confiança; contradição
+        # numérica derruba e fica EXPOSTA — a colônia nunca escolhe calada
+        # entre duas versões.
+        check = self._cross_check(result, decision, computation, grounded,
+                                  cognition)
+        if check is not None:
+            result["cross_check"] = check.to_dict()
+            from backend.cognition.cross_check import apply_adjustment
+            result["confidence"] = apply_adjustment(result["confidence"], check)
         # Laço vivo (FASE 6 · integração): alimenta o calibrador de confiança com
         # esta missão. "Acerto" = sinal de auto-consistência da colônia (resposta
         # ancorada e sem escalar ao humano) — NÃO é verdade externa; é a colônia
@@ -360,7 +370,11 @@ class Hivemind(MemoryMixin, SwarmMixin):
         confidence = decision.get("confidence")
         _GENERIC = "Sem evidências suficientes"
         cognition: dict[str, Any] | None = None
-        grounded: dict[str, Any] | None = None
+        # B2: a memória própria é consultada SEMPRE — barata e local. Mesmo
+        # quando não é a rota escolhida, ela vira a segunda opinião da
+        # verificação cruzada. Uma memória que discorda do cálculo tem que
+        # aparecer, não sumir.
+        grounded: dict[str, Any] | None = self._memory_rag(task_id)
         if computation:
             answer = computation["answer_text"]
             confidence = computation["confidence"]
@@ -375,8 +389,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 f"{summary.get('tests')} testes)."
             )
         elif not created and (not answer or _GENERIC in answer):
-            # B1: antes de adivinhar por regras, pergunta à própria memória.
-            grounded = self._memory_rag(task_id)
+            # B1: antes de adivinhar por regras, usa a própria memória.
             if grounded is not None and grounded.get("sufficient"):
                 answer = grounded["answer"]
                 confidence = grounded["confidence"]
@@ -388,6 +401,39 @@ class Hivemind(MemoryMixin, SwarmMixin):
                     answer = cognition["answer"]
                     confidence = cognition["confidence"]
         return answer, confidence, cognition, computation, plan, grounded
+
+    def _cross_check(self, result: dict[str, Any], decision: dict[str, Any],
+                     computation, grounded, cognition):
+        """Monta as afirmações de cada rota e as confronta (B2).
+
+        Só entram rotas que REALMENTE produziram texto nesta missão. Nunca
+        derruba a missão: qualquer falha devolve None e o resultado segue sem a
+        seção de verificação.
+        """
+        try:
+            from backend.cognition.cross_check import Claim, cross_check
+            claims: list[Claim] = []
+            if computation:
+                claims.append(Claim("computation", computation["answer_text"],
+                                    computation.get("confidence")))
+            if result.get("sources") and decision.get("answer"):
+                claims.append(Claim("web_search", decision["answer"],
+                                    decision.get("confidence")))
+            if grounded and grounded.get("sufficient"):
+                # substância, não a moldura: "(1 registro)" é fato sobre a
+                # recuperação e não afirmação sobre o mundo.
+                claims.append(Claim("own_memory",
+                                    grounded.get("substance") or grounded["answer"],
+                                    grounded.get("confidence")))
+            if cognition:
+                fonte = self._classify_cognition(cognition, result.get("answer"))[0]
+                claims.append(Claim(fonte, cognition.get("answer", ""),
+                                    cognition.get("confidence")))
+            if len(claims) < 2:
+                return None            # sem segunda opinião, não há o que cruzar
+            return cross_check(claims, result.get("confidence"))
+        except Exception:  # noqa: BLE001 - verificação nunca derruba a missão
+            return None
 
     def _memory_rag(self, task_id: str) -> dict[str, Any] | None:
         """B1: fundamenta na memória própria e CITA (ou devolve o silêncio).

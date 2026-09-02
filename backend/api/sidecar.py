@@ -40,6 +40,18 @@ def seed_secret_vault() -> bool:
 
 def main() -> None:
     os.environ["ANTS_RUNTIME"] = "native"
+    # O corpo precisa se declarar para as DUAS leituras de runtime que existem:
+    # `backend/action/runtime.py` lê ANTS_RUNTIME e `backend/local_agent/runtime.py`
+    # lê ANTS_LOCAL_AGENT. Faltando a segunda, `/local-agent/status` respondia
+    # `native: false` DENTRO do app nativo — a colônia rodando no corpo acreditava
+    # não ter corpo, e as capacidades de dispositivo seriam recusadas justamente
+    # onde deveriam funcionar. Achado compilando e RODANDO o app de verdade.
+    #
+    # Marcar aqui é seguro por construção: este entrypoint só existe no binário
+    # do sidecar (app/ants_backend.spec). O deploy web sobe `backend.api.main:app`
+    # direto pelo uvicorn e nunca importa este módulo — o servidor não tem como
+    # se declarar nativo por acidente.
+    os.environ["ANTS_LOCAL_AGENT"] = "native"
     _prepare_native_data_dir()
     seed_secret_vault()
     import uvicorn

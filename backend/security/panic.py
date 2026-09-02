@@ -6,6 +6,8 @@ qualquer executor antes de agir — toda ação checa `is_engaged()` e aborta.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import time
 from typing import Optional
 
@@ -27,8 +29,8 @@ class PanicSwitch:
         try:
             from backend.permissions.device_scopes import get_device_scopes
             get_device_scopes().revoke_all()
-        except Exception:  # noqa: BLE001 - best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - best-effort
+            swallow("panic.engage", exc)
         return self.status()
 
     def reset(self) -> dict:

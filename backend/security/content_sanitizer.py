@@ -14,6 +14,8 @@ gate de ações (B.4/B.5).
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import re
 from dataclasses import dataclass, field
 
@@ -87,8 +89,8 @@ class ContentSanitizer:
         try:
             from backend.security.immune_system import ImmuneSystem
             ImmuneSystem().learn_signature("prompt_injection:" + text[:120])
-        except Exception:  # noqa: BLE001 - registro é best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - registro é best-effort
+            swallow("content_sanitizer._remember", exc)
 
 
 _INSTANCE: ContentSanitizer | None = None

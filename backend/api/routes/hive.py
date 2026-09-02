@@ -117,8 +117,8 @@ def _after_mission(task_id: str) -> None:
     try:
         from backend.api.routes.memory import maybe_auto_sleep
         maybe_auto_sleep()
-    except Exception:  # noqa: BLE001 - automação nunca derruba a missão
-        pass
+    except Exception as exc:  # noqa: BLE001 - automação nunca derruba a missão
+        swallow("rotas._after_mission", exc)
 
 
 async def _run_task(task: Task) -> None:
@@ -429,6 +429,9 @@ async def live(websocket: WebSocket, task_id: str) -> None:
                 break
             await websocket.send_json({"type": "event", "event": event})
     except WebSocketDisconnect:
+        # NÃO é falha: o cliente fechou a aba. Declarar isso no registro de
+        # falhas silenciosas encheria o painel a cada desconexão normal, e um
+        # registro cheio de ruído é tão inútil quanto um vazio.
         pass
     finally:
         await BUS.unsubscribe(task_id, queue)

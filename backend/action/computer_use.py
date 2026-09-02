@@ -11,6 +11,8 @@ tudo. Os handlers das capacidades vivem em `computer_use_handlers.py`.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -112,5 +114,5 @@ class ComputerUse:
             try:
                 self._audit.log(user, action, "computer_use",
                                 "granted" if ok else "denied")
-            except Exception:
-                pass
+            except Exception as exc:
+                swallow("computer_use._log", exc)

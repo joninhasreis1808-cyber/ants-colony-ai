@@ -5,6 +5,8 @@ se um bus for fornecido.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import hashlib
 import time
 from collections import OrderedDict
@@ -48,8 +50,8 @@ class ResponseCache:
         if self.bus:
             try:
                 self.bus.publish(etype, {"key": key})
-            except Exception:
-                pass
+            except Exception as exc:
+                swallow("response_cache._emit", exc)
 
     def stats(self) -> dict:
         return {"hits": self.hits, "misses": self.misses, "size": len(self._data)}

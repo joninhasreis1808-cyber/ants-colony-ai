@@ -5,6 +5,8 @@ quarentena e notifica a Rainha (via callback/evento).
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from typing import Callable
 
 
@@ -24,8 +26,8 @@ class RecoveryManager:
             if self.notify:
                 try:
                     self.notify({"module": module, "state": "quarantined"})
-                except Exception:
-                    pass
+                except Exception as exc:
+                    swallow("recovery.report_failure", exc)
             return "quarantined"
         return "retry"
 

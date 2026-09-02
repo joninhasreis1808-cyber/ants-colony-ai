@@ -16,6 +16,8 @@ ser plugado nos stores reais sem tocá-los. Puro stdlib, determinístico.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Optional
 
@@ -142,8 +144,8 @@ class RetrievalPlanner:
             gasto += spec.recall_cost
             try:
                 itens.extend(list(fn()) or [])
-            except Exception:  # noqa: BLE001 - recall falho não derruba a missão
-                pass
+            except Exception as exc:  # noqa: BLE001 - recall falho não derruba a missão
+                swallow("hierarchy.execute", exc)
             if enough and len(itens) >= enough:
                 parou_por = "evidência suficiente"
                 break

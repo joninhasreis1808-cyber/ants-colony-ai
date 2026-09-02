@@ -61,6 +61,8 @@ def _numbers(text: str) -> list[float]:
             out.append(float(m.replace(".", "").replace(",", ".")
                              if m.count(",") == 1 and "." not in m else m.replace(",", "")))
         except ValueError:
+            # NÃO é falha: varrendo texto livre, a maioria dos tokens não é
+            # número. Isto é fluxo normal do laço, não erro engolido.
             pass
     return out
 

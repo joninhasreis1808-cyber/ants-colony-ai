@@ -7,6 +7,8 @@ diretório de dados do app (opcional) e mantém um buffer em memória para a UI.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import hashlib
 import json
 import os
@@ -69,8 +71,8 @@ class DeviceAudit:
             os.makedirs(os.path.dirname(self._path) or ".", exist_ok=True)
             with open(self._path, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        except Exception:  # noqa: BLE001 - best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - best-effort
+            swallow("device_audit._append_disk", exc)
 
 
 _INSTANCE: DeviceAudit | None = None

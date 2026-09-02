@@ -13,6 +13,8 @@ nativo. Nada é inventado: o que roda, roda; o que não roda, é declarado.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import re
 from dataclasses import asdict, dataclass, field
 from html.parser import HTMLParser
@@ -158,8 +160,8 @@ class ScreenReader:
         if self._text is not None and reading.text:
             try:
                 return self._text.interpret(reading.text).to_dict()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as exc:  # noqa: BLE001
+                swallow("screen_reader.comprehend", exc)
         return {"summary": reading.description, "entities": []}
 
     # ---- 4) planejar a ação (capacidade declarada de execução) ----

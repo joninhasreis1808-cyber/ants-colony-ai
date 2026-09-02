@@ -4,6 +4,8 @@ Uma linha JSON por evento — fácil de indexar (Loki, ELK) e de ler em dev.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import json
 import sys
 import time
@@ -21,8 +23,8 @@ class StructuredLogger:
         try:
             self.stream.write(json.dumps(record, ensure_ascii=False) + "\n")
             self.stream.flush()
-        except Exception:
-            pass
+        except Exception as exc:
+            swallow("logger.log", exc)
         return record
 
     def info(self, msg: str, **f: Any) -> dict:

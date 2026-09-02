@@ -1,6 +1,7 @@
 # AUTOAVALIAÇÃO — FASE A (Mente Colmeia) · Roteiro de Maestria v9.25
 
 > **Base medida:** `main` commit `72a6341` · **962 passed, 5 skipped**
+> **Atualizado em:** `c70d7d3` · **978 passed, 5 skipped** (PR #70, dívida paga)
 > **Escopo:** A1–A7, sete tarefas, sete PRs (#62, #64, #63, #66, #65, #67, #68).
 > Tudo abaixo foi **medido neste commit**, não lembrado.
 
@@ -24,9 +25,14 @@ esta autoavaliação contra o texto literal.**
 
 ---
 
-## O achado mais importante desta fase
+## O achado mais importante desta fase — e o que foi feito com ele
 
-Três das sete peças **existem, estão testadas, e não são chamadas por nenhum
+> **Atualização (commit `c70d7d3`, PR #70):** o dono mandou ligar as três peças
+> órfãs antes da FASE B. **Feito.** A tabela abaixo é o diagnóstico original; a
+> coluna final registra onde cada uma foi ligada. A dívida está paga, e a
+> ligação do A3 ainda revelou uma regressão real (ver adiante).
+
+Três das sete peças **existiam, estavam testadas, e não eram chamadas por nenhum
 fluxo de produção**:
 
 | Peça | Ligada ao laço vivo? | Quem chama |
@@ -35,15 +41,22 @@ fluxo de produção**:
 | A4 · A/B por rota | **sim** | `planner._apply_experiment` + `hive` + `mission_runner` |
 | A5 · desempenho próprio | **sim** | `recruiter._order` + `hive`, a cada missão |
 | A6 · sono que reorganiza | **sim** | `sleep_cycle.run_sleep_cycle` |
-| A1 · `deliberation.py` | **não** | ninguém (o `deliberation_mode` é usado; o módulo de cenários, não) |
-| A3 · `RetrievalPlanner` | **não** | ninguém — 0 chamadas fora de teste e API |
-| A7 · `RealCouncil` | **não** | só o endpoint `/council`; `QueenCouncil` não é usado em produção |
+| A1 · `deliberation.py` | **era não → agora sim** | `action_gate`: simula em N horizontes e **só endurece** a decisão |
+| A3 · `RetrievalPlanner` | **era não → agora sim** | `hive_memory._recall_prior`: L1 (cache) antes de L4 (longo prazo), com orçamento |
+| A7 · `RealCouncil` | **era não → agora sim** | `evolution.council_advice`: aconselha propostas; o dono continua decidindo |
 
-Isso **não** significa que o trabalho está errado. O A3 foi entregue
-explicitamente como *"taxonomia + política, recalls injetáveis"* — foi uma
-decisão declarada na época, não um descuido. Mas **"existe e é testado" não é o
-mesmo que "a colônia usa"**, e apresentar as sete como igualmente vivas seria
-maquiar. Fica registrado como dívida nomeada.
+Isso **não** significava que o trabalho estava errado. O A3 foi entregue
+explicitamente como *"taxonomia + política, recalls injetáveis"* — decisão
+declarada na época, não descuido. Mas **"existe e é testado" não é o mesmo que
+"a colônia usa"**, e apresentar as sete como igualmente vivas seria maquiar.
+
+**O que a ligação provou:** ao ligar o A3 ao recall real, apareceu uma regressão
+que nenhum teste de prateleira pegaria — `plan()` cobrava o custo de L0/L2/L3
+mesmo sem recaller nelas, e a L4 (cara, mas a única com a memória real) caía fora
+do orçamento. O recall de longo prazo deixaria de acontecer. Corrigido na causa.
+
+É a evidência de que a dívida não era formalidade: **peça na prateleira esconde
+defeito que só o uso revela.**
 
 ---
 
@@ -85,8 +98,10 @@ maquiar. Fica registrado como dívida nomeada.
    garantia "sem histórico, viés zero" está provada — mas o *benefício* ainda
    não foi observado numa missão real.
 4. **O sono do A6 nunca reorganizou memória de produção**, só memórias de teste.
-5. **O conselho do A7 não decide nada na colônia.** Existe, é testado, tem
-   endpoint — e nenhum fluxo o consulta.
+5. ~~**O conselho do A7 não decide nada na colônia.**~~ **Resolvido** (#70): o
+   conselho agora aconselha propostas de evolução. Segue valendo que ele
+   **aconselha e não decide** — aplicar exige aprovação explícita do dono, por
+   projeto.
 6. **A calibração (ECE) não foi medida com volume real.**
 7. **A interface não mostra nada disso.** Nenhum arquivo em `web/js/` consome os
    endpoints novos. É escopo da FASE C, mas até lá o dono não vê a FASE A pela
@@ -100,9 +115,16 @@ maquiar. Fica registrado como dívida nomeada.
 
 ---
 
-## Recomendação
+## Recomendação — e o desfecho
 
-Antes de abrir a FASE B, **ligar as três peças órfãs** (A1, A3, A7) a fluxos
-reais — ou declarar explicitamente que elas ficam como capacidade disponível até
-uma fase posterior. Construir mais capacidade sobre capacidade não usada aumenta
-a distância entre o que o projeto **tem** e o que ele **faz**.
+**Recomendação original:** antes de abrir a FASE B, ligar as três peças órfãs a
+fluxos reais — ou declarar explicitamente que ficam como capacidade disponível.
+Construir mais capacidade sobre capacidade não usada aumenta a distância entre o
+que o projeto **tem** e o que ele **faz**.
+
+**Desfecho:** o dono escolheu ligar. Feito no PR #70, com 16 testes novos e uma
+regressão real corrigida na causa. A FASE A fecha **sem dívida nomeada**, em
+`c70d7d3`, com **978 passed, 5 skipped**.
+
+Ressalva que **continua de pé**: nada disto rodou em produção. Os itens 1–4 e
+6–9 da seção anterior seguem válidos como não-verificado.

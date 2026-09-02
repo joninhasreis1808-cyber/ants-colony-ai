@@ -3,7 +3,7 @@
   --border:#3a2f1c; --border2:#4a3c24;
   --amber:#d4a017; --honey:#e8b84b; --ember:#c0603b;
   --leaf:#6aa15a; --soil:#b98a5e; --queen:#e8b84b; --soldier:#c25a4e; --scout:#5f97c9; --nurse:#e0a54b;
-  --text:#ece3d2; --muted:#a89a80; --dim:#7a6e58;
+  --text:#ece3d2; --muted:#a89a80; --dim:#90846e;
   --ok:#6aa15a; --warn:#d4a017; --err:#c25a4e;
   --serif:'Newsreader',Georgia,serif;
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
@@ -37,11 +37,18 @@ html,body{height:100%}
   background:radial-gradient(120% 60% at 50% -10%,rgba(212,160,23,.07),transparent 55%);
   animation:colonyPulse 5s ease-in-out infinite}
 @keyframes colonyPulse{0%,100%{opacity:.5}50%{opacity:1}}
-body.light .ant-shell,.ant-shell.light{--bg:#f2ece0;--bg2:#e8e0d0;--surface:#fbf7ee;--surface2:#f3ecdd;--border:#d8cdb4;--border2:#c8ba98;--text:#2a2216;--muted:#6b5f47;--dim:#8a7d62}
+body.light .ant-shell,.ant-shell.light{--bg:#f2ece0;--bg2:#e8e0d0;--surface:#fbf7ee;--surface2:#f3ecdd;--border:#d8cdb4;--border2:#c8ba98;--text:#2a2216;--muted:#6b5f47;--dim:#6f6247}
 
 h1,h2,h3,h4{font-weight:500;letter-spacing:-.01em;line-height:1.2}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea,select{font-family:inherit;color:var(--text);background:transparent;border:none;outline:none;width:100%;font-size:16px}
+/* Acessibilidade (WCAG 2.4.7 · Foco Visível): o `outline:none` acima existe
+   pela estética do campo, e por causa dele quem navega por teclado ficava SEM
+   NENHUM sinal de onde estava — medido em pixels: 0.00% de diferença entre o
+   campo focado e o não focado. `:focus-visible` devolve o sinal só a quem
+   navega por teclado, preservando a aparência para quem usa o mouse. */
+input:focus-visible,textarea:focus-visible,select:focus-visible{
+  outline:2px solid var(--amber);outline-offset:2px;border-radius:4px}
 svg{display:block}
 .ico{width:19px;height:19px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 .ico.sm{width:15px;height:15px}.ico.lg{width:24px;height:24px}

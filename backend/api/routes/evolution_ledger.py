@@ -23,6 +23,21 @@ async def list_proposals() -> dict[str, Any]:
     return {"proposals": get_evolution_ledger().list()}
 
 
+@router.get("/{proposal_id}/advice")
+async def advice(proposal_id: str) -> dict[str, Any]:
+    """Conselho Real (A7) sobre esta proposta — aconselha, não decide.
+
+    Aplicar continua exigindo aprovação explícita do dono. O veredito traz
+    `independence` (quantas bases independentes sustentam a recomendação) e
+    `fragile`, que avisa quando ela se apoia numa base só.
+    """
+    from backend.hivemind.evolution import council_advice
+    p = get_evolution_ledger().get(proposal_id)
+    if p is None:
+        raise HTTPException(status_code=404, detail="proposta inexistente")
+    return council_advice(p)
+
+
 @router.post("/mine")
 async def mine() -> dict[str, Any]:
     """Minera a experiência e registra novas propostas (não aplica nada)."""

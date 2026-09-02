@@ -26,14 +26,20 @@
     });
   };
 
-  /* As seis manchetes do B4. A cor carrega o sentido; o texto carrega o fato. */
+  /* As seis manchetes do B4. A cor carrega o sentido; o texto carrega o fato.
+   *
+   * `sev` e o orcamento de MOVIMENTO (FASE D). A regra: o movimento e gasto
+   * onde a colonia esta MENOS segura. Uma resposta contestada ou sem base
+   * chega com enfase; uma verificada chega quieta. Movimento aqui e sinal, nao
+   * enfeite — e nunca e o UNICO canal: a palavra e a cor ja dizem tudo, e com
+   * `prefers-reduced-motion` o cartao fica estatico sem perder informacao. */
   var HEAD = {
-    verificado:    { rot: "verificado",    cls: "epi-ok" },
-    fundamentado:  { rot: "fundamentado",  cls: "epi-ok" },
-    recordado:     { rot: "recordado",     cls: "epi-mid" },
-    inferido:      { rot: "inferido",      cls: "epi-mid" },
-    contestado:    { rot: "contestado",    cls: "epi-bad" },
-    sem_base:      { rot: "sem base",      cls: "epi-bad" }
+    verificado:    { rot: "verificado",    cls: "epi-ok",  sev: "baixa" },
+    fundamentado:  { rot: "fundamentado",  cls: "epi-ok",  sev: "baixa" },
+    recordado:     { rot: "recordado",     cls: "epi-mid", sev: "baixa" },
+    inferido:      { rot: "inferido",      cls: "epi-mid", sev: "media" },
+    contestado:    { rot: "contestado",    cls: "epi-bad", sev: "alta" },
+    sem_base:      { rot: "sem base",      cls: "epi-bad", sev: "alta" }
   };
 
   var EIXOS = [
@@ -52,7 +58,7 @@
   }
 
   function render(epi) {
-    var meta = HEAD[epi.headline] || { rot: epi.headline, cls: "epi-mid" };
+    var meta = HEAD[epi.headline] || { rot: epi.headline, cls: "epi-mid", sev: "media" };
     var linhas = EIXOS.map(function (par) {
       var v = epi[par[0]];
       if (!v) return "";
@@ -73,6 +79,7 @@
 
     var card = document.createElement("div");
     card.className = "epi-card" + (collapsed() ? " is-collapsed" : "");
+    card.setAttribute("data-sev", meta.sev || "media");
     card.innerHTML =
       '<button class="epi-head" type="button" aria-expanded="'
         + (collapsed() ? "false" : "true") + '">'

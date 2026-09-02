@@ -88,3 +88,32 @@
   .epi-card .epi-row { flex-direction: column; gap: 1px; }
   .epi-card .epi-k { flex-basis: auto; }
 }
+
+/* ── FASE D · movimento que informa ──────────────────────────────────────
+   O orçamento de movimento é gasto onde a colônia está MENOS segura: uma
+   resposta contestada ou sem base chega com ênfase; uma verificada chega
+   quieta. Isso é sinal, não enfeite.
+
+   O movimento NUNCA é o único canal — a palavra ("contestado") e a cor já
+   carregam a informação inteira. Quem pede menos movimento recebe o mesmo
+   conteúdo, parado. */
+
+@keyframes epi-entra {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes epi-atencao {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  35%      { box-shadow: 0 0 0 3px rgba(192, 57, 43, .22); }
+}
+
+.epi-card[data-sev] { animation: epi-entra .22s ease-out both; }
+.epi-card[data-sev="alta"] {
+  animation: epi-entra .22s ease-out both, epi-atencao 1.1s ease-in-out .22s 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .epi-card[data-sev],
+  .epi-card[data-sev="alta"] { animation: none !important; }
+  .epi-card .epi-toggle { transition: none !important; }
+}

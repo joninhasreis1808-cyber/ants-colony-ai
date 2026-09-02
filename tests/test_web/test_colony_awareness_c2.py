@@ -48,8 +48,19 @@ def test_sem_emoji_sem_framework_sem_build():
         assert proibido not in JS
 
 
+def _sem_keyframes(css: str) -> str:
+    """Remove os blocos @keyframes antes de varrer seletores.
+
+    Os passos de um keyframe (`from`, `to`, `35%`) NAO sao seletores e nao tem
+    como vazar para elemento nenhum — mas um parser ingenuo os confunde com
+    seletor solto. A regra continua igualmente estrita para o que e seletor de
+    verdade; o que muda e o parser parar de errar.
+    """
+    return re.sub(r"@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", css, flags=re.S)
+
+
 def test_o_css_e_100_por_cento_escopado():
-    for linha in CSS.splitlines():
+    for linha in _sem_keyframes(CSS).splitlines():
         s = linha.strip()
         if not s or s.startswith(("/*", "*", "}", "@media", "@")):
             continue

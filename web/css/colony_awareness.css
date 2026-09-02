@@ -75,3 +75,27 @@
   #ants-awareness .ca-row { flex-direction: column; gap: 0; }
   #ants-awareness .ca-k { flex-basis: auto; }
 }
+
+/* ── FASE D · movimento que informa ──────────────────────────────────────
+   Depois de cada missão estes números mudam. Antes, mudavam em SILÊNCIO — o
+   aprendizado da colônia acontecia e ninguém via acontecer. Agora só a linha
+   que REALMENTE mudou recebe um destaque breve.
+
+   Duas regras que valem aqui: nada pisca na primeira pintura (não havia com o
+   que comparar), e nada pisca sem ter mudado — piscar à toa seria mentira
+   visual. O destaque some sozinho; a informação fica. */
+
+@keyframes ca-mudou-brilho {
+  from { background: rgba(216, 161, 58, .20); }
+  to   { background: transparent; }
+}
+
+#ants-awareness .ca-row.ca-mudou {
+  animation: ca-mudou-brilho 1.6s ease-out both;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ants-awareness .ca-row.ca-mudou { animation: none !important; }
+  #ants-awareness .ca-caret { transition: none !important; }
+}

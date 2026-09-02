@@ -7,6 +7,8 @@ missão retoma de onde parou (a tarefa sobrevive, não o processo). Serializáve
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -112,8 +114,8 @@ class MissionStore:
             try:
                 m = Mission.from_dict(d)
                 self._m[m.id] = m
-            except Exception:  # noqa: BLE001 - registro corrompido é ignorado
-                pass
+            except Exception as exc:  # noqa: BLE001 - registro corrompido é ignorado
+                swallow("mission_store.carregar", exc)
 
     def _save(self) -> None:
         from backend.hivemind.state_store import save_json

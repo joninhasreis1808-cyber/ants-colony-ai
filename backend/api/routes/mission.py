@@ -12,6 +12,8 @@ task_id que o api_bridge já escuta).
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import asyncio
 from typing import Any, Optional
 
@@ -54,8 +56,8 @@ async def _launch(goal: str, context: dict, executor, mission) -> None:
     try:
         await run_mission(goal, MEMORY, context=context, executor=executor,
                           mission=mission)
-    except Exception:                            # noqa: BLE001 - não derruba o loop
-        pass
+    except Exception as exc:                            # noqa: BLE001 - não derruba o loop
+        swallow("rotas._launch_mission", exc)
 
 
 @router.post("", response_model=MissionResponse)

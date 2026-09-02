@@ -10,6 +10,8 @@ recusa honesta, nunca execução silenciosa.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import json
 import os
 import time
@@ -88,8 +90,8 @@ class DeviceScopes:
             os.makedirs(os.path.dirname(self._path) or ".", exist_ok=True)
             with open(self._path, "w", encoding="utf-8") as fh:
                 json.dump(self._granted, fh)
-        except Exception:  # noqa: BLE001 - persistência é best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - persistência é best-effort
+            swallow("device_scopes._save", exc)
 
 
 _INSTANCE: Optional[DeviceScopes] = None

@@ -8,6 +8,8 @@ a disponibilidade é garantida.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import shutil
 
 import httpx   # dep do projeto (9.4 · T7): substitui o cliente síncrono antigo
@@ -44,8 +46,8 @@ class LocalProvider:
         if backend == "ollama":
             try:
                 return self._ollama_generate(prompt)
-            except Exception:  # noqa: BLE001
-                pass  # cai para regras se o modelo falhar
+            except Exception as exc:  # noqa: BLE001
+                swallow("local_provider.generate", exc)  # cai para regras se o modelo falhar
         return self._rule_based(prompt)
 
     async def agenerate(self, prompt: str) -> str:
@@ -54,8 +56,8 @@ class LocalProvider:
         if await self._ollama_running_async():
             try:
                 return await self._ollama_generate_async(prompt)
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as exc:  # noqa: BLE001
+                swallow("local_provider.agenerate", exc)
         return self._rule_based(prompt)
 
     def _ollama_running(self) -> bool:

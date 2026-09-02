@@ -154,3 +154,94 @@ def test_o_modulo_nao_tenta_de_novo_nem_relanca():
     fonte = (SF.__file__ and open(SF.__file__, encoding="utf-8").read()) or ""
     assert "raise" not in fonte.replace("jamais pode derrubar", "")
     assert "def swallow" in fonte and "return None" not in fonte.split("def swallow")[1][:400]
+
+
+# ===  a varredura completa: os 24 blocos, diagnosticados um a um  ===========
+
+def test_nenhum_bloco_mudo_sobrou_alem_dos_INTENCIONAIS():
+    """Varre o backend inteiro e exige que todo `except ... : pass` restante
+    seja um dos cinco casos em que o silêncio é a resposta CERTA."""
+    import ast
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[1] / "backend"
+    mudos = []
+    for f in sorted(raiz.rglob("*.py")):
+        if f.name == "silent_failures.py":
+            continue
+        arvore = ast.parse(f.read_text(encoding="utf-8"))
+        for no in ast.walk(arvore):
+            if isinstance(no, ast.ExceptHandler) and len(no.body) == 1 \
+                    and isinstance(no.body[0], ast.Pass):
+                tipo = ast.unparse(no.type) if no.type else "bare"
+                mudos.append((f.name, tipo))
+
+    intencionais = {
+        # aba fechada é comportamento normal do cliente, não falha
+        ("hive.py", "WebSocketDisconnect"),
+        # token não-numérico ao varrer texto livre: fluxo do laço, não erro
+        ("critic.py", "ValueError"),
+        # libs opcionais ausentes DE PROPÓSITO na imagem de nuvem
+        ("extractor.py", "ImportError"),
+    }
+    inesperados = [m for m in mudos if m not in intencionais]
+    assert not inesperados, f"blocos mudos sem justificativa: {inesperados}"
+
+
+def test_cada_silencio_intencional_explica_o_motivo_no_codigo():
+    """Silêncio sem justificativa escrita vira silêncio esquecido."""
+    from pathlib import Path
+
+    raiz = Path(__file__).resolve().parents[1] / "backend"
+    casos = {
+        "api/routes/hive.py": "NÃO é falha: o cliente fechou a aba",
+        "cognition/critic.py": "NÃO é falha: varrendo texto livre",
+        "search/extractor.py": "Ausência ESPERADA",
+    }
+    for arquivo, marca in casos.items():
+        texto = (raiz / arquivo).read_text(encoding="utf-8")
+        assert marca in texto, f"{arquivo} cala sem explicar por quê"
+
+
+def test_a_ausencia_esperada_de_lib_NAO_polui_o_registro():
+    """As libs opcionais não estão na imagem de nuvem — declarar isso a cada
+    extração encheria o painel com o que já sabemos."""
+    r = _limpo()
+    from backend.search.extractor import extract_text
+    texto = extract_text("<html><body><p>conteudo real</p></body></html>")
+    assert "conteudo real" in texto, "a escada de degradação tem que entregar texto"
+    assert r.total == 0, f"ausência esperada virou ruído: {r.piores()}"
+
+
+def test_o_panico_engaja_mesmo_com_o_armazem_quebrado_E_declara(monkeypatch):
+    """O caso mais crítico convertido: o botão de pânico."""
+    r = _limpo()
+    import backend.permissions.device_scopes as DS
+
+    def explode():
+        raise RuntimeError("escopos fora do ar")
+
+    monkeypatch.setattr(DS, "get_device_scopes", explode)
+    import backend.security.panic as P
+
+    P._INSTANCE = None
+    try:
+        p = P.get_panic()
+        p.engage("teste")
+        assert p.is_engaged() is True, "o pânico TEM que engajar mesmo assim"
+        assert "panic.engage" in [x["onde"] for x in r.piores()]
+    finally:
+        # Um pânico engajado no singleton recusaria TODA ação dos testes
+        # seguintes. O teste limpa o que sujou.
+        P._INSTANCE = None
+
+
+def test_permissao_que_nao_persistiu_nao_some_calada():
+    r = _limpo()
+    from backend.permissions.device_scopes import DeviceScopes
+
+    s = DeviceScopes(path="/proc/impossivel/scopes.json")
+    s.grant("read_files")
+    assert s.is_granted("read_files") is True, "vale em memória"
+    assert "device_scopes._save" in [x["onde"] for x in r.piores()], \
+        "gravação falhou e ninguém ficou sabendo"

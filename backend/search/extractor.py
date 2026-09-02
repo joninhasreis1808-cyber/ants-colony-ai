@@ -6,6 +6,8 @@ obrigatória. Remove script/style/nav/ads e limita a 2000 chars/página.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import re
 import unicodedata
 
@@ -31,15 +33,22 @@ def extract_text(html: str) -> str:
         got = trafilatura.extract(html) or ""
         if got.strip():
             return _finish(got)
-    except Exception:  # noqa: BLE001 - lib ausente/erro → próximo degrau
+    except ImportError:
+        # Ausência ESPERADA: `trafilatura` não entra na imagem de nuvem por
+        # decisão de projeto (requirements-cloud.txt). Declarar isso encheria o
+        # registro a cada extração com uma informação que já sabemos.
         pass
+    except Exception as exc:  # noqa: BLE001 - a lib EXISTE e quebrou: isso importa
+        swallow("extractor.trafilatura", exc)
     # 2) readability-lxml, se existir
     try:
         from readability import Document  # type: ignore
         summary = Document(html).summary()
         return _finish(_TAG.sub(" ", summary))
-    except Exception:  # noqa: BLE001
-        pass
+    except ImportError:
+        pass                       # ausência esperada, como acima
+    except Exception as exc:  # noqa: BLE001 - a lib existe e quebrou
+        swallow("extractor.readability", exc)
     # 3) BeautifulSoup, se existir
     try:
         from bs4 import BeautifulSoup  # type: ignore
@@ -48,8 +57,10 @@ def extract_text(html: str) -> str:
                          "aside", "form"]):
             tag.decompose()
         return _finish(soup.get_text(" "))
-    except Exception:  # noqa: BLE001
-        pass
+    except ImportError:
+        pass                       # ausência esperada, como acima
+    except Exception as exc:  # noqa: BLE001 - a lib existe e quebrou
+        swallow("extractor.bs4", exc)
     # 4) fallback próprio (regex) — sempre funciona, offline
     stripped = _DROP.sub(" ", html)
     return _finish(_TAG.sub(" ", stripped))

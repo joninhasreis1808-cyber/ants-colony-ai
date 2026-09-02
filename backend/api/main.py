@@ -6,6 +6,8 @@ entrada único: `uvicorn backend.api.main:app`.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import time
 from pathlib import Path
 from typing import Any
@@ -58,8 +60,8 @@ def _count_tests() -> int:
         try:
             n += len(re.findall(r"^\s*(?:async\s+)?def test_",
                                 f.read_text(encoding="utf-8"), re.M))
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception as exc:  # noqa: BLE001
+            swallow("main._count_tests", exc)
     return n
 
 

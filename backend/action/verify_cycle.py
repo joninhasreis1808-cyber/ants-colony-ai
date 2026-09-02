@@ -8,6 +8,8 @@ em `error_memory` e relata honestamente. 3 ações diferentes falhas numa missã
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -42,8 +44,8 @@ class VerifyCycle:
     def _emit(self, kind: str, payload: dict) -> None:
         try:
             self._bus.publish(kind, payload)
-        except Exception:  # noqa: BLE001 - barramento é best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - barramento é best-effort
+            swallow("verify_cycle._emit", exc)
 
     def run(
         self,
@@ -109,5 +111,5 @@ class VerifyCycle:
             from backend.monitoring.device_audit import get_device_audit
             get_device_audit().record(label, "", "falha", bot="operaria",
                                       extra={"error": reason})
-        except Exception:  # noqa: BLE001 - best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - best-effort
+            swallow("verify_cycle._remember_error", exc)

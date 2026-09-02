@@ -789,8 +789,8 @@ class Hivemind(MemoryMixin, SwarmMixin):
             for b in bots:
                 t.record_success(b.name) if success else t.record_failure(b.name)
             save_trust()
-        except Exception:  # noqa: BLE001 - persistência é best-effort
-            pass
+        except Exception as exc:  # noqa: BLE001 - persistência é best-effort
+            swallow("hive._record_trust", exc)
 
     def _deterministic(self, task_id: str) -> dict[str, Any] | None:
         """Córtex determinístico: resolve cálculos exatos antes da busca.

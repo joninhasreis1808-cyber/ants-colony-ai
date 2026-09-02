@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
 from backend.permissions.device_scopes import get_device_scopes
+from backend.permissions.path_guard import get_path_guard
 from backend.tools import capabilities as caps
 from backend.tools import compute_tools, file_tools, write_tools
 
@@ -58,10 +59,64 @@ class ToolRegistry:
             return False
         return not t.scope or get_device_scopes().is_granted(t.scope)
 
+    def availability(self, name: str) -> dict[str, Any]:
+        """Por que esta ferramenta pode (ou não pode) ser usada AGORA.
+
+        `can_use` respondia sim/não e o catálogo repetia esse sim/não seco: o
+        dono via cinco ferramentas indisponíveis sem nenhuma pista do motivo nem
+        do que fazer a respeito. Aqui a colônia declara as duas coisas.
+
+        E declara também a pré-condição que ficava ESCONDIDA: as ferramentas de
+        arquivo passam pelo `path_guard` além do escopo. Sem pasta autorizada,
+        elas apareciam como disponíveis e falhavam na hora de rodar — a colônia
+        prometia o que não podia cumprir.
+        """
+        t = self.get(name)
+        if not t:
+            return {"available": False, "reason": "ferramenta desconhecida",
+                    "remedy": None, "blockers": ["desconhecida"]}
+
+        bloqueios: list[str] = []
+        motivos: list[str] = []
+        remedios: list[str] = []
+
+        if t.scope and not get_device_scopes().is_granted(t.scope):
+            bloqueios.append("escopo")
+            motivos.append(f"o escopo '{t.scope}' não está concedido")
+            remedios.append(f"conceda o escopo '{t.scope}' nas permissões")
+
+        if self._needs_path(t) and not get_path_guard().allowed_dirs():
+            bloqueios.append("pasta")
+            motivos.append("nenhuma pasta foi autorizada para leitura/escrita")
+            remedios.append("autorize ao menos uma pasta no guarda de caminhos")
+
+        if not bloqueios:
+            return {"available": True,
+                    "reason": "escopo e pré-condições satisfeitos",
+                    "remedy": None, "blockers": []}
+        return {"available": False, "reason": "; ".join(motivos),
+                "remedy": "; ".join(remedios), "blockers": bloqueios}
+
+    @staticmethod
+    def _needs_path(t: "Tool") -> bool:
+        """A ferramenta opera sobre caminhos? (passa pelo path_guard)"""
+        campos = set((t.input_schema or {}).keys())
+        return bool(campos & {"path", "src", "dest", "dir"})
+
     def list(self) -> list[dict[str, Any]]:
-        """Catálogo honesto: cada ferramenta + se está disponível agora."""
-        return [dict(t.to_dict(), available=self.can_use(t.name))
-                for t in self._tools.values()]
+        """Catálogo honesto: cada ferramenta, se está disponível E POR QUÊ.
+
+        O `available` continua no mesmo lugar e com o mesmo significado — quem
+        já lia esse campo não quebra. O que vem junto agora é o motivo e o
+        caminho para destravar.
+        """
+        out = []
+        for t in self._tools.values():
+            disp = self.availability(t.name)
+            out.append(dict(t.to_dict(), available=disp["available"],
+                            reason=disp["reason"], remedy=disp["remedy"],
+                            blockers=disp["blockers"]))
+        return out
 
     def run(self, name: str, args: dict | None = None) -> dict[str, Any]:
         """Valida (Scope Guard) e executa; devolve resultado OU recusa honesta."""

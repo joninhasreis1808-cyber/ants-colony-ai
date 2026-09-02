@@ -161,6 +161,12 @@ def build(result: dict[str, Any]) -> EpistemicLabel:
     web = str(prov.get("web") or "")
     if "bloqueado" in web or "erro" in web:
         limites.append(f"a busca externa não estava disponível ({web})")
+    fb = result.get("feedback") or {}
+    if fb.get("honored") is False and fb.get("note"):
+        limites.append(fb["note"])          # B5: proibição que não pôde ser honrada
+    elif fb.get("blocked"):
+        limites.append(f"rotas vetadas pelo dono nesta missão: "
+                       f"{', '.join(fb['blocked'])}")
 
     return EpistemicLabel(
         headline=manchete, origin=source, verification=verificacao,

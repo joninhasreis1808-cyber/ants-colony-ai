@@ -1,0 +1,77 @@
+/* Ant's — colony_awareness.css (C2 · FASE C).
+ * 100% escopado em #ants-awareness. */
+
+#ants-awareness {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  width: min(340px, calc(100vw - 24px));
+  max-height: min(60vh, 520px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line, #2a2a2a);
+  border-radius: 12px;
+  background: var(--surface, #161616);
+  color: var(--text, #e8e4dc);
+  font-size: 12px;
+  z-index: 40;
+  overflow: hidden;
+}
+
+#ants-awareness .ca-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line, #2a2a2a);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+#ants-awareness .ca-head:hover { background: var(--surface-3, rgba(255,255,255,.05)); }
+#ants-awareness .ca-head:focus-visible { outline: 2px solid var(--accent, #d8a13a); outline-offset: -2px; }
+#ants-awareness .ca-title { flex: 1 1 auto; font-weight: 600; letter-spacing: .01em; }
+#ants-awareness .ca-caret {
+  width: 8px; height: 8px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: .6;
+  transition: transform .15s ease;
+}
+#ants-awareness[data-collapsed="1"] .ca-caret { transform: rotate(-45deg); }
+#ants-awareness[data-collapsed="1"] .ca-body { display: none; }
+
+#ants-awareness .ca-body { overflow-y: auto; padding: 4px 12px 10px; }
+#ants-awareness .ca-sec { padding: 8px 0; border-bottom: 1px solid var(--line, #2a2a2a); }
+#ants-awareness .ca-sec:last-child { border-bottom: 0; }
+#ants-awareness .ca-sec-t {
+  margin: 0 0 5px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  opacity: .55;
+  font-weight: 600;
+}
+
+#ants-awareness .ca-row { display: flex; gap: 8px; padding: 2px 0; align-items: baseline; }
+#ants-awareness .ca-k { flex: 0 0 42%; opacity: .8; overflow-wrap: anywhere; }
+#ants-awareness .ca-v { flex: 1 1 auto; opacity: .95; overflow-wrap: anywhere; }
+
+/* O estado vazio nao e enfeite: explica o que falta acontecer. */
+#ants-awareness .ca-empty {
+  margin: 0;
+  opacity: .6;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+@media (max-width: 560px) {
+  #ants-awareness { right: 8px; left: 8px; width: auto; max-height: 50vh; }
+  #ants-awareness .ca-row { flex-direction: column; gap: 0; }
+  #ants-awareness .ca-k { flex-basis: auto; }
+}

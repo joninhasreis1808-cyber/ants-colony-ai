@@ -206,7 +206,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         created = self.memory.get_context(task_id, "created_app")
         perception = self.memory.get_context(task_id, "perception")
 
-        answer, confidence, cognition, computation, plan = \
+        answer, confidence, cognition, computation, plan, grounded = \
             self._resolve_answer(task_id, decision, created)
 
         sources_list = self.memory.get_context(task_id, "sources") or []
@@ -234,6 +234,10 @@ class Hivemind(MemoryMixin, SwarmMixin):
             result["plan"] = plan
         if cognition:
             result["cognition"] = cognition
+        if grounded and grounded.get("sufficient"):
+            # B1: as memórias que sustentam a resposta ficam CITADAS no produto
+            # final — a colônia mostra de onde tirou, não pede para acreditar.
+            result["grounding"] = grounded
         if created:
             result["created_app"] = created
         if perception:
@@ -242,7 +246,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         # REAL da tentativa de busca externa. Nunca maquia — declara a fonte.
         result["provenance"] = self._build_provenance(
             task_id, result["sources"], cognition, created, answer,
-            computation, plan
+            computation, plan, grounded
         )
         # Trajeto da missão (7.2): o que CADA bot fez, obstáculos reais e o
         # que a colônia aprendeu — para o chat mostrar o caminho todo.
@@ -340,8 +344,15 @@ class Hivemind(MemoryMixin, SwarmMixin):
         """Decide a resposta/confiança e a fonte cognitiva a partir das rotas.
 
         Ordem de autoridade: cálculo exato (córtex determinístico) › plano
-        raciocinado › app criado › cérebro próprio (fallback cognitivo). Devolve
-        (answer, confidence, cognition, computation, plan) para o compilador usar.
+        raciocinado › app criado › **memória própria fundamentada (B1)** ›
+        cérebro próprio (fallback cognitivo).
+
+        O RAG entra antes do fallback porque uma resposta ancorada em algo que a
+        colônia REGISTROU vale mais que uma composição por regras sem lastro
+        nenhum. E entra depois do cálculo e do plano porque memória é registro,
+        não verificação — o teto de confiança dela diz isso.
+
+        Devolve (answer, confidence, cognition, computation, plan, grounded).
         """
         computation = self._deterministic(task_id)
         plan = None if computation else self._planner(task_id)
@@ -349,6 +360,7 @@ class Hivemind(MemoryMixin, SwarmMixin):
         confidence = decision.get("confidence")
         _GENERIC = "Sem evidências suficientes"
         cognition: dict[str, Any] | None = None
+        grounded: dict[str, Any] | None = None
         if computation:
             answer = computation["answer_text"]
             confidence = computation["confidence"]
@@ -363,12 +375,37 @@ class Hivemind(MemoryMixin, SwarmMixin):
                 f"{summary.get('tests')} testes)."
             )
         elif not created and (not answer or _GENERIC in answer):
-            # Sem evidência externa e sem app: recorre ao cérebro próprio.
-            cognition = self._cognitive_fallback(task_id)
-            if cognition:
-                answer = cognition["answer"]
-                confidence = cognition["confidence"]
-        return answer, confidence, cognition, computation, plan
+            # B1: antes de adivinhar por regras, pergunta à própria memória.
+            grounded = self._memory_rag(task_id)
+            if grounded is not None and grounded.get("sufficient"):
+                answer = grounded["answer"]
+                confidence = grounded["confidence"]
+            else:
+                # Sem evidência externa, sem app e sem memória que sustente:
+                # recorre ao cérebro próprio.
+                cognition = self._cognitive_fallback(task_id)
+                if cognition:
+                    answer = cognition["answer"]
+                    confidence = cognition["confidence"]
+        return answer, confidence, cognition, computation, plan, grounded
+
+    def _memory_rag(self, task_id: str) -> dict[str, Any] | None:
+        """B1: fundamenta na memória própria e CITA (ou devolve o silêncio).
+
+        Nunca derruba a missão: sem LTM ou com falha de recall, devolve None e a
+        colônia segue para a próxima rota.
+        """
+        try:
+            from backend.cognition.memory_rag import get_memory_rag
+            rag = get_memory_rag(self.ltm)
+            if rag is None:
+                return None
+            goal = (self.memory.get_task(task_id) or {}).get("goal", "")
+            if not goal:
+                return None
+            return rag.answer(goal).to_dict()
+        except Exception:  # noqa: BLE001 - o RAG nunca derruba a missão
+            return None
 
     @staticmethod
     def _domains_of(sources: list, dedup: bool = False) -> list[str]:
@@ -471,13 +508,15 @@ class Hivemind(MemoryMixin, SwarmMixin):
         answer: str | None = None,
         computation: dict[str, Any] | None = None,
         plan: dict[str, Any] | None = None,
+        grounded: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Classifica a origem da resposta e o status real da busca web.
 
-        Valores de `source`: web_search (URLs reais), memory (recordado do
-        grafo), seed_knowledge (inato), reasoning (inferência própria sem
-        conhecimento), none (não conseguiu). Aditivo e honesto: se a web foi
-        bloqueada (403) ou não trouxe nada, isso fica explícito em `web`.
+        Valores de `source`: web_search (URLs reais), own_memory (B1 · ancorada
+        em memórias próprias CITADAS), memory (recordado do grafo),
+        seed_knowledge (inato), reasoning (inferência própria sem conhecimento),
+        none (não conseguiu). Aditivo e honesto: se a web foi bloqueada (403) ou
+        não trouxe nada, isso fica explícito em `web`.
         """
         web_report = self.memory.get_context(task_id, "web_report") or []
         domains = self._domains_of(sources)     # sem dedup (comportamento original)
@@ -491,6 +530,10 @@ class Hivemind(MemoryMixin, SwarmMixin):
         elif created:
             source, confidence, gaps, castes = \
                 "reasoning", None, [], ["rainha", "exploradoras"]
+        elif grounded and grounded.get("sufficient"):
+            source, confidence, gaps, castes = (
+                "own_memory", grounded.get("confidence"), [],
+                ["rainha", "arquivistas"])
         elif cognition:
             source, confidence, gaps, castes = \
                 self._classify_cognition(cognition, answer)

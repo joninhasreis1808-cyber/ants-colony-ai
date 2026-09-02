@@ -41,9 +41,11 @@ class LongTermMemory:
 
         Retorna o id da memória, ou None se a atenção a descartou.
         """
-        if not self.attention.is_worth_remembering(data):
+        # Uma avaliação só: medir duas vezes deflacionava o score gravado,
+        # porque a estimativa de novidade marca o conteúdo como visto.
+        score, vale = self.attention.evaluate(data)
+        if not vale:
             return None
-        score = self.attention.calculate_attention(data)
         encoded = self.encoder.encode(data, score)
         # Associa a memórias já existentes antes de gravar.
         self.encoder.associate(

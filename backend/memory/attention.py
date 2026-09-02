@@ -42,8 +42,27 @@ class AttentionFilter:
         return round(min(score, 1.0), 4)
 
     def is_worth_remembering(self, data: MemoryInput) -> bool:
-        """Atalho: o score supera o limiar de armazenamento?"""
+        """Atalho: o score supera o limiar de armazenamento?
+
+        Atenção: `calculate_attention` **marca o conteúdo como visto** para
+        estimar novidade. Quem precisa do score E da decisão deve usar
+        `evaluate()`, que calcula uma vez só — ver o porquê lá.
+        """
         return self.calculate_attention(data) > self._threshold
+
+    def evaluate(self, data: MemoryInput) -> tuple[float, bool]:
+        """Calcula UMA vez e devolve (score, vale-a-pena-guardar).
+
+        Existe por causa de um defeito real: `calculate_attention` registra o
+        conteúdo em `_seen`, então a segunda chamada sobre a mesma entrada cai de
+        novidade 0.6 para 0.15 e devolve um número menor. Quem chamava
+        `is_worth_remembering` e depois `calculate_attention` passava no portão
+        com um score e **gravava outro, deflacionado** — toda memória nascia mais
+        fraca do que o projeto previu, mais perto do piso de poda e longe do
+        limiar de reforço do sono. Aqui o valor é um só, do começo ao fim.
+        """
+        score = self.calculate_attention(data)
+        return score, score > self._threshold
 
     def get_attention_level(self, data: MemoryInput) -> AttentionLevel:
         """Classifica a atenção em HIGH / MEDIUM / LOW / IGNORE."""

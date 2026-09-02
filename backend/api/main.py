@@ -31,6 +31,7 @@ from backend.api.routes import calibration as calibration_routes
 from backend.api.routes import causal as causal_routes
 from backend.api.routes import self_performance as self_performance_routes
 from backend.api.routes import ab_experiment as ab_experiment_routes
+from backend.api.routes import council as council_routes
 from backend.api.routes import nervous as nervous_routes
 from backend.api.routes import tools as tools_routes
 from backend.api.routes import mission as mission_routes
@@ -136,6 +137,7 @@ app.include_router(calibration_routes.router)
 app.include_router(causal_routes.router)
 app.include_router(self_performance_routes.router)
 app.include_router(ab_experiment_routes.router)
+app.include_router(council_routes.router)
 app.include_router(memory_routes.router)
 app.include_router(factory_routes.router)
 app.include_router(bio_routes.router)

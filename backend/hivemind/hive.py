@@ -519,6 +519,9 @@ class Hivemind(MemoryMixin, SwarmMixin):
         colônia segue para a próxima rota.
         """
         try:
+            from backend.cognition.feedback_bias import blocked_routes
+            if blocked_routes(["own_memory"]):
+                return None            # B5: o dono vetou a memória própria
             from backend.cognition.memory_rag import get_memory_rag
             rag = get_memory_rag(self.ltm)
             if rag is None:

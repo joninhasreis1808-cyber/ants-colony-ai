@@ -245,6 +245,7 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
     outcome = {
         "mission_id": mission.id, "goal": goal, "state": mission.state,
         "route": plan.route.to_dict(), "graph": graph.to_dict(),
+        "feedback": plan.feedback,
         "progress": progress, "answer": final_answer,
         "drift": drift.to_dict(), "blackboard": board.snapshot(),
         "collective": verdict.to_dict(),

@@ -15,7 +15,7 @@ reproduzível.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from backend.cognition.cartographer import Route, get_cartographer
 from backend.cognition.experience import apply_experience
@@ -29,10 +29,11 @@ class Plan:
     goal: str
     route: Route
     graph: TaskGraph
+    feedback: dict = field(default_factory=dict)   # o que a opinião do dono fez (B5)
 
     def to_dict(self) -> dict:
         return {"goal": self.goal, "route": self.route.to_dict(),
-                "graph": self.graph.to_dict()}
+                "graph": self.graph.to_dict(), "feedback": self.feedback}
 
 
 # Esqueletos de decomposição por rota. Cada tupla: (id, descrição, deps).
@@ -111,6 +112,20 @@ def _apply_experiment(routes: list, goal: str) -> list:
     return routes
 
 
+def _apply_feedback(routes: list) -> dict:
+    """A opinião do dono chega à escolha da rota (B5).
+
+    `forbid` é VETO — torna a rota indisponível, não a desempata. `approve` e
+    `reject` viram viés proporcional ao peso aprendido. Sem opinião registrada,
+    o peso é 1.0, o viés é 0.0 e a escolha fica idêntica à de hoje.
+    """
+    try:
+        from backend.cognition.feedback_bias import apply_to_routes
+        return apply_to_routes(routes)
+    except Exception:  # noqa: BLE001 - o feedback nunca derruba o plano
+        return {}
+
+
 class HierarchicalPlanner:
     """Decompõe um objetivo em um TaskGraph seguindo a melhor rota disponível."""
 
@@ -118,6 +133,7 @@ class HierarchicalPlanner:
         routes = get_cartographer().discover(goal, context)
         apply_experience(routes, goal)          # viés da experiência (B3) na escolha
         _apply_experiment(routes, goal)         # viés do A/B em curso (A4), se houver
+        feedback = _apply_feedback(routes)      # a opinião do dono (B5) vale aqui
         route = get_cartographer().choose(routes)
         if route is None:                       # nada disponível → raciocínio puro
             route = [r for r in routes if r.name == "reasoning"][0]
@@ -131,7 +147,7 @@ class HierarchicalPlanner:
         for sid, desc, deps in skeleton:
             graph.add(sid, desc, deps, confidence=route_score)
         graph.topological_order()               # valida (sem ciclo) já no plano
-        return Plan(goal=goal, route=route, graph=graph)
+        return Plan(goal=goal, route=route, graph=graph, feedback=feedback)
 
 
 _INSTANCE: HierarchicalPlanner | None = None

@@ -289,6 +289,14 @@ class Hivemind(MemoryMixin, SwarmMixin):
                               task_id=task_id,
                               cross_verdict=(check.verdict if check else None))
         self._apply_calibration(result)
+        # B4 · rótulo epistêmico ampliado: os sinais que já existiam, espalhados
+        # em seis campos, viram um rótulo único que a interface pode mostrar sem
+        # ter de cruzar nada na cabeça. Nada de novo é inventado aqui.
+        try:
+            from backend.cognition.epistemic_label import build as _rotulo
+            result["epistemic"] = _rotulo(result).to_dict()
+        except Exception:  # noqa: BLE001 - o rótulo nunca derruba a missão
+            pass
         # Laço vivo (FASE 6 · gatilho do canário): a missão realimenta os canários
         # das evoluções aplicadas para este tipo de objetivo — fecha o ciclo
         # propor→aprovar→aplicar→observar→promover/reverter, sozinho.

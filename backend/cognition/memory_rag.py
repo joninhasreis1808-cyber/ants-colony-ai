@@ -35,6 +35,7 @@ isso. Determinístico, offline, stdlib.
 """
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -46,15 +47,22 @@ _TOP_K = 4
 
 @dataclass
 class Passage:
-    """Um trecho recuperado da memória própria, com a similaridade REAL."""
+    """Um trecho recuperado da memória própria, com a similaridade REAL.
+
+    `age_days` é a idade do registro. Uma resposta ancorada numa memória de seis
+    meses não vale o mesmo que uma de ontem, e quem lê tem direito de saber a
+    diferença. `None` quando o armazém não guardou a data — nunca zero fingindo
+    ser recente.
+    """
 
     memory_id: str
     content: str
     score: float
+    age_days: Optional[float] = None
 
     def to_dict(self) -> dict[str, Any]:
         return {"memory_id": self.memory_id, "score": round(self.score, 4),
-                "excerpt": self.content[:200]}
+                "excerpt": self.content[:200], "age_days": self.age_days}
 
 
 @dataclass
@@ -75,10 +83,15 @@ class GroundedAnswer:
     passages: list[Passage] = field(default_factory=list)
     substance: Optional[str] = None   # o trecho SEM a moldura (ver abaixo)
 
+    @property
+    def age_days(self) -> Optional[float]:
+        """Idade do registro que sustenta a resposta (o mais forte)."""
+        return self.passages[0].age_days if self.passages else None
+
     def to_dict(self) -> dict[str, Any]:
         return {"sufficient": self.sufficient, "reason": self.reason,
                 "answer": self.answer, "confidence": self.confidence,
-                "substance": self.substance,
+                "substance": self.substance, "age_days": self.age_days,
                 "passages": [p.to_dict() for p in self.passages],
                 "source": "own_memory"}
 
@@ -102,8 +115,17 @@ class MemoryRAG:
             pares = self._ltm.store.retrieve_by_embedding(emb, top_k)
         except Exception:  # noqa: BLE001 - recall falho não derruba a missão
             return []
-        return [Passage(memory_id=m.id, content=m.content, score=float(s))
-                for m, s in pares if (m.content or "").strip()]
+        agora = time.time()
+        out: list[Passage] = []
+        for m, s in pares:
+            if not (m.content or "").strip():
+                continue
+            ts = getattr(m, "timestamp", None)
+            idade = (round(max(0.0, (agora - float(ts)) / 86400.0), 3)
+                     if isinstance(ts, (int, float)) and ts > 0 else None)
+            out.append(Passage(memory_id=m.id, content=m.content,
+                               score=float(s), age_days=idade))
+        return out
 
     # -- fundamentação -------------------------------------------------------
     def answer(self, query: str, top_k: int = _TOP_K) -> GroundedAnswer:

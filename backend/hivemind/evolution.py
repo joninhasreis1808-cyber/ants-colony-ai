@@ -16,6 +16,8 @@ Assim a colônia evolui a própria decisão sem jamais fugir da coleira do dono.
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -282,7 +284,8 @@ def _causal_evidence(route: str) -> list[str]:
             return []
         top = max(efeitos.items(), key=lambda kv: kv[1])
         return [f"causal: 'fonte:{route}' → '{top[0]}' em {top[1]} observação(ões)"]
-    except Exception:  # noqa: BLE001 - evidência causal é opcional
+    except Exception as exc:  # noqa: BLE001 - evidência causal é opcional
+        swallow("evolution._causal_evidence", exc)
         return []
 
 

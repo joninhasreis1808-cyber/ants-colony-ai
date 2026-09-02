@@ -18,6 +18,8 @@ quando há rede. Nenhum LLM embarcado — a Mente Colmeia coordena, as castas ag
 """
 from __future__ import annotations
 
+from backend.monitoring.silent_failures import swallow
+
 from typing import Any, Awaitable, Callable, Optional
 
 from backend.cognition.critic import get_goal_guard
@@ -237,8 +239,8 @@ async def run_mission(goal: str, memory: Any, *, bus: Any = None,
         from backend.evaluation.ab_experiment import get_ab_registry
         get_ab_registry().observe_mission(
             goal, not failed, max(0.0, mission.updated_at - mission.created_at))
-    except Exception:  # noqa: BLE001 - o experimento nunca derruba a missão
-        pass
+    except Exception as exc:  # noqa: BLE001 - o experimento nunca derruba a missão
+        swallow("mission_runner._ab", exc)
     mission.checkpoint(graph, note="missão encerrada")
     get_mission_store().save(mission)   # persiste o estado final (9.13)
 

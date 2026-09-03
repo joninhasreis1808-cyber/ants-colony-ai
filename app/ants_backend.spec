@@ -1,11 +1,22 @@
 # PyInstaller spec — binário standalone do backend do Ant's (sidecar do app).
-# Uso: pyinstaller app/ants_backend.spec  (rode a partir da raiz do repo)
+# Uso: pyinstaller app/ants_backend.spec  (de qualquer diretório)
 # Gera dist/ants_backend  — sobe a API em 127.0.0.1:8765 e serve a interface.
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_submodules
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, ".."))
+# `collect_submodules("backend")` roda AQUI, antes do Analysis(pathex=[ROOT]),
+# e precisa que `backend` já seja importável neste ponto. O executável
+# `pyinstaller` é um script — seu sys.path[0] é o diretório DELE
+# (/usr/local/bin, tipicamente), nunca o cwd de quem o chamou, ao contrário
+# de `python3 -c`. Sem esta linha, a coleta abaixo silenciosamente devolve
+# quase nada (achado ao empacotar: 15M em vez de ~111M, sidecar quebrado com
+# "ModuleNotFoundError: No module named 'backend.api'" — nenhum erro no
+# build, só um binário pequeno e mudo).
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 
 # A interface web (PWA) precisa viajar dentro do binário.
 datas = [(os.path.join(ROOT, "web"), "web")]

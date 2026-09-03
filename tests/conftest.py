@@ -76,6 +76,8 @@ def reset_learner():
             get_command_guard()  # garante singleton limpo
             import backend.action.action_flow as _af
             _af._PENDING.clear()
+            from backend.action.verify_cycle import reset_verify_cycle
+            reset_verify_cycle()  # isolamento: contador de falhas por missão
         except Exception:  # noqa: BLE001
             pass
 

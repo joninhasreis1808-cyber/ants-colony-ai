@@ -12,13 +12,12 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from backend.cognitive.meta_supervisor import MetaSupervisor
-from backend.hivemind.colony_state import ColonyStateMachine
+from backend.hivemind.colony_state import status_now
 from backend.hivemind.homeostasis import Homeostasis
 from backend.monitoring.observability import Observability
 
 router = APIRouter(prefix="/colony", tags=["evolution"])
 
-STATE = ColonyStateMachine()
 HOMEO = Homeostasis()
 META = MetaSupervisor()
 OBS = Observability()
@@ -57,8 +56,9 @@ class AutonomyIn(BaseModel):
 
 @router.get("/state")
 async def colony_state() -> dict[str, Any]:
-    """Estado atual da colônia e teto de bots."""
-    return STATE.status()
+    """Estado atual da colônia e teto de bots — refletindo atividade real
+    do barramento de eventos (fund. 06), não uma instância nunca tocada."""
+    return status_now()
 
 
 @router.post("/homeostasis")

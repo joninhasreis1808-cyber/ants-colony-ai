@@ -38,6 +38,15 @@ class EventBus:
 
     async def publish(self, task_id: str, payload: dict[str, Any]) -> None:
         """Entrega um evento a todos os assinantes da tarefa."""
+        # Item 6 do Repertório da Colmeia: todo evento real que passa por
+        # aqui É a colônia fazendo algo — o mesmo sinal que a Câmera ao Vivo
+        # já usa agora também acorda o estado da colônia, honestamente.
+        try:
+            from backend.hivemind.colony_state import mark_activity
+            mark_activity()
+        except Exception as exc:  # noqa: BLE001 - nunca derruba a entrega do evento
+            from backend.monitoring.silent_failures import swallow
+            swallow("event_bus.publish.mark_activity", exc)
         async with self._lock:
             queues = list(self._subs.get(task_id, ()))
         for queue in queues:

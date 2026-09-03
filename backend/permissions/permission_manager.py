@@ -48,6 +48,11 @@ class PermissionManager:
         """Nível atual do usuário (BASIC por padrão)."""
         return int(self._levels.get(user, Level.BASIC))
 
+    def reset(self) -> None:
+        """Zera níveis e revogações — isolamento entre testes/execuções."""
+        self._levels.clear()
+        self._revoked.clear()
+
     def check(self, user: str, action: str, resource: str = "") -> bool:
         """Verifica se o usuário pode executar a ação (sem confirmação).
 

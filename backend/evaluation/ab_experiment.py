@@ -227,6 +227,10 @@ class ABRegistry:
     def list(self) -> list[dict[str, Any]]:
         return [e.to_dict() for e in self._items.values()]
 
+    def reset(self) -> None:
+        """Zera todos os experimentos — isolamento entre testes/execuções."""
+        self._items.clear()
+
     # -- os dois pontos de contato com o organismo --------------------------
     def bias_for(self, goal: str) -> dict[str, float]:
         """Viés experimental por rota para ESTE objetivo. Sem experimento → {}.

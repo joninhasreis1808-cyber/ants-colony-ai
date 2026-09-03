@@ -81,6 +81,11 @@ def test_2a_guarda_path_guard_barra_ate_o_dono(monkeypatch, tmp_path):
     monkeypatch.setenv("ANTS_PUBLIC", "1")
     monkeypatch.setenv("ANTS_API_TOKEN", "segredo-do-jonas")
     h = {"Authorization": "Bearer segredo-do-jonas"}
+    # Nível de permissão do "jonas" é próprio deste teste, não herdado de outro
+    # (PERMISSIONS é zerado entre testes) — sem isto, file.create (STANDARD)
+    # nunca passaria para um usuário que começa em BASIC.
+    assert client.post("/permissions/grant", headers=h,
+                       json={"user_id": "jonas", "level": 5}).status_code == 200
     alvo_proibido = "backend/api/PWNED.py"
     r = client.post("/action/file", headers=h, json={
         "user_id": "jonas", "op": "create", "path": alvo_proibido, "content": "x"})

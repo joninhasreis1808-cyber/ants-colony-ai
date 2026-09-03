@@ -15,6 +15,9 @@ class SearchProvider(ABC):
     """Interface comum de um provedor de busca."""
 
     name: str = "base"
+    # Fonte sem chave (grátis, sempre elegível) por padrão — só os providers
+    # que exigem uma API key paga (Tavily, Brave) declaram True (fund. 04).
+    requires_key: bool = False
 
     @property
     @abstractmethod

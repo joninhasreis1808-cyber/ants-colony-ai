@@ -92,6 +92,17 @@ def reset_learner():
         except Exception:  # noqa: BLE001
             pass
 
+    def _reset_calibrator():
+        # get_calibrator() (B3) acumula (confiança prevista, acertou?) de TODA
+        # missão real da suíte — um teste que devolve uma resposta exata com
+        # confiança 1.0 podia sair com confiança corrigida para baixo por
+        # missões de outros arquivos, sem relação nenhuma com este cálculo.
+        try:
+            from backend.evaluation.confidence_calibration import get_calibrator
+            get_calibrator().reset()
+        except Exception:  # noqa: BLE001
+            pass
+
     def _reset_permissions():
         # backend.api.deps.PERMISSIONS é outro singleton de processo, com nível
         # por usuário nunca zerado — um teste que concede nível 5 a "jonas"
@@ -154,6 +165,7 @@ def reset_learner():
     get_answer_cache().clear()   # isolamento: cache de respostas aprendidas
     _reset_device()              # isolamento: escopos/paths/pânico/auditoria
     _reset_ab_experiments()      # isolamento: experimentos A/B entre testes
+    _reset_calibrator()          # isolamento: calibração de confiança (B3)
     _reset_experience()          # isolamento: memória de estratégia/erro (B3)
     _reset_permissions()         # isolamento: níveis/revogações por usuário
     _reset_observer()            # isolamento: achados do Observador
@@ -163,6 +175,7 @@ def reset_learner():
     get_answer_cache().clear()
     _reset_device()
     _reset_ab_experiments()
+    _reset_calibrator()
     _reset_experience()
     _reset_permissions()
     _reset_observer()

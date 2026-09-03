@@ -48,6 +48,13 @@ class ConfidenceCalibrator:
         if correct:
             self._hits[b] += w
 
+    def reset(self) -> None:
+        """Zera toda a calibração acumulada — isolamento entre testes/execuções."""
+        self._count = [0.0] * self._bins
+        self._hits = [0.0] * self._bins
+        self._sum_pred = [0.0] * self._bins
+        self._raw = [0] * self._bins
+
     @property
     def total(self) -> int:
         """Missões observadas (contagem bruta, não a massa ponderada)."""

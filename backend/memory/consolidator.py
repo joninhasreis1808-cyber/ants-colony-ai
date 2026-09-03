@@ -27,11 +27,16 @@ class MemoryConsolidator:
             mem.strength = min(mem.strength + boost, 1.0)
             mem.access_count += 1
             mem.last_access = time.time()
+            # muta a Memory já gravada sem passar por store() de novo — sem
+            # isto, o reforço seria esquecido no próximo reinício mesmo com
+            # persistência configurada (mesma classe de defeito do #92).
+            self._store.persist_now()
 
     def weaken(self, memory_id: str, decay: float = 0.01) -> None:
         """Enfraquece uma memória. Mínimo 0.0."""
         if mem := self._store.get(memory_id):
             mem.strength = max(mem.strength - decay, 0.0)
+            self._store.persist_now()
 
     def get_memory_strength(self, memory_id: str) -> float:
         """Força atual de uma memória (0.0 se inexistente)."""
@@ -72,6 +77,8 @@ class MemoryConsolidator:
             if mem.strength < 0.05:
                 self._store.remove(mem.id)
                 removed += 1
+        if reinforced or weakened:
+            self._store.persist_now()   # removidas já persistiram sozinhas
         report.counts = {
             "reinforced": reinforced, "weakened": weakened, "removed": removed,
         }

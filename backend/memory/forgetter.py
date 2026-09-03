@@ -36,6 +36,9 @@ class AdaptiveForgetter:
             mem.strength = max(
                 mem.strength - _DECAY.get(mem.mem_type, 0.01), 0.0
             )
+        # muta Memory já gravadas sem passar por store() de novo — persiste
+        # uma vez só no fim, não por memória (evitaria centenas de gravações).
+        self._store.persist_now()
         report.counts = {"decayed": self._store.count()}
         return report
 

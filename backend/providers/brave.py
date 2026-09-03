@@ -19,6 +19,7 @@ class BraveProvider(SearchProvider):
     """Busca via API Brave Search."""
 
     name = "brave"
+    requires_key = True
 
     def __init__(
         self, api_key: Optional[str] = None, timeout: float = 15.0

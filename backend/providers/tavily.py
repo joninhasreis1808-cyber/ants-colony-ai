@@ -20,6 +20,7 @@ class TavilyProvider(SearchProvider):
     """Busca via API Tavily."""
 
     name = "tavily"
+    requires_key = True
 
     def __init__(
         self, api_key: Optional[str] = None, timeout: float = 15.0

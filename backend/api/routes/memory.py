@@ -7,13 +7,15 @@ from typing import Any
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.memory.long_term_memory import LongTermMemory
+from backend.memory.ltm_store import get_ltm
 from backend.memory.schemas import MemoryInput
 
 router = APIRouter(prefix="/memory", tags=["memory"])
 
-# Instância de processo do sistema de memória.
-LTM = LongTermMemory()
+# Instância de processo do sistema de memória — durável (fundamento 02): o
+# que a colônia lembra sobrevive a reinício/hibernação, recarregado do mesmo
+# ants.db que DNA, confiança e feedback já usam.
+LTM = get_ltm()
 
 # Automação do sono (9.4 · T-B): o ciclo de sono roda SOZINHO, disparado pela
 # atividade da colônia (ao fim de uma missão), com um guarda de intervalo mínimo

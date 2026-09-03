@@ -3,6 +3,11 @@
 Une atenção, codificação, armazenamento, consolidação, recuperação,
 esquecimento e sono numa API única e coesa. É o ponto de entrada usado
 pela colmeia: `remember()` para gravar e `recall()` para lembrar.
+
+`persist_path` (fundamento 02 do Repertório da Colmeia): quando dado, a LTM
+sobrevive a reinícios pelo mesmo KVStore/SQLite que DNA, confiança e feedback
+já usam — não um serviço pago novo. Sem ele, continua 100% em RAM, como
+sempre foi.
 """
 from __future__ import annotations
 
@@ -12,6 +17,7 @@ from backend.memory.distributed_store import DistributedStore
 from backend.memory.embedder import Embedder
 from backend.memory.encoder import NeuralEncoder
 from backend.memory.forgetter import AdaptiveForgetter
+from backend.memory.kv_store import KVStore
 from backend.memory.reports import RetrievalResult
 from backend.memory.retriever import MemoryRetriever
 from backend.memory.schemas import Memory, MemoryInput
@@ -22,11 +28,13 @@ class LongTermMemory:
     """Sistema de memória bio-inspirado, pronto para a colmeia."""
 
     def __init__(
-        self, backend: str = "memory", embedder: Embedder | None = None
+        self, backend: str = "memory", embedder: Embedder | None = None,
+        persist_path: str | None = None,
     ) -> None:
         self.attention = AttentionFilter()
         self.encoder = NeuralEncoder(embedder)
-        self.store = DistributedStore(backend)
+        persist = KVStore(persist_path) if persist_path else None
+        self.store = DistributedStore(backend, persist=persist)
         self.consolidator = MemoryConsolidator(self.store)
         self.retriever = MemoryRetriever(
             self.store, self.encoder, self.consolidator
@@ -70,8 +78,18 @@ class LongTermMemory:
         return self.sleep.run_sleep_cycle().to_dict()
 
     def _link_back(self, mem_id: str, associations: list[str]) -> None:
-        """Torna as associações bidirecionais no armazenamento."""
+        """Torna as associações bidirecionais no armazenamento.
+
+        Muta uma `Memory` já gravada sem passar por `store()` de novo — por
+        isso persiste explicitamente aqui: sem isto, o vínculo de volta
+        ficaria só em RAM e sumiria no próximo reinício, mesmo com
+        `persist_path` configurado.
+        """
+        mudou = False
         for assoc_id in associations:
             if assoc := self.store.get(assoc_id):
                 if mem_id not in assoc.associations:
                     assoc.associations.append(mem_id)
+                    mudou = True
+        if mudou:
+            self.store.persist_now()

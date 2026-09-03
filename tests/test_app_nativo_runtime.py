@@ -33,6 +33,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 RAIZ = Path(__file__).resolve().parents[1]
 
 
@@ -120,6 +122,19 @@ def test_o_spec_garante_a_raiz_no_sys_path_antes_de_coletar_backend():
     )
 
 
+def _pyinstaller_disponivel() -> bool:
+    try:
+        import PyInstaller  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.skipif(
+    not _pyinstaller_disponivel(),
+    reason="PyInstaller é dependência de empacotar o sidecar, não de rodar a "
+           "colônia — fica de fora da imagem de nuvem enxuta de propósito",
+)
 def test_a_colocacao_do_root_no_sys_path_realmente_faz_backend_ser_coletavel():
     """Prova executável, não só textual: reproduz a condição real do bug —
     processo iniciado numa pasta que NÃO é a raiz do repo, com o cwd fora do

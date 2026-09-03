@@ -15,6 +15,27 @@ Aqui as rotas passam a se conferir. Duas coisas mudam:
   • **Divergência** é EXPOSTA e derruba a confiança. A colônia nunca escolhe
     calada entre duas versões: ela mostra as duas e diz que discordam.
 
+Grafo, não leque (item 3 do Repertório da Colmeia)
+---------------------------------------------------
+A primeira versão só comparava cada rota contra UMA "principal" (a primeira da
+lista) — um leque, não um grafo. Com 3+ rotas isso deixa pontos cegos: um
+conflito numérico entre a SEGUNDA e a TERCEIRA rota nunca era visto se nenhuma
+das duas fosse a principal; e duas rotas que só concordam indiretamente (A com
+B, B com C, mas A e C nunca comparadas por texto) nunca contavam como
+confirmação de A.
+
+Agora TODO par de rotas é confrontado — arestas de "concorda" ou "diverge" — e:
+
+  • **conflitos** relatados são TODOS os pares que divergem, não só os que
+    envolvem a principal;
+  • **concordância** conta o componente conectado (via arestas "concorda",
+    transitivamente) que inclui a principal — uma confirmação indireta através
+    de uma terceira rota agora conta, porque de fato é evidência independente
+    concordando, mesmo sem comparação direta de texto.
+
+Nada disto troca os detectores: continuam os dois mesmos sinais declarados
+abaixo (número e léxico), determinísticos, sem modelo de linguagem.
+
 O que este detector realmente detecta
 -------------------------------------
 Com todas as letras, porque isto é um sinal declarado e não mágica:
@@ -76,6 +97,7 @@ class CrossCheck:
     claims: list[Claim] = field(default_factory=list)
     agreeing: list[str] = field(default_factory=list)
     conflicts: list[dict[str, Any]] = field(default_factory=list)
+    edges: list[dict[str, Any]] = field(default_factory=list)
     adjustment: float = 0.0
     undetectable: str = ("contradição semântica não é detectada sem modelo de "
                          "linguagem - ausência de conflito aqui não é prova de "
@@ -85,6 +107,7 @@ class CrossCheck:
         return {"verdict": self.verdict, "reason": self.reason,
                 "claims": [c.to_dict() for c in self.claims],
                 "agreeing": list(self.agreeing), "conflicts": list(self.conflicts),
+                "edges": list(self.edges),
                 "adjustment": self.adjustment, "undetectable": self.undetectable}
 
 
@@ -133,9 +156,22 @@ def numeric_conflict(a: str, b: str) -> Optional[tuple[list[float], list[float]]
     return sorted(set(na)), sorted(set(nb))
 
 
+def _reachable(start: str, adj: dict[str, set[str]]) -> set[str]:
+    """Componente conectado a partir de `start` (BFS), sem incluir `start`."""
+    seen: set[str] = set()
+    fila = list(adj.get(start, ()))
+    while fila:
+        atual = fila.pop()
+        if atual in seen:
+            continue
+        seen.add(atual)
+        fila.extend(v for v in adj.get(atual, ()) if v not in seen and v != start)
+    return seen
+
+
 def cross_check(claims: list[Claim], base_confidence: Optional[float] = None
                 ) -> CrossCheck:
-    """Confronta o que cada rota independente afirmou."""
+    """Confronta o que cada rota independente afirmou — grafo completo, não leque."""
     validos = [c for c in claims
                if c.source in INDEPENDENT and (c.text or "").strip()]
     # Uma rota, uma voz: a mesma testemunha não se confirma.
@@ -154,17 +190,24 @@ def cross_check(claims: list[Claim], base_confidence: Optional[float] = None
                     f"opinião para conferir")
         return r
 
-    principal = unicos[0]
-    for outro in unicos[1:]:
-        conflito = numeric_conflict(principal.text, outro.text)
-        if conflito is not None:
-            r.conflicts.append({"a": principal.source, "b": outro.source,
-                                "valores_a": conflito[0], "valores_b": conflito[1],
-                                "tipo": "numérico"})
-            continue
-        if lexical_overlap(principal.text, outro.text) >= _LEXICAL_FLOOR:
-            r.agreeing.append(outro.source)
+    # Toda aresta do grafo, não só a partir da principal — um conflito entre
+    # duas rotas que não sejam a primeira não pode ficar invisível.
+    agree_adj: dict[str, set[str]] = {c.source: set() for c in unicos}
+    for i, a in enumerate(unicos):
+        for b in unicos[i + 1:]:
+            conflito = numeric_conflict(a.text, b.text)
+            if conflito is not None:
+                r.conflicts.append({"a": a.source, "b": b.source,
+                                    "valores_a": conflito[0], "valores_b": conflito[1],
+                                    "tipo": "numérico"})
+                r.edges.append({"a": a.source, "b": b.source, "relacao": "diverge"})
+                continue
+            if lexical_overlap(a.text, b.text) >= _LEXICAL_FLOOR:
+                agree_adj[a.source].add(b.source)
+                agree_adj[b.source].add(a.source)
+                r.edges.append({"a": a.source, "b": b.source, "relacao": "concorda"})
 
+    principal = unicos[0]
     if r.conflicts:
         r.verdict = "divergente"
         c = r.conflicts[0]
@@ -172,13 +215,18 @@ def cross_check(claims: list[Claim], base_confidence: Optional[float] = None
                     f"{c['valores_b']} - nenhum número em comum. A colônia "
                     f"mostra as duas versões em vez de escolher calada")
         r.adjustment = _conflict_adjustment(base_confidence)
+        # mesmo com conflito em cauda, o grafo não esconde quem concordou.
+        r.agreeing = sorted(_reachable(principal.source, agree_adj))
         return r
-    if r.agreeing:
+
+    componente = _reachable(principal.source, agree_adj)
+    if componente:
         r.verdict = "confirmado"
+        r.agreeing = sorted(componente)
         r.reason = (f"'{principal.source}' foi confirmada por "
-                    f"{len(r.agreeing)} rota(s) independente(s): "
-                    f"{', '.join(r.agreeing)}")
-        r.adjustment = round(min(_MAX_BONUS, _AGREE_BONUS * len(r.agreeing)), 4)
+                    f"{len(componente)} rota(s) independente(s), direta ou "
+                    f"transitivamente: {', '.join(r.agreeing)}")
+        r.adjustment = round(min(_MAX_BONUS, _AGREE_BONUS * len(componente)), 4)
         return r
     r.verdict = "isolado"
     r.reason = ("as rotas responderam sobre assuntos diferentes demais para se "

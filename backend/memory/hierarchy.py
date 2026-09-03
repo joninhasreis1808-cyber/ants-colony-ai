@@ -13,13 +13,19 @@ L6 — sempre dentro de um **orçamento** explícito.
 Este módulo NÃO reescreve nenhum armazém: ele é a taxonomia + a política. Os
 recalls são **injetáveis** (callables), então o planner é testável sem I/O e pode
 ser plugado nos stores reais sem tocá-los. Puro stdlib, determinístico.
+
+A decisão em si — qual passo, qual custo, quando parar — foi extraída para
+`backend/cognition/budget_ladder.py` (fundamento 01 do Repertório da Colmeia):
+o mecanismo não tem nada de memória, e outros domínios (busca, deliberação,
+formação) reaproveitam o mesmo motor em vez de reescrever a lógica. Este
+módulo é a taxonomia L0-L6 por cima dele.
 """
 from __future__ import annotations
 
-from backend.monitoring.silent_failures import swallow
-
 from dataclasses import dataclass
 from typing import Any, Callable, Iterable, Optional
+
+from backend.cognition.budget_ladder import BudgetLadder, Step
 
 
 @dataclass(frozen=True)
@@ -86,7 +92,19 @@ def layers_in_order() -> list[LayerSpec]:
 
 
 class RetrievalPlanner:
-    """Decide QUAL camada consultar, QUANTO e QUANDO PARAR."""
+    """Decide QUAL camada consultar, QUANTO e QUANDO PARAR.
+
+    Uso do `BudgetLadder` (fundamento 01): a decisão em si — qual passo, qual
+    custo, quando parar — não tem nada de memória, e mora lá. Este planner só
+    traduz a taxonomia L0-L6 para a linguagem genérica do motor e de volta.
+    """
+
+    def __init__(self) -> None:
+        camadas = layers_in_order()
+        self._por_chave = {s.key: s for s in camadas}
+        self._escada = BudgetLadder(
+            [Step(s.key, s.level, s.recall_cost, s.priority) for s in camadas]
+        )
 
     def plan(self, complexity: str = "normal",
              budget: float = _DEFAULT_BUDGET,
@@ -95,7 +113,7 @@ class RetrievalPlanner:
 
         Complexidade define até que nível descer; o orçamento corta antes se o
         custo acumulado estourar. Sempre devolve ao menos a primeira camada
-        elegível (a mais barata nunca deve ser pulada).
+        elegível (a mais barata nunca deve ser pulada — garantia do motor).
 
         `available` limita o plano às camadas que REALMENTE têm de onde recuperar.
         Sem isso, o orçamento seria gasto com camadas que `execute` iria pular de
@@ -104,19 +122,8 @@ class RetrievalPlanner:
         parâmetro mantém o comportamento original: planeja a escada inteira.
         """
         max_level = _MAX_LEVEL.get(complexity, _MAX_LEVEL["normal"])
-        disponiveis = set(available) if available is not None else None
-        chosen: list[LayerSpec] = []
-        spent = 0.0
-        for spec in layers_in_order():
-            if spec.level > max_level:
-                continue
-            if disponiveis is not None and spec.key not in disponiveis:
-                continue
-            if chosen and spent + spec.recall_cost > budget:
-                break                      # orçamento estourou → para aqui
-            chosen.append(spec)
-            spent += spec.recall_cost
-        return chosen
+        passos = self._escada.plan(max_level, budget, available=available)
+        return [self._por_chave[p.key] for p in passos]
 
     def execute(self, complexity: str = "normal",
                 budget: float = _DEFAULT_BUDGET,
@@ -128,31 +135,14 @@ class RetrievalPlanner:
         `enough` > 0 interrompe assim que reunir esse tanto de itens (não gasta
         camada cara à toa). Camada sem recaller é simplesmente pulada.
         """
-        recallers = recallers or {}
-        # Só planeja o que tem de onde recuperar: orçamento não se gasta com
-        # camada vazia (senão a escada cara e útil cai fora por causa das vazias).
-        plano = self.plan(complexity, budget, available=recallers.keys() or None)
-        itens: list[Any] = []
-        visitadas: list[str] = []
-        gasto = 0.0
-        parou_por = "plano completo"
-        for spec in plano:
-            fn = recallers.get(spec.key)
-            if fn is None:
-                continue
-            visitadas.append(spec.key)
-            gasto += spec.recall_cost
-            try:
-                itens.extend(list(fn()) or [])
-            except Exception as exc:  # noqa: BLE001 - recall falho não derruba a missão
-                swallow("hierarchy.execute", exc)
-            if enough and len(itens) >= enough:
-                parou_por = "evidência suficiente"
-                break
+        max_level = _MAX_LEVEL.get(complexity, _MAX_LEVEL["normal"])
+        saida = self._escada.execute(
+            recallers or {}, onde="hierarchy.execute",
+            max_level=max_level, budget=budget, enough=enough)
         return {"complexity": complexity, "budget": budget,
-                "planned": [s.key for s in plano], "visited": visitadas,
-                "spent": round(gasto, 4), "items": itens,
-                "stopped_by": parou_por}
+                "planned": saida["planned"], "visited": saida["visited"],
+                "spent": saida["spent"], "items": saida["items"],
+                "stopped_by": saida["stopped_by"]}
 
 
 _INSTANCE: Optional[RetrievalPlanner] = None

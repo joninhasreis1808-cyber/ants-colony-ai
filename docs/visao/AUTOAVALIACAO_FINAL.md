@@ -3,6 +3,7 @@
 > **Base medida:** `main` commit `bb77679` · **1171 passed, 5 skipped**
 > **Atualizado em:** `365abc7` · item 4 resolvido · `6b9e0c3` · item 2 resolvido
 > **Suite atual:** **1183 passed, 5 skipped**
+> **Corrigido:** a base da jornada era **879**, não 887 (ver abaixo).
 > **Escopo:** o fechamento do roteiro. As FASES A e B têm autoavaliação própria
 > (`AUTOAVALIACAO_FASE_A.md`, `AUTOAVALIACAO_FASE_B.md`).
 > Tudo abaixo foi **medido neste commit**, não lembrado.
@@ -16,6 +17,42 @@ v9.25 sumiu com as reversões de contêiner — foram **quatro** ao longo da jor
 As perguntas são **reconstruídas** das 6 regras do `PROTOCOLO_COWORK` (literais
 no repositório) e dos 9 invariantes. Se o dono reenviar o roteiro, refaço as três
 autoavaliações contra o texto original.
+
+---
+
+## Correção: a base da jornada era 879, não 887
+
+Este documento afirmava `887 → 1171`. O 887 nunca foi medido — foi lembrado, e
+estava errado por 8. Rodei o pytest nos dois commits que poderiam ser a base:
+
+    8939e32  (#60, véspera da jornada)  →  879 passed, 5 skipped
+    996c68b  (#61, FASE 0)              →  879 passed, 5 skipped
+
+E a auditoria da própria FASE 0 já dizia 879, em três lugares do
+`CURRENT_STATE.md`. Eram três testemunhas contra o número que eu escrevi, e
+nenhuma delas foi consultada quando escrevi.
+
+Aproveitei para conferir **todos** os outros marcos citados nas três
+autoavaliações, em vez de corrigir só o que me incomodou:
+
+| Commit | Marco | Afirmado | Medido |
+|---|---|---|---|
+| `8939e32` | véspera da jornada | 887 | **879** ❌ |
+| `72a6341` | fim do A7 | 962 | **962** ✅ |
+| `c70d7d3` | órfãs ligadas | 978 | **978** ✅ |
+| `5c8420f` | fim do B6 | 1084 | **1084** ✅ |
+| `bb77679` | FASE F | 1171 | **1171** ✅ |
+
+Só o número que eu não tinha medido estava errado. O crescimento real da
+jornada é **879 → 1183**, e a regra 3 continua cumprida: nenhum teste foi
+enfraquecido para caber.
+
+**Segundo número lembrado, encontrado na mesma tabela:** este documento dizia
+"24 PRs", em dois lugares. O `git log` diz **25** no commit que ele descreve
+(`bb77679`, PRs #61–#85) e **30** na jornada inteira até `e18397b`. Corrigido
+para 30, que é o escopo que o documento passou a cobrir depois das duas
+atualizações. A lição é a mesma das duas vezes: **um número que eu não medi é
+um palpite com cara de fato.**
 
 ---
 
@@ -43,8 +80,8 @@ peças não eram chamadas por nenhum fluxo. Desde então a checagem vem primeiro
 |---|---|---|---|
 | 1 | Diagnóstico antes de correção | **cumprida** | A FASE D só existiu na forma que tem porque medi antes: `prefers-reduced-motion` **já funcionava** (15 e 120 → 0 e 0), então não inventei um defeito para consertar. A FASE C3 mediu contraste e teclado com ferramenta antes de tocar em CSS. |
 | 2 | Prova executável | **cumprida** | Renderização em Chromium real (C1, C2, D), axe-core em 9 cenas (C3), validação com as deps exatas de produção. |
-| 3 | Rede de segurança sagrada | **cumprida** | 887 → 1171. **Nenhum teste enfraquecido para caber** — quando um teste antigo colidiu com minha mudança (B3), adaptei o meu código. |
-| 4 | Um commit por tarefa | **cumprida** | 24 PRs, um por tarefa, todos com CI verde. |
+| 3 | Rede de segurança sagrada | **cumprida** | 879 → 1171. **Nenhum teste enfraquecido para caber** — quando um teste antigo colidiu com minha mudança (B3), adaptei o meu código. |
+| 4 | Um commit por tarefa | **cumprida** | **30** PRs até `e18397b`, um por tarefa, todos com CI verde (contados no `git log`, não lembrados). |
 | 5 | Declarar o não verificado | **cumprida** | Seção final, e em cada PR. |
 | 6 | Interface nunca inventa | **cumprida** | Estado vazio que explica o que falta acontecer (C2); movimento que nunca pisca sem ter mudado (D); "não" com remédio executável (E); falha engolida que aparece (F). |
 
@@ -60,7 +97,7 @@ peças não eram chamadas por nenhum fluxo. Desde então a checagem vem primeiro
 | I6 | Segurança do corpo | **preservado** | `git diff` em `backend/local_agent/` e `app/`: **vazio**. |
 | I7 | Autoevolução só em DADOS | **preservado** | Nenhum `exec`/`eval`/escrita de `.py`. |
 | I8 | Interface nunca inventa dado | **preservado** | Ver regra 6. |
-| I9 | Rito de engenharia | **cumprido** | Nos 24. |
+| I9 | Rito de engenharia | **cumprido** | Nos 30. |
 
 ---
 

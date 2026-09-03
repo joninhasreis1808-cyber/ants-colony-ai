@@ -3,6 +3,8 @@
 > **Base medida:** `main` commit `72a6341` · **962 passed, 5 skipped**
 > **Atualizado em:** `c70d7d3` · **978 passed, 5 skipped** (PR #70, dívida paga)
 > **Escopo:** A1–A7, sete tarefas, sete PRs (#62, #64, #63, #66, #65, #67, #68).
+> **Corrigido:** a base da jornada era **879**, não 887 — medida, não lembrada
+> (ver `AUTOAVALIACAO_FINAL.md`). Os marcos 962 e 978 foram reconferidos e batem.
 > Tudo abaixo foi **medido neste commit**, não lembrado.
 
 ---
@@ -66,7 +68,7 @@ defeito que só o uso revela.**
 |---|---|---|---|
 | 1 | Diagnóstico antes de correção | **cumprida** | Cada incremento abriu lendo o código existente. O A7 começou constatando que `QueenCouncil.deliberate()` recebia votos prontos; o A6, que `observe_mission` já se declarava *"não um A/B por rota"*. |
 | 2 | Prova executável, não descrição | **cumprida** | 83 testes novos na fase. A prova do A4 roda a Cartógrafa real: sem experimento a colônia escolhe `computation` (0.559 vs 0.320); com o braço no desafiante, a missão roda em `memory`. |
-| 3 | A rede de segurança é sagrada | **cumprida** | 887 → 962, verde antes e depois de cada PR, em ordem fixa e aleatória. Nenhum teste enfraquecido para caber. |
+| 3 | A rede de segurança é sagrada | **cumprida** | 879 → 962, verde antes e depois de cada PR, em ordem fixa e aleatória. Nenhum teste enfraquecido para caber. |
 | 4 | Um commit por tarefa | **cumprida** | 7 tarefas, 7 PRs, 7 squash-merges. Nenhum commit-monstro. |
 | 5 | Declarar o que NÃO foi verificado | **cumprida** | Seção final deste documento, e em cada PR. |
 | 6 | Interface nunca inventa texto | **cumprida** | Os 5 endpoints novos devolvem estado vazio + `note` explicando. `rate: None` (não `0`) para braço sem tentativa; `success_rate` devolve `None` para casta sem histórico. |

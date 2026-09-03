@@ -78,6 +78,8 @@ def reset_learner():
             _af._PENDING.clear()
             from backend.action.verify_cycle import reset_verify_cycle
             reset_verify_cycle()  # isolamento: contador de falhas por missão
+            from backend.hivemind.colony_state import reset_colony_state_machine
+            reset_colony_state_machine()  # isolamento: última atividade real
         except Exception:  # noqa: BLE001
             pass
 

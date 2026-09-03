@@ -113,3 +113,21 @@ class VerifyCycle:
                                       extra={"error": reason})
         except Exception as exc:  # noqa: BLE001 - best-effort
             swallow("verify_cycle._remember_error", exc)
+
+
+_INSTANCE: VerifyCycle | None = None
+
+
+def get_verify_cycle() -> VerifyCycle:
+    """Singleton de processo do ciclo — o contador de falhas por missão só
+    faz sentido se TODA ação real passar pelo mesmo ciclo."""
+    global _INSTANCE
+    if _INSTANCE is None:
+        _INSTANCE = VerifyCycle()
+    return _INSTANCE
+
+
+def reset_verify_cycle() -> None:
+    """Zera o singleton — usado por testes para isolamento."""
+    global _INSTANCE
+    _INSTANCE = None

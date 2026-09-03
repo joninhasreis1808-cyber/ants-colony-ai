@@ -33,6 +33,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import pytest
+
 RAIZ = Path(__file__).resolve().parents[1]
 
 
@@ -97,6 +99,70 @@ def test_o_spec_do_pyinstaller_aponta_para_o_entrypoint_do_sidecar():
     """Se o spec mudar de entrada, a marca nativa deixaria de ser aplicada."""
     spec = (RAIZ / "app/ants_backend.spec").read_text(encoding="utf-8")
     assert '"backend", "api", "sidecar.py"' in spec
+
+
+def test_o_spec_garante_a_raiz_no_sys_path_antes_de_coletar_backend():
+    """Achado ao empacotar de verdade (preparação do app Tauri): o executável
+    `pyinstaller` é um script — seu `sys.path[0]` é o diretório DELE, nunca o
+    cwd de quem o chamou. Sem inserir `ROOT` no `sys.path` ANTES de
+    `collect_submodules("backend")`, a coleta falha em silêncio: nenhum erro
+    no build, só um binário pequeno (15M em vez de ~111M) e mudo em runtime
+    (`ModuleNotFoundError: No module named 'backend.api'`). A ordem importa:
+    o insert precisa vir antes da coleta, não só existir em algum lugar."""
+    spec = (RAIZ / "app/ants_backend.spec").read_text(encoding="utf-8")
+    pos_insert = spec.find("sys.path.insert(0, ROOT)")
+    # rfind: a chamada REAL é a última ocorrência — a primeira é a menção
+    # entre aspas neste próprio comentário, algumas linhas acima do código.
+    pos_coleta = spec.rfind('collect_submodules("backend")')
+    assert pos_insert != -1, "spec voltou a coletar 'backend' sem garantir a raiz no sys.path"
+    assert pos_coleta != -1
+    assert pos_insert < pos_coleta, (
+        "o insert existe mas vem DEPOIS da coleta — silenciosamente inútil, "
+        "o mesmo defeito com outra cara"
+    )
+
+
+def _pyinstaller_disponivel() -> bool:
+    try:
+        import PyInstaller  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.skipif(
+    not _pyinstaller_disponivel(),
+    reason="PyInstaller é dependência de empacotar o sidecar, não de rodar a "
+           "colônia — fica de fora da imagem de nuvem enxuta de propósito",
+)
+def test_a_colocacao_do_root_no_sys_path_realmente_faz_backend_ser_coletavel():
+    """Prova executável, não só textual: reproduz a condição real do bug —
+    processo iniciado numa pasta que NÃO é a raiz do repo, com o cwd fora do
+    `sys.path` (exatamente como o executável `pyinstaller` roda) — e confirma
+    que o mecanismo do spec (inserir ROOT antes de coletar) resolve."""
+    import os
+    import subprocess
+    import sys as _sys
+
+    script = f"""
+import sys
+assert {str(RAIZ)!r} not in sys.path, "o teste falhou em isolar o cwd do sys.path"
+sys.path.insert(0, {str(RAIZ)!r})   # o mecanismo do spec, reproduzido aqui
+from PyInstaller.utils.hooks import collect_submodules
+mods = collect_submodules("backend")
+assert "backend.api" in mods, mods[:5]
+assert len(mods) > 100, f"coleta pobre demais: {{len(mods)}}"
+print("ok", len(mods))
+"""
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    r = subprocess.run(
+        [_sys.executable, "-c", script],
+        cwd="/tmp", env=env,
+        capture_output=True, text=True, timeout=60,
+    )
+    assert r.returncode == 0, f"stdout={r.stdout} stderr={r.stderr}"
+    assert "ok" in r.stdout
 
 
 def test_o_app_declara_o_sidecar_como_binario_externo():

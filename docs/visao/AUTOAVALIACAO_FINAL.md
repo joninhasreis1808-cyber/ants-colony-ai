@@ -4,6 +4,8 @@
 > **Atualizado em:** `365abc7` · item 4 resolvido · `6b9e0c3` · item 2 resolvido
 > **Suite atual:** **1183 passed, 5 skipped**
 > **Corrigido:** a base da jornada era **879**, não 887 (ver abaixo).
+> **Achado após o fechamento (`4cdd5ba`):** oitavo defeito pré-existente —
+> A3 e B1 nunca rodavam na rota real. Ver seção abaixo.
 > **Escopo:** o fechamento do roteiro. As FASES A e B têm autoavaliação própria
 > (`AUTOAVALIACAO_FASE_A.md`, `AUTOAVALIACAO_FASE_B.md`).
 > Tudo abaixo foi **medido neste commit**, não lembrado.
@@ -103,7 +105,7 @@ peças não eram chamadas por nenhum fluxo. Desde então a checagem vem primeiro
 
 ## O resultado que eu destacaria acima do número de testes
 
-**Sete defeitos pré-existentes**, nenhum introduzido nesta jornada, nenhum
+**Oito defeitos pré-existentes**, nenhum introduzido nesta jornada, nenhum
 visível em revisão de código. Todos apareceram pelo mesmo motivo: **uma peça saiu
 da prateleira e entrou em uso.**
 
@@ -114,19 +116,36 @@ da prateleira e entrou em uso.**
 5. O orçamento do A3 **descartava a única camada com memória real**
 6. O token `--dim` **reprovava em contraste em todo fundo, nos dois temas**
 7. O rótulo epistêmico **sumia** nas respostas de cache e pesquisa profunda
+8. **A3 e B1 nunca rodavam na rota real** — `/hive/task` construía a colmeia
+   sem `ltm=`, então `self.ltm` era `None` em toda missão de produção desde que
+   as duas peças foram escritas. Consequência maior que A3/B1 sozinhas: a
+   colônia **nunca gravou um desfecho de missão** na memória de longo prazo em
+   produção — A6 (sono automático) sempre operou sobre um armazém vazio.
 
-O sétimo só apareceu na validação ponta a ponta. Meus próprios testes não o
-pegaram porque verificavam backend e front **separadamente** — nenhum testava o
-transporte no meio.
+O sétimo e o oitavo só apareceram fora do código isolado: o sétimo na validação
+ponta a ponta, o oitavo numa auditoria que rodou missões pela ROTA HTTP real em
+vez de `build_hive()` chamado à mão — exatamente como todo teste de A3/B1, e a
+própria checagem de órfãs desta FASE, já tinham feito. "Ligado a um fluxo" e
+"o fluxo real recebe o objeto de que a peça precisa" não são a mesma prova.
+Corrigido em `4cdd5ba`, com prova pela rota HTTP real (não só unitária) e
+travado por teste: `tests/test_ltm_wiring_producao.py`.
 
 ---
 
 ## O que NÃO foi verificado
 
-1. **O serviço real no Render.** O proxy de saída deste ambiente nega o CONNECT
-   para o host e as ferramentas do Render MCP desconectaram. Validei dependências,
-   boot, rotas, autenticação em modo público, missões e interface — **não**
-   latência real, hibernação do free tier, nem rede de verdade.
+1. **O serviço real no Render — parcialmente melhor, ainda não fechado.** O
+   proxy de saída deste ambiente continua negando o CONNECT direto ao host
+   (confirmado de novo agora: `curl` ao domínio público devolve 403 do
+   gateway). Mas as ferramentas do Render MCP reconectaram nesta sessão, e por
+   elas confirmei, ao vivo: o serviço `ants-c2ik` está ativo (plano free,
+   região Oregon), o deploy do commit `4cdd5ba` (correção do item 8 acima)
+   ficou **live em 33s**, e os logs mostram `GET /health` respondendo `200`
+   a cada 5s — o serviço está de pé e saudável agora. O que continua sem
+   verificação é a experiência de fora: latência real vista por um usuário,
+   comportamento na hibernação do free tier, e uma missão completa rodada
+   pela URL pública — o MCP dá visão de operador, não a mesma prova que
+   rodar `/hive/task` de fora daria.
 2. ~~**O app Tauri não foi compilado nem executado.**~~ **Resolvido**
    (commit `6b9e0c3`). Este limite era de ambiente, e caiu quando as libs de
    sistema do GTK/WebKit puderam ser instaladas. Feito de verdade: `cargo test`

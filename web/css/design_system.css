@@ -72,8 +72,20 @@ svg{display:block}
   letter-spacing:.1em;text-transform:uppercase;padding:6px 13px;border-radius:20px;
   border:1px solid var(--sc,var(--border2));color:var(--sc,var(--muted));white-space:nowrap}
 .state-ind::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--sc,var(--dim));
-  box-shadow:0 0 8px var(--sc,transparent);animation:blink 2.2s ease-in-out infinite}
+  box-shadow:0 0 8px var(--sc,transparent)}
+/* fund. 06: o pulso só anima quando HÁ evento real recente (classe .is-live,
+   ligada por context_engine.js ao volume real do barramento) — parado por
+   padrão é sinal tanto quanto animado; um ponto que pisca sempre não diz
+   nada. */
+.state-ind.is-live::before{animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{50%{opacity:.35}}
+/* Nível 1 do item 6 (§3): "uma linha: o que foi pedido; uma barra: quanto
+   falta" — sempre no topbar, nunca escondida atrás de uma aba. Some por
+   completo (`hidden`) quando não há missão — não mostra 0% decorativo. */
+.mo-line{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+  font-size:11px;color:var(--muted);min-width:0;max-width:38vw}
+.mo-goal{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mo-pct{color:var(--amber);flex:0 0 auto}
 .spacer{flex:1}
 .mode-switch{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:3px}
 .mode-switch button{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:7px 12px;border-radius:18px;

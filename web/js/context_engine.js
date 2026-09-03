@@ -1,52 +1,65 @@
-/* Ant's — context_engine.js: a interface se reorganiza pelo estado da colônia.
-   Aditivo e puramente visual: não altera a lógica dos JS originais.
-   Aplica um atributo data-colony-state no #app, que o design_system.css usa
-   para mudar discretamente o tema (cores, glow, animações). */
+/* Ant's — context_engine.js (fund. 06 · item 6 do Repertório da Colmeia):
+ * o rótulo "estado da colônia" do topbar (#state-ind), agora REAL.
+ *
+ * O que havia antes: `inferFromGoal()` adivinhava o estado por PALAVRAS-CHAVE
+ * no texto que o usuário digitou ("cri(e|ar)|app|api" → "Construindo", etc.)
+ * e um `setTimeout` fixo de 6s devolvia "Observando" — sem relação nenhuma
+ * com a colônia ter terminado de verdade. Três scripts diferentes (este,
+ * ants_bridge.js, live_panels.js) escreviam no MESMO elemento em corrida,
+ * o que ganhava por último vencia. `/colony/state` (backend real, ligado ao
+ * barramento de eventos no PR #103) já existia e era consultado só quando o
+ * usuário abria a aba "Recursos" — o resto do tempo, o rótulo visível era
+ * pura adivinhação.
+ *
+ * Agora só ESTE módulo escreve em #state-ind/data-colony-state, e sempre a
+ * partir de `/colony/state`. Três estados reais, sem embelezar: a colônia
+ * não sabe dizer SE está "explorando" ou "construindo" — só se está
+ * adormecida, ativa ou intensiva. Rotular mais fino que isso seria inventar.
+ */
 (function () {
   "use strict";
-  const STATES = {
-    dormant:   { label: "Adormecida",  icon: "i-mem" },
-    observing: { label: "Observando",  icon: "i-compass" },
-    exploring: { label: "Explorando",  icon: "i-compass" },
-    building:  { label: "Construindo", icon: "i-factory" },
-    learning:  { label: "Aprendendo",  icon: "i-mem" },
-    defending: { label: "Defendendo",  icon: "i-shield" },
-    executing: { label: "Executando",  icon: "i-zap" },
-    emergency: { label: "Emergência",  icon: "i-shield" },
-  };
-  let current = "dormant";
-  const listeners = [];
 
-  function ensureIndicator() {
-    let el = document.getElementById("colony-state-indicator");
-    if (!el) {
-      el = document.createElement("span");
-      el.id = "colony-state-indicator";
-      el.className = "state-indicator";
-      const conn = document.getElementById("conn");
-      if (conn && conn.parentElement) conn.parentElement.insertBefore(el, conn);
-    }
-    return el;
+  var STATES = {
+    dormant:   { label: "Adormecida" },
+    active:    { label: "Ativa" },
+    intensive: { label: "Intensiva" },
+  };
+
+  var current = null;
+  var listeners = [];
+  var lastEventAt = 0;
+
+  function paint(state) {
+    var meta = STATES[state] || STATES.dormant;
+    current = state;
+    var app = document.getElementById("app");
+    if (app) app.setAttribute("data-colony-state", state);
+    var ind = document.getElementById("state-ind");
+    if (ind) ind.textContent = meta.label;
+    listeners.forEach(function (cb) { try { cb(state); } catch (e) {} });
   }
 
-  function setContext(state) {
-    if (!STATES[state]) return;
-    current = state;
-    const app = document.getElementById("app");
-    if (app) app.setAttribute("data-colony-state", state);
-    const ind = ensureIndicator();
-    ind.textContent = STATES[state].label;
-    // reflete no indicador do design (topbar)
-    const si = document.getElementById("state-ind");
-    if (si) si.textContent = STATES[state].label;
-    // trilhas de feromônio no conteúdo só quando a colônia trabalha
-    const content = document.querySelector(".content");
-    if (content) {
-      content.classList.add("bg-pheromone-trails");
-      content.classList.toggle("colony-working",
-        state !== "dormant" && state !== "observing");
+  /* O pulso do ponto (`.is-live`) é sinal, não enfeite (regra da FASE D,
+   * reafirmada no §3 do item 6): só anima nos ~4s depois de um evento REAL
+   * do barramento (ants:task-tick), nunca continuamente. */
+  function markLive() {
+    lastEventAt = Date.now();
+    var ind = document.getElementById("state-ind");
+    if (ind) ind.classList.add("is-live");
+  }
+  setInterval(function () {
+    if (lastEventAt && Date.now() - lastEventAt > 4000) {
+      var ind = document.getElementById("state-ind");
+      if (ind) ind.classList.remove("is-live");
+      lastEventAt = 0;
     }
-    listeners.forEach((cb) => { try { cb(state); } catch (e) {} });
+  }, 1000);
+
+  function refresh() {
+    if (!window.AntAPI) return;
+    window.AntAPI.get("/colony/state").then(function (d) {
+      if (d && d.state) paint(d.state);
+    }).catch(function () { /* rede fora: mantém o último estado conhecido */ });
   }
 
   function getCurrentContext() { return current; }
@@ -54,31 +67,15 @@
     if (typeof cb === "function") listeners.push(cb);
   }
 
-  // Deriva o estado a partir do texto de um objetivo (heurística leve).
-  function inferFromGoal(goal) {
-    const g = (goal || "").toLowerCase();
-    if (/cri(e|ar)|app|api|constr/.test(g)) return "building";
-    if (/pesquis|busca|encontr|descob/.test(g)) return "exploring";
-    if (/analis|process|document|dados/.test(g)) return "executing";
-    if (/protej|segur|defend|amea/.test(g)) return "defending";
-    if (/aprend|memó|consolid|sono/.test(g)) return "learning";
-    return "observing";
-  }
+  window.AntContext = { getCurrentContext, registerContextChange, refresh, STATES };
 
-  window.AntContext = { setContext, getCurrentContext,
-                        registerContextChange, inferFromGoal, STATES };
-  document.addEventListener("DOMContentLoaded", () => {
-    ensureIndicator();
-    setContext("dormant");
-    // liga-se ao envio de mensagens para refletir o estado automaticamente
-    const send = document.getElementById("chat-send");
-    const input = document.getElementById("chat-input");
-    function react() {
-      if (input && input.value.trim()) setContext(inferFromGoal(input.value));
-      setTimeout(() => setContext("observing"), 6000);
-    }
-    if (send) send.addEventListener("click", react);
-    if (input) input.addEventListener("keydown",
-      (e) => { if (e.key === "Enter") react(); });
+  document.addEventListener("DOMContentLoaded", function () {
+    refresh();
+    setInterval(refresh, 8000);
+  });
+  document.addEventListener("ants:task-tick", function () { markLive(); });
+  document.addEventListener("ants:task-done", function () {
+    markLive();
+    setTimeout(refresh, 300);   // dá tempo do backend registrar o desfecho
   });
 })();

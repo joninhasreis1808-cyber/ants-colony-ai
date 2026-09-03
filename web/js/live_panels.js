@@ -68,7 +68,9 @@
       set("env-reqs", (su.by_type || {}).ACTION_STARTED || 0);
       if (nc) nc.innerHTML = Object.entries(su.by_type || {}).map(([k, n]) => bar(k, Math.min(100, n * 4))).join("") || dorm;
     } catch (e) { if (nc) nc.innerHTML = dorm; }
-    try { const st = await A().get("/colony/state"); setState(st.state); } catch (e) {}
+    // Estado da colônia (data-colony-state/#state-ind): dono exclusivo agora
+    // é context_engine.js (fund. 06) — antes duas leituras concorrentes do
+    // mesmo `/colony/state` sem coordenação nenhuma entre si.
     // Memória com DADOS REAIS (9.2 · Bloco E): /memory/health devolve
     // counts.{total,strong} e extra.avg_strength — antes lia chaves inexistentes
     // (short_term/avg_strength na raiz) e ficava sempre "—".
@@ -86,17 +88,6 @@
         ? new Date(au.last_sleep_ts * 1000).toLocaleTimeString().slice(0, 5)
         : "—");
     } catch (e) {}
-  }
-
-  const STATE_PT = {
-    dormant: "Adormecida", observing: "Observando", exploring: "Explorando",
-    building: "Construindo", learning: "Aprendendo", defending: "Defendendo",
-    executing: "Executando", verifying: "Verificando", emergency: "Emergência",
-  };
-  function setState(s) {
-    if (!s) return;
-    const app = $("app"); if (app) app.setAttribute("data-colony-state", s);
-    if ($("state-ind")) $("state-ind").textContent = STATE_PT[s] || cap(s);
   }
 
   async function fillCognition() {

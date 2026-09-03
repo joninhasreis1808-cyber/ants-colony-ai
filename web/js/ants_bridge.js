@@ -138,12 +138,14 @@
     (r.recruitment || []).slice(0, 8).forEach(function (l) {
       api.pushConsole("info", l.caller, "recrutou " + l.called + " · " + l.reason);
     });
-    // A colônia terminou de pensar → volta a observar (interface reage).
-    api.setColonyState("observing");
+    // O rótulo de estado (fund. 06) é responsabilidade exclusiva do
+    // context_engine.js agora, sempre a partir de `/colony/state` real — ele
+    // já escuta este mesmo evento. Chamar setColonyState aqui era um
+    // segundo escritor competindo pelo mesmo elemento com um valor ADIVINHADO
+    // ("terminou → observando", nem sempre verdade: pode continuar ativa).
   });
   document.addEventListener("ants:online", function (e) {
     emit("online", !!(e && e.detail));
-    if (e && e.detail === false) api.setColonyState("dormant");
   });
   document.addEventListener("ants:netcall", function (e) { emit("netcall", e && e.detail); });
 

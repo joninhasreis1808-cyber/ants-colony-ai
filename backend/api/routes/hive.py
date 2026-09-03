@@ -146,8 +146,16 @@ async def _run_task(task: Task) -> None:
         _ensure_epistemic(task)
         _after_mission(task.id)
         return
+    # A3/B1: liga a memória de longo prazo real — a MESMA instância que os
+    # endpoints /memory e o auto-sono já leem/escrevem. Sem isto, `hive.ltm`
+    # ficava None e a escada de recall (A3) e o RAG com citação (B1) nunca
+    # rodavam na missão de verdade, mesmo com código e testes corretos: os
+    # testes constroem sua própria LTM e chamam build_hive(ltm=...) direto,
+    # nunca passam por ESTA rota — por isso o gap sobreviveu a todo o roteiro.
+    from backend.api.routes.memory import LTM
     hive, _ = build_hive(
-        bus=BUS, router=ROUTER, pheromones=PHEROMONES, lifecycle=LIFECYCLE
+        bus=BUS, router=ROUTER, pheromones=PHEROMONES, lifecycle=LIFECYCLE,
+        ltm=LTM,
     )
     hive.memory = MEMORY
     for bot in hive.recruiter._roster:  # noqa: SLF001

@@ -6,14 +6,19 @@ que ela costuma ser questionada. NÃO é telemetria inventada nem mockup:
 é conhecimento real, escrito à mão, que a colônia consulta quando não há
 acesso externo — como uma enciclopédia mínima embarcada.
 
-Uso: `SeedKnowledge().recall(pergunta)` devolve as frases mais relevantes
-por sobreposição de termos (offline, determinístico), prontas para
-alimentar o `CognitiveOrchestrator.think(pergunta, knowledge)`.
+Uso: `SeedKnowledge().recall(pergunta)` devolve as frases mais relevantes,
+prontas para alimentar o `CognitiveOrchestrator.think(pergunta, knowledge)`.
+
+Ranqueamento (Precisão Offline v1 · item 1): antes era sobreposição crua de
+termos (contagem de palavras em comum, sem pesar as raras contra as comuns).
+Agora usa o `HybridStore` (TF-IDF + palavras-chave) — peça que já existia
+pronta e correta em `backend/memory/hybrid_store.py`, mas nunca tinha sido
+ligada a lugar nenhum do pipeline de resposta. Mesma interface pública
+(`recall`), mesmos fatos; só o ranqueamento fica mais preciso.
 """
 from __future__ import annotations
 
-import re
-import unicodedata
+from backend.memory.hybrid_store import HybridStore
 
 # Cada item: (tópicos-chave, frase factual). As frases são curtas e
 # autossuficientes para o motor de raciocínio conseguir citá-las.
@@ -69,35 +74,21 @@ _FACTS: list[tuple[str, str]] = [
 ]
 
 
-def _norm(text: str) -> str:
-    """Minúsculas sem acento, para casar termos de forma robusta."""
-    text = unicodedata.normalize("NFKD", text.lower())
-    text = "".join(c for c in text if not unicodedata.combining(c))
-    return text
-
-
-def _tokens(text: str) -> set[str]:
-    return {t for t in re.findall(r"\w+", _norm(text)) if len(t) > 2}
-
-
 class SeedKnowledge:
-    """Base de conhecimento inata, consultável por sobreposição de termos."""
+    """Base de conhecimento inata, consultável por busca híbrida (TF-IDF)."""
 
     def __init__(self) -> None:
-        self._index = [(_tokens(topics), fact) for topics, fact in _FACTS]
+        self._facts = [fact for _, fact in _FACTS]
+        self._store = HybridStore()
+        for topics, fact in _FACTS:
+            # indexa tópicos-chave + frase juntos: os tópicos carregam
+            # sinônimos/variações que a frase sozinha pode não citar.
+            self._store.index(topics + " " + fact)
 
     def recall(self, question: str, limit: int = 4) -> list[str]:
         """Devolve até `limit` frases factuais relevantes à pergunta."""
-        q = _tokens(question)
-        if not q:
-            return []
-        scored: list[tuple[int, str]] = []
-        for topics, fact in self._index:
-            overlap = len(q & (topics | _tokens(fact)))
-            if overlap:
-                scored.append((overlap, fact))
-        scored.sort(key=lambda x: x[0], reverse=True)
-        return [fact for _, fact in scored[:limit]]
+        hits = self._store.search(question, top=limit)
+        return [self._facts[i] for i, _ in hits]
 
     def __len__(self) -> int:
-        return len(self._index)
+        return len(self._facts)

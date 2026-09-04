@@ -4,6 +4,34 @@ Simula a atenção do cérebro: nem tudo merece ser armazenado. Avalia cada
 informação por quatro fatores (novidade, emoção, utilidade, repetição) e
 devolve um score em [0, 1] que decide se — e com que prioridade — a
 informação será codificada.
+
+Limiar alcançável (Precisão Offline v1 · item 8)
+------------------------------------------------
+O limiar era 0.4 — acima do TETO do único fator que sempre existe. Um
+texto máximamente novo e longo marca `1.0 * W_NOVELTY = 0.30`: sempre
+abaixo de 0.4. Ou seja, **novidade sozinha nunca bastava**, por
+construção, e nada entrava sem metadado (tag, tarefa ligada, emoção).
+
+Duas consequências reais, medidas antes de mexer:
+
+  • `POST /memory/remember` com conteúdo puro devolvia sempre
+    `stored:false`. O ESTADO_ATUAL.md atribuía isso à falta de
+    chromadb+sentence-transformers — atribuição ERRADA: a rejeição
+    acontece aqui, antes de qualquer store vetorial ser tocado, e
+    instalar as libs não mudaria nada. Limitação documentada com a causa
+    errada faz ninguém procurar a causa certa; corrigido junto.
+  • `_utility` tinha uma regra explícita "o que vem do usuário costuma
+    ser útil" (+0.2) — e mesmo COM ela o conteúdo do usuário era
+    descartado (0.33 < 0.4). A intenção declarada era anulada pela
+    aritmética: a regra existia, mas não podia cumprir seu propósito.
+
+Correção medida sobre um leque de entradas reais: limiar 0.28 (logo
+abaixo do teto da novidade) e bônus de usuário 0.5. Passa a guardar texto
+novo e substancial e nota curta do usuário; continua descartando ruído
+("ok"), saudação e repetição — que era o trabalho legítimo do filtro.
+
+O limiar não altera nenhum score: move só a linha de corte. Quem já
+passava guarda a mesma força de antes.
 """
 from __future__ import annotations
 
@@ -15,12 +43,21 @@ W_EMOTIONAL = 0.2
 W_UTILITY = 0.3
 W_REPETITION = 0.2
 
+# Limiar padrão. Precisa ficar ABAIXO de W_NOVELTY, senão conteúdo novo
+# sem metadado nenhum nunca entra — foi exatamente o defeito corrigido
+# aqui. `test_limiar_precisa_ser_alcancavel_pela_novidade` prende isto.
+_DEFAULT_THRESHOLD = 0.28
+# Peso de utilidade de algo que o dono mandou explicitamente. Alto de
+# propósito: é o sinal mais forte de intenção que este sistema recebe.
+_UTILITY_FROM_USER = 0.5
+
 
 class AttentionFilter:
     """Decide o que merece ser lembrado."""
 
     def __init__(
-        self, threshold: float = 0.4, ignore_below: float = 0.2
+        self, threshold: float = _DEFAULT_THRESHOLD,
+        ignore_below: float = 0.2,
     ) -> None:
         self._threshold = threshold
         self._ignore_below = ignore_below
@@ -93,5 +130,5 @@ class AttentionFilter:
         if data.tags:
             score += min(len(data.tags) / 4.0, 0.3)
         if data.source in ("usuário", "user"):
-            score += 0.2  # o que vem do usuário costuma ser útil
+            score += _UTILITY_FROM_USER  # sinal forte de intenção do dono
         return min(score, 1.0)

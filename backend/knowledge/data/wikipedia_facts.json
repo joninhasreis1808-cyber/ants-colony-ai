@@ -1,0 +1,134 @@
+[
+  {
+    "query": "DNA",
+    "title": "Ácido desoxirribonucleico",
+    "extract": "Ácido desoxirribonucleico é um polímero composto por duas cadeias polinucleotídicas que se enrolam umas sobre as outras para formar uma dupla hélice. O polímero carrega instruções genéticas para o desenvolvimento, funcionamento, crescimento e reprodução de todos os organismos conhecidos e muitos vírus. O ADN e o ácido ribonucleico (RNA) são ácidos nucleicos. Ao lado de proteínas, lipídios e carboidratos complexos (polissacarídeos), os ácidos nucléicos são um dos quatro principais tipos de macromoléculas essenciais para todas as formas de vida conhecidas.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81cido_desoxirribonucleico"
+  },
+  {
+    "query": "Evolução (biologia)",
+    "title": "Evolução",
+    "extract": "Na biologia, Evolução é a mudança das características hereditárias de uma população de seres vivos de uma geração para outra. Este processo faz com que as populações de organismos mudem e se diversifiquem ao longo do tempo. O termo \"evolução\" pode referir-se à evidência observacional que constitui o fato científico intrínseco à teoria da evolução biológica, ou, em acepção completa, à teoria em sua completude. Uma teoria científica é por definição um conjunto indissociável de todas as evidências verificáveis conhecidas e das ideias testáveis e testadas àquelas atreladas.",
+    "url": "https://pt.wikipedia.org/wiki/Evolu%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Sistema Solar",
+    "title": "Sistema Solar",
+    "extract": "Sistema Solar compreende o conjunto constituído pelo Sol e todos os corpos celestes que estão sob seu domínio gravitacional. \nO sistema formou-se há cerca de 4,6 mil milhões de anos, quando uma região densa de uma nuvem molecular colapsou, criando o Sol e um disco protoplanetário a partir do qual os corpos orbitais se agruparam. No interior do núcleo do Sol, o hidrogénio é fundido em hélio durante mil milhões de anos, libertando energia que, ao longo de períodos de tempo ainda mais extensos, é emitida através da camada exterior do Sol, a fotosfera. Isto cria a heliosfera e um gradiente de temperatura decrescente ao longo do Sistema Solar.\n99,86% da massa do Sistema Solar é constituída quase inteiramente pela massa do Sol. Os próximos objetos mais massivos do sistema são os oito planetas que, por definição, dominam as órbitas que ocupam. Por ordem de distância crescente em relação ao Sol, os mais próximos são os quatro planetas terrestres – Mercúrio, Vénus, Terra e Marte que possuem em comum uma crosta sólida e rochosa, razão pela qual se classificam no grupo dos planetas telúricos ou rochosos. Estes são os planetas do Sistema Solar interior. A Terra e Marte são os únicos planetas no Sistema Solar que orbitam dentro da zona habitável do Sol, na qual a luz solar pode tornar líquida a água da superfície sob pressão atmosférica. Além da linha de gelo, a cerca de cinco unidades astronómicas (UA), encontram-se dois gigantes gasosos – Júpiter e Saturno – e dois gigantes gelados – Úrano e Neptuno. Estes são os planetas do Sistema Solar exterior. Júpiter e Saturno possuem quase 90% da massa não estelar do Sistema Solar. Dos cinco planetas anões, Ceres é o que se localiza mais próximo do centro do Sistema Solar, enquanto todos os outros, Plutão, Haumea, Makemake e Éris, encontram-se além da órbita de Netuno.",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_Solar"
+  },
+  {
+    "query": "Buraco negro",
+    "title": "Buraco negro",
+    "extract": "Buraco negro é um objeto astronômico denso e massivo cujo intenso campo gravitacional impede qualquer coisa de escapar, inclusive a luz. A teoria da relatividade geral prevê que uma massa suficientemente compacta pode deformar o espaço-tempo para formar um buraco negro. O limite da região da qual não é possível escapar é chamado de horizonte de eventos e que, embora o horizonte de eventos tenha um efeito enorme sobre o destino e as circunstâncias de um objeto que o atravessa, não tem nenhuma característica local detectável. De muitas maneiras, um buraco negro age como um corpo negro ideal, pois não reflete luz. A teoria quântica de campos no espaço-tempo curvo prevê que os horizontes de eventos emitem radiação Hawking, com o mesmo espectro que um corpo negro de temperatura inversamente proporcional à sua massa. Essa temperatura é da ordem dos bilionésimos de um kelvin para buracos negros de massa estelar, o que a torna praticamente impossível de observar.",
+    "url": "https://pt.wikipedia.org/wiki/Buraco_negro"
+  },
+  {
+    "query": "Tabela periódica",
+    "title": "Tabela periódica",
+    "extract": "Tabela periódica é uma disposição sistemática dos elementos químicos ordenados por seus números atômicos, configuração eletrônica, e recorrência das propriedades periódicas. Este ordenamento mostra tendências periódicas, tais como elementos com comportamentos similares na mesma coluna. Também mostra quatro blocos retangulares com propriedades químicas similares. Em geral, dentro de uma linha (período) os elementos são metálicos na esquerda e não metálicos na direita.",
+    "url": "https://pt.wikipedia.org/wiki/Tabela_peri%C3%B3dica"
+  },
+  {
+    "query": "Vulcão",
+    "title": "Vulcão",
+    "extract": "Vulcão é uma estrutura geológica criada quando o magma, gases e partículas quentes \"escapam\" para a superfície. Eles ejetam altas quantidades de poeira, gases e aerossóis na atmosfera, interferindo no clima. São frequentemente considerados causadores de poluição natural. Tipicamente, os vulcões apresentam formato cónico e montanhoso.",
+    "url": "https://pt.wikipedia.org/wiki/Vulc%C3%A3o"
+  },
+  {
+    "query": "Terremoto",
+    "title": "Sismo",
+    "extract": "Sismo, também chamado de terremoto, terramoto, abalo sísmico ou tremor de terra, é o resultado de uma súbita liberação de energia na crosta do planeta Terra, geralmente por conta do choque entre placas tectônicas, o que cria ondas sísmicas. A sismicidade ou atividade sísmica de uma área refere-se à frequência, tipo e tamanho dos terremotos registrados ao longo de um período de tempo na região.",
+    "url": "https://pt.wikipedia.org/wiki/Sismo"
+  },
+  {
+    "query": "Ciclo da água",
+    "title": "Ciclo hidrológico",
+    "extract": "O ciclo da água, conhecido cientificamente como o ciclo hidrológico, refere-se à troca contínua de água na hidrosfera, entre a atmosfera, a água do solo, águas superficiais, subterrâneas e das plantas. A ciência que estuda o ciclo hidrológico é a hidrologia.",
+    "url": "https://pt.wikipedia.org/wiki/Ciclo_hidrol%C3%B3gico"
+  },
+  {
+    "query": "Efeito estufa",
+    "title": "Efeito estufa",
+    "extract": "O efeito estufa (português brasileiro) ou efeito de estufa (português europeu) é um processo físico que ocorre quando uma parte da radiação infravermelha é emitida pela superfície terrestre e absorvida por determinados gases presentes na atmosfera, os chamados gases do efeito estufa ou gases estufa. Como consequência disso, parte do calor é irradiado de volta para a superfície, não sendo libertado para o espaço. O efeito estufa dentro de uma determinada faixa é de vital importância pois, sem ele, a vida como a conhecemos não poderia existir. Serve para manter o planeta aquecido e, assim, garantir a manutenção da vida.",
+    "url": "https://pt.wikipedia.org/wiki/Efeito_estufa"
+  },
+  {
+    "query": "Fissão nuclear",
+    "title": "Fissão nuclear",
+    "extract": "Fissão nuclear, na física nuclear, é a quebra do núcleo de um átomo instável em dois núcleos menores pelo bombardeamento de partículas como nêutrons. Os isótopos formados pela divisão têm massa parecida, no entanto geralmente seguem a proporção de massa de 3 para 2.",
+    "url": "https://pt.wikipedia.org/wiki/Fiss%C3%A3o_nuclear"
+  },
+  {
+    "query": "Energia solar",
+    "title": "Energia solar",
+    "extract": "Energia solar é o termo que se refere à energia proveniente da luz e do calor do Sol. Ela é aproveitada por meio de diferentes tecnologias em constante evolução, como o aquecimento solar, a energia solar fotovoltaica, a energia heliotérmica, a arquitetura solar e a fotossíntese artificial. As tecnologias solares são amplamente caracterizadas como ativas ou passivas, dependendo da forma como capturam, convertem e distribuem a energia solar. Entre as técnicas solares ativas estão o uso de painéis fotovoltaicos, os coletores das usinas heliotérmica e os aquecedores solares. Entre as técnicas solares passivas estão a orientação de um edifício para o Sol, a seleção de materiais com massa térmica favorável ou propriedades translúcidas e projetar espaços que façam o ar circular naturalmente.",
+    "url": "https://pt.wikipedia.org/wiki/Energia_solar"
+  },
+  {
+    "query": "Vacina",
+    "title": "Vacina",
+    "extract": "Vacina é uma preparação biológica que fornece imunidade adquirida ativa para uma doença particular. Uma vacina tipicamente contém um agente que se assemelha a um microrganismo causador de doenças e é muitas vezes feita de formas enfraquecidas ou mortas do micróbio, das suas toxinas ou de uma das suas proteínas de superfície. O agente estimula o sistema imunológico do corpo a reconhecê-lo como uma ameaça, destruí-lo e a manter um registro seu para que possa mais facilmente reconhecer e destruir qualquer um desses microrganismos que mais tarde encontre. As vacinas podem ser profilácticas, ou terapêuticas.",
+    "url": "https://pt.wikipedia.org/wiki/Vacina"
+  },
+  {
+    "query": "Antibiótico",
+    "title": "Antibiótico",
+    "extract": "Antibiótico é qualquer medicamento capaz de combater uma infecção causada por microrganismos que causam infecções a outro organismo. Não destroem vírus.",
+    "url": "https://pt.wikipedia.org/wiki/Antibi%C3%B3tico"
+  },
+  {
+    "query": "Tectônica de placas",
+    "title": "Tectónica de placas",
+    "extract": "Tectónica (português europeu) ou tectônica (português brasileiro) de placas é a teoria científica que explica que a litosfera da Terra é compreendida em uma série de grandes placas tectónicas que se movem lentamente desde 3-4 bilhões de anos atrás. O modelo é baseado no conceito de deriva continental, uma ideia desenvolvida durante as primeiras décadas do século XX. A tectónica de placas passou a ser aceita pelos geocientistas depois que a expansão do fundo oceânico foi validada em meados da década de 1960. Os processos que resultam nas placas e moldam a crosta terrestre são chamados de tectónica. Placas tectónicas também ocorrem em outros planetas e luas.",
+    "url": "https://pt.wikipedia.org/wiki/Tect%C3%B3nica_de_placas"
+  },
+  {
+    "query": "Criptografia",
+    "title": "Criptografia",
+    "extract": "Criptografia, ou criptologia, é a prática e o estudo de técnicas para comunicação segura na presença de comportamento adversário. De forma mais geral, a criptografia trata da construção e análise de protocolos que impedem terceiros ou o público de ler mensagens privadas. A criptografia moderna existe na intersecção das disciplinas de matemática, ciência da computação, segurança da informação, engenharia elétrica, processamento de sinais digitais, física e outras. Conceitos básicos relacionados à segurança da informação também são centrais para a criptografia. As aplicações práticas da criptografia incluem comércio eletrônico, cartões de pagamento baseados em chip, moedas digitais, senhas de computador e comunicações militares.",
+    "url": "https://pt.wikipedia.org/wiki/Criptografia"
+  },
+  {
+    "query": "Antártida",
+    "title": "Antártida",
+    "extract": "Antártida ou Antártica (ver questão do nome) é o mais meridional e o segundo menor dos continentes, com uma superfície de 14 milhões de quilômetros quadrados. Rodeia o polo Sul, e por esse motivo está quase completamente coberta por enormes geleiras (glaciares), exceção feita a algumas zonas de elevado aclive nas cadeias montanhosas e à extremidade norte da península Antártica. Sua formação se deu pela separação do antigo supercontinente Gondwana há aproximadamente 100 milhões de anos e seu resfriamento aconteceu nos últimos 35 milhões de anos.",
+    "url": "https://pt.wikipedia.org/wiki/Ant%C3%A1rtida"
+  },
+  {
+    "query": "Imprensa",
+    "title": "Imprensa",
+    "extract": "Imprensa é a designação coletiva dos meios de comunicação que exercem o Jornalismo e outras funções de comunicação informativa — em contraste com a comunicação puramente propagandística ou de entretenimento.",
+    "url": "https://pt.wikipedia.org/wiki/Imprensa"
+  },
+  {
+    "query": "Avião",
+    "title": "Avião",
+    "extract": "Avião ou aeroplano é uma aeronave de asa fixa que é impulsionada pelo empuxo de um motor a jato, hélice ou motor de foguete. Os aviões vêm em uma variedade de tamanhos, formatos e configurações de asas. O amplo espectro de usos dos aviões inclui recreação, transporte de mercadorias e pessoas, militar e experimental.",
+    "url": "https://pt.wikipedia.org/wiki/Avi%C3%A3o"
+  },
+  {
+    "query": "Cérebro",
+    "title": "Cérebro",
+    "extract": "O cérebro é o principal órgão e centro do sistema nervoso em todos os animais vertebrados, e em muitos invertebrados. Alguns animais primitivos como os celenterados e equinodermas (estrela-do-mar) possuem um sistema nervoso descentralizado sem cérebro, enquanto as esponjas-do-mar não possuem sistema nervoso. Nos vertebrados o cérebro localiza-se na cabeça protegido pelo crânio, próximo aos aparatos sensoriais primários: visão, audição, equilíbrio, tato, paladar e olfato. Num senso estrito, cérebro é o conjunto das estruturas nervosas derivadas do prosencéfalo. Em linguagem corrente, este termo pode designar o encéfalo como um todo, o telencéfalo ou o córtex cerebral.",
+    "url": "https://pt.wikipedia.org/wiki/C%C3%A9rebro"
+  },
+  {
+    "query": "Vírus",
+    "title": "Vírus",
+    "extract": "Vírus são pequenos agentes infecciosos, a maioria com 20-300 nm de diâmetro, apesar de existirem vírus ɡiɡantes de (0,6–1,5 µm), que apresentam genoma constituído de uma ou várias moléculas de ácido nucleico, as quais possuem a forma de fita simples ou dupla. Os ácidos nucleicos dos vírus geralmente apresentam-se revestidos por um envoltório proteico formado por uma ou várias proteínas, que pode ainda ser revestido por um complexo envelope formado por uma bicamada lipídica.",
+    "url": "https://pt.wikipedia.org/wiki/V%C3%ADrus"
+  },
+  {
+    "query": "Ecossistema",
+    "title": "Ecossistema",
+    "extract": "Ecossistema é, em ecologia, a conjunção da comunidade de organismos de várias espécies (biocenose) e dos fatores ambientais (abióticos) de um determinado local. Os ecossistemas formam uma série de cadeias de relações entre organismos, o que demonstra a sua interdependência dentro do sistema. Os fatores abióticos e bióticos são ligados por cadeias tróficas, ou seja, pelo fluxo de energia e nutrientes no ecossistema. Biosfera é conjunto de todos os ecossistemas do planeta Terra.[carece de fontes]?",
+    "url": "https://pt.wikipedia.org/wiki/Ecossistema"
+  },
+  {
+    "query": "Molécula",
+    "title": "Molécula",
+    "extract": "Uma molécula é um grupo eletricamente neutro que possui pelo menos dois átomos, todos ligados entre si mediante uma ligação covalente. O grupo possui dois ou mais átomos que são mantidos juntos por forças de atração conhecidas como ligações químicas; dependendo do contexto, o termo pode ou não incluir iões que satisfaçam este critério. Na física quântica, química orgânica e bioquímica, a distinção de iões é excluída e normalmente utiliza-se a molécula é frequentemente quando se refere a íões poliatómicos.",
+    "url": "https://pt.wikipedia.org/wiki/Mol%C3%A9cula"
+  }
+]

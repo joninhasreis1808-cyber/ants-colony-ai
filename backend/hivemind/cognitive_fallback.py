@@ -3,9 +3,10 @@
 Se o pipeline de pesquisa não trouxe evidências (provedores bloqueados,
 offline), a colmeia não desiste: recorre ao próprio cérebro. Reúne o
 conhecimento disponível (o recordado da memória de longo prazo + o
-conhecimento inato do domínio) e roda o `CognitiveOrchestrator` das 9
-camadas, devolvendo uma resposta com confiança, as camadas/castas que
-participaram, as lacunas e — quando a confiança é baixa — uma nota de
+conhecimento inato do domínio, hoje escrito à mão e importado da
+Wikipédia PT-BR — ver `gather_knowledge`) e roda o `CognitiveOrchestrator`
+das 9 camadas, devolvendo uma resposta com confiança, as camadas/castas
+que participaram, as lacunas e — quando a confiança é baixa — uma nota de
 honestidade epistêmica via `Limitations`.
 
 Tudo offline e aditivo: não altera o pipeline P-D-C-A dos bots.
@@ -16,6 +17,7 @@ from typing import Any
 
 from backend.cognitive.orchestrator import CognitiveOrchestrator
 from backend.intelligence.limitations import Limitations
+from backend.knowledge.wiki_knowledge import WikiKnowledge
 from backend.memory.seed_knowledge import SeedKnowledge
 
 # Camadas cognitivas que o orquestrador realmente aciona ao pensar.
@@ -33,6 +35,7 @@ class CognitiveFallback:
     def __init__(self) -> None:
         self._brain = CognitiveOrchestrator()
         self._seed = SeedKnowledge()
+        self._wiki = WikiKnowledge()
         self._limits = Limitations()
         from backend.cognitive.relevance_gate import RelevanceGate
         self._gate = RelevanceGate()
@@ -42,12 +45,22 @@ class CognitiveFallback:
     ) -> list[str]:
         """Junta o que a colônia sabe: recordado + conhecimento inato.
 
+        "Inato" hoje é duas fontes: `SeedKnowledge` (escrita à mão, sobre o
+        domínio da própria colônia) e `WikiKnowledge` (importada da
+        Wikipédia PT-BR, conhecimento geral — cada trecho já vem com a
+        fonte citada no próprio texto). Ambas contam como `seed_used` na
+        proveniência (`answer`, abaixo) — a distinção fica no texto citado,
+        não no agregado; ver PR de introdução do item 2 para o porquê.
+
         Deduplica preservando ordem — o recordado da memória vem primeiro,
         depois as frases inatas mais relevantes ao objetivo.
         """
         knowledge: list[str] = []
         seen: set[str] = set()
-        for item in (prior or []) + self._seed.recall(goal):
+        candidates = (
+            (prior or []) + self._seed.recall(goal) + self._wiki.recall(goal)
+        )
+        for item in candidates:
             key = item.strip().lower()
             if item and key not in seen:
                 seen.add(key)

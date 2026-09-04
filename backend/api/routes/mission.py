@@ -6,9 +6,13 @@ passo emitindo eventos por casta (a Câmera ao Vivo mostra o trajeto na MESMA
 fonte de /hive), VERIFICA o desvio de objetivo e APRENDE com o resultado. Não
 bloqueia a resposta; GET /mission/{id} devolve o desfecho auditável.
 
-Os eventos vão para a MESMA memória do /hive, então a barra de progresso e a
-Câmera funcionam sem nenhuma mudança de front-end (o id da missão faz o papel do
-task_id que o api_bridge já escuta).
+Os eventos vão para a MESMA memória do /hive (`MEMORY.add_event`, sempre) e
+agora também para o MESMO barramento ao vivo (`bus=BUS` — achado sem corrigir
+até aqui: `run_mission`/`run_autonomous_mission` sempre aceitaram `bus`, mas
+nenhuma chamada deste arquivo o passava, então `/hive/live/{mission_id}`
+nunca recebia nada em tempo real). `GET /hive/status/{mission_id}` continua
+sem servir — ele lê a tabela `tasks`, e uma missão nunca é salva lá; o
+desfecho auditável de uma missão é `GET /mission/{id}`, não aquele endpoint.
 """
 from __future__ import annotations
 
@@ -20,7 +24,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from backend.api.routes.hive import MEMORY
+from backend.api.routes.hive import BUS, MEMORY
 from backend.hivemind.mission_runner import get_mission_outcome, run_mission
 
 router = APIRouter(prefix="/mission", tags=["mission"])
@@ -54,8 +58,8 @@ def _make_executor(deep: bool, online: bool, confirm: bool = False):
 
 async def _launch(goal: str, context: dict, executor, mission) -> None:
     try:
-        await run_mission(goal, MEMORY, context=context, executor=executor,
-                          mission=mission)
+        await run_mission(goal, MEMORY, bus=BUS, context=context,
+                          executor=executor, mission=mission)
     except Exception as exc:                            # noqa: BLE001 - não derruba o loop
         swallow("rotas._launch_mission", exc)
 
@@ -88,7 +92,8 @@ async def run_mission_sync(req: MissionRequest) -> dict[str, Any]:
     online = True if req.online is None else bool(req.online)
     context = {"online": online, "deep": req.deep}
     executor = _make_executor(req.deep, online, req.confirm)
-    return await run_mission(req.goal, MEMORY, context=context, executor=executor)
+    return await run_mission(req.goal, MEMORY, bus=BUS, context=context,
+                             executor=executor)
 
 
 @router.post("/auto")
@@ -104,7 +109,7 @@ async def run_mission_autonomous(req: MissionRequest) -> dict[str, Any]:
     context = {"online": online, "deep": req.deep}
     executor = _make_executor(req.deep, online, req.confirm)
     gov = AutonomyGovernor(max_cycles=max(1, min(5, req.max_cycles)))
-    return await run_autonomous_mission(req.goal, MEMORY, executor=executor,
+    return await run_autonomous_mission(req.goal, MEMORY, bus=BUS, executor=executor,
                                         context=context, governor=gov)
 
 

@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import time
 
-import numpy as np
 
 from backend.memory.consolidator import MemoryConsolidator
+from backend.memory.embedder import cosine
 from backend.memory.distributed_store import DistributedStore
 from backend.memory.forgetter import AdaptiveForgetter
 from backend.memory.reorganizer import MemoryReorganizer
@@ -79,12 +79,12 @@ class SleepCycle:
         patterns: list[Pattern] = []
         for i, a in enumerate(ids):
             ma = self._store.get(a)
-            va = np.asarray(embs[a])
+            va = embs[a]
             for b in ids[i + 1:]:
                 mb = self._store.get(b)
                 if not ma or not mb or ma.mem_type == mb.mem_type:
                     continue
-                sim = self._cosine(va, np.asarray(embs[b]))
+                sim = cosine(va, embs[b])
                 if min_sim <= sim <= max_sim:
                     # Cria a associação nos dois sentidos (insight).
                     if b not in ma.associations:
@@ -111,6 +111,3 @@ class SleepCycle:
         """Relatório do último ciclo de sono, se houver."""
         return self._last_report
 
-    def _cosine(self, a: np.ndarray, b: np.ndarray) -> float:
-        na, nb = np.linalg.norm(a), np.linalg.norm(b)
-        return float(np.dot(a, b) / (na * nb)) if na and nb else 0.0

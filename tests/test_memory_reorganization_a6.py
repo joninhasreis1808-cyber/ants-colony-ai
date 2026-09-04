@@ -26,7 +26,7 @@ def _store() -> DistributedStore:
 
 def _guardar(store, *, id_=None, tipo=MemoryType.WORKING, emb=None,
              feats=None, assoc=None, atencao=0.8, conteudo="conteudo"):
-    enc = EncodedMemory(content=conteudo, embedding=emb or [1.0, 0.0, 0.0],
+    enc = EncodedMemory(content=conteudo, embedding=emb or {0: 1.0},
                         features=list(feats or []), attention_score=atencao,
                         mem_type=tipo, associations=list(assoc or []))
     if id_:
@@ -156,12 +156,12 @@ def test_agrupamento_e_deterministico():
 
 def test_embedding_da_abstracao_e_derivado_dos_membros():
     store = _store()
-    for i, e in (("m_a", [1.0, 0.0]), ("m_b", [0.0, 1.0]), ("m_c", [1.0, 1.0])):
+    for i, e in (("m_a", {0: 1.0}), ("m_b", {1: 1.0}), ("m_c", {0: 1.0, 1: 1.0})):
         _guardar(store, id_=i, tipo=MemoryType.SEMANTIC, feats=["k"], emb=e,
                  assoc=[j for j in ("m_a", "m_b", "m_c") if j != i])
     gid = MemoryReorganizer(store).reorganize().gists[0]
     # média exata dos três — derivado, nunca inventado
-    assert store.embedding_of(gid) == [round(2 / 3, 6), round(2 / 3, 6)]
+    assert store.embedding_of(gid) == {0: round(2 / 3, 6), 1: round(2 / 3, 6)}
 
 
 # --- o ciclo de sono completo executa a reorganização ----------------------

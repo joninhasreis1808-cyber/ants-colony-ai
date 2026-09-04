@@ -34,6 +34,7 @@ import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from backend.memory.embedder import SparseVector, mean
 from backend.memory.reports import Report
 from backend.memory.schemas import EncodedMemory, Memory, MemoryType
 
@@ -210,14 +211,13 @@ class MemoryReorganizer:
             tags=["gist", "sono"],
         )
 
-    def _mean_embedding(self, ids: list[str]) -> list[float]:
-        """Embedding médio dos membros — derivado, nunca inventado."""
-        vetores = [v for v in (self._store.embedding_of(i) for i in ids) if v]
-        if not vetores:
-            return []
-        n = min(len(v) for v in vetores)
-        return [round(sum(v[j] for v in vetores) / len(vetores), 6)
-                for j in range(n)]
+    def _mean_embedding(self, ids: list[str]) -> SparseVector:
+        """Embedding médio dos membros — derivado, nunca inventado.
+
+        Com vetores esparsos a média é por DIMENSÃO (chave), não por
+        posição: antes o denso era truncado no menor vetor da lista, o que
+        descartava caudas silenciosamente."""
+        return mean([self._store.embedding_of(i) or {} for i in ids])
 
     # -- o passo completo do sono -------------------------------------------
     def reorganize(self) -> Reorganization:

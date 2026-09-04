@@ -1,0 +1,33 @@
+{
+  "_nota": "Regras no formalismo do InferenceEngine (backend/reasoning/inference.py): a conclusão de uma regra pode ser condição de outra, então o encadeamento acontece de verdade. NÃO confundir com o campo 'rules' de facts.json, que é outro formalismo: lá o 'if' são palavras a detectar no TEXTO da pergunta e o 'then' é uma frase de explicação para o usuário. Aqui condições e conclusões são fatos-símbolo, comparados por igualdade exata. Curadas à mão, restritas a relações definicionais/taxonômicas de manual — nada empiricamente contestável.",
+  "rules": [
+    {"if": ["feromônio"], "then": "sinal químico"},
+    {"if": ["sinal químico"], "then": "comunicação indireta"},
+    {"if": ["comunicação indireta"], "then": "estigmergia"},
+    {"if": ["estigmergia"], "then": "coordenação sem chefe"},
+    {"if": ["coordenação sem chefe"], "then": "inteligência coletiva"},
+
+    {"if": ["rainha"], "then": "casta"},
+    {"if": ["operária"], "then": "casta"},
+    {"if": ["soldado"], "then": "casta"},
+    {"if": ["exploradora"], "then": "casta"},
+    {"if": ["casta"], "then": "divisão de trabalho"},
+    {"if": ["divisão de trabalho"], "then": "especialização"},
+
+    {"if": ["bactéria"], "then": "ser vivo"},
+    {"if": ["planta"], "then": "ser vivo"},
+    {"if": ["formiga"], "then": "ser vivo"},
+    {"if": ["ser vivo"], "then": "feito de células"},
+    {"if": ["feito de células"], "then": "tem material genético"},
+
+    {"if": ["planta"], "then": "faz fotossíntese"},
+    {"if": ["faz fotossíntese"], "then": "precisa de luz"},
+    {"if": ["precisa de luz"], "then": "depende do sol"},
+    {"if": ["ser vivo", "faz fotossíntese"], "then": "organismo autotrófico"},
+
+    {"if": ["sol"], "then": "estrela"},
+    {"if": ["estrela"], "then": "corpo celeste"},
+    {"if": ["corpo celeste"], "then": "tem massa"},
+    {"if": ["tem massa"], "then": "sofre gravidade"}
+  ]
+}

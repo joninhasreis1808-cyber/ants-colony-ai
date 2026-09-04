@@ -13,13 +13,15 @@ from pydantic import BaseModel
 from backend.cognitive.orchestrator import CognitiveOrchestrator
 from backend.intelligence.limitations import Limitations
 from backend.reasoning.engine import ReasoningEngine
-from backend.reasoning.inference import InferenceEngine
+from backend.reasoning.inference import get_inference_engine
 
 router = APIRouter(prefix="/mind", tags=["superorganism"])
 
 COGNITIVE = CognitiveOrchestrator()
 REASONER = ReasoningEngine()
-INFERENCE = InferenceEngine()
+# Motor COM as regras curadas (Precisão Offline v1 · item 6). Antes era um
+# `InferenceEngine()` cru — zero regras, então esta rota nunca derivava nada.
+INFERENCE = get_inference_engine()
 LIMITS = Limitations()
 
 
@@ -58,11 +60,21 @@ async def reason(body: ReasonIn) -> dict[str, Any]:
 
 @router.post("/infer")
 async def infer(body: InferIn) -> dict[str, Any]:
-    """Inferência lógica sobre fatos (forward/backward chaining)."""
+    """Inferência lógica sobre fatos (forward/backward chaining).
+
+    `rules_loaded` fica exposto de propósito: antes esta rota rodava com
+    zero regras e não havia como perceber isso pela resposta — derivava
+    vazio e parecia que os fatos é que não davam em nada. `chain` mostra
+    QUAIS regras sustentaram o objetivo, em vez de só afirmar que sim.
+    """
     derived = INFERENCE.infer(body.facts)
-    result: dict[str, Any] = {"derived": derived}
+    result: dict[str, Any] = {
+        "derived": derived,
+        "rules_loaded": INFERENCE.rule_count(),
+    }
     if body.goal:
         result["can_derive"] = INFERENCE.can_derive(body.goal, body.facts)
+        result["chain"] = INFERENCE.explain(body.goal, body.facts)
     return result
 
 

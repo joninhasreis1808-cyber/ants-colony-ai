@@ -6,12 +6,29 @@ para a colônia raciocinar sobre texto sem depender de nada externo.
 
 Peso por raridade em `similarity()` (Precisão Offline v1 · item 5)
 -----------------------------------------------------------------
-`similarity()` é a função mais usada de todo o raciocínio da colônia:
-`ReasoningEngine._best_evidence` (quem escolhe A evidência que vira A
-resposta), os dois críticos, o raciocínio avançado e a autoconsistência
-do fallback cognitivo. Até aqui ela era cosseno sobre CONTAGEM CRUA de
-radicais: um termo comum compartilhado pesava igual a um termo raro e
-distintivo — "como funciona Vulcão?" podia se perder no "funciona".
+`similarity()` é chamada em vários pontos do raciocínio da colônia:
+`ReasoningEngine._best_evidence`, os dois críticos, o raciocínio avançado
+e a autoconsistência do fallback cognitivo. Até aqui ela era cosseno
+sobre CONTAGEM CRUA de radicais: um termo comum compartilhado pesava
+igual a um termo raro e distintivo — ranqueando 50 documentos, "como
+funciona Vulcão?" se perdia no "funciona" e devolvia o fato de Blockchain.
+
+ALCANCE REAL, medido depois (correção de uma afirmação exagerada que
+estava aqui): no caminho de resposta do `CognitiveFallback`, esta função
+NÃO é quem decide. A recuperação acontece antes, no `HybridStore`
+(item 1), e o `RelevanceGate` estreita ainda mais — medido no fluxo real,
+`_best_evidence` recebe 1 ou 2 candidatos, não 50 ('como funciona um
+vulcão?': 5 reunidos, 1 sobrevive ao portão), e com um só a escolha já
+está forçada. Desligar o IDF e repetir a medição ponta-a-ponta das 18
+perguntas de `test_precisao_offline_efeito_somado.py` dá resultado
+IDÊNTICO nos três conjuntos — inclusive o exemplo do parágrafo acima, que
+continua devolvendo Blockchain para "como funciona um vulcão?" com IDF
+ligado ou desligado. O ganho de 78,8% para 82,8%
+que justificou este item foi medido escolhendo entre 50 documentos:
+cenário real para quem ranqueia muitos candidatos de uma vez, mas não o
+do fluxo principal de resposta. A mudança continua correta e vale para
+esses outros chamadores; só não é ela que move a qualidade da resposta
+final, como este cabeçalho dava a entender.
 
 Agora cada termo é pesado pelo seu IDF, medido sobre o corpus local.
 Duas decisões deliberadas, ambas verificadas antes de escrever o código:

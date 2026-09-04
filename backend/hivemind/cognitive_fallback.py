@@ -9,16 +9,29 @@ das 9 camadas, devolvendo uma resposta com confiança, as camadas/castas
 que participaram, as lacunas e — quando a confiança é baixa — uma nota de
 honestidade epistêmica via `Limitations`.
 
+Autoconsistência interna (Precisão Offline v1 · item 4): `cross_check.py`
+(B2) já confronta a resposta final de rotas DIFERENTES (memória vs. web,
+por exemplo) — mas nunca olhou para DENTRO da própria evidência reunida
+aqui. Com a base agora maior (item 2), é comum haver mais de um fato
+relevante para a mesma pergunta. `_self_consistency` reaproveita os MESMOS
+detectores do cross_check (número e léxico) para conferir se o segundo
+fato mais relevante confirma ou contradiz o primeiro, ANTES de declarar a
+resposta final — sinal mais fraco que o cross-check entre rotas (é o
+mesmo corpus, não fontes independentes de verdade), por isso o ajuste de
+confiança é menor.
+
 Tudo offline e aditivo: não altera o pipeline P-D-C-A dos bots.
 """
 from __future__ import annotations
 
 from typing import Any
 
+from backend.cognition.cross_check import lexical_overlap, numeric_conflict
 from backend.cognitive.orchestrator import CognitiveOrchestrator
 from backend.intelligence.limitations import Limitations
 from backend.knowledge.wiki_knowledge import WikiKnowledge
 from backend.memory.seed_knowledge import SeedKnowledge
+from backend.nlp.processor import NLPProcessor
 
 # Camadas cognitivas que o orquestrador realmente aciona ao pensar.
 _LAYERS = [
@@ -27,6 +40,14 @@ _LAYERS = [
 ]
 # Castas biológicas correspondentes (quem, na colônia, faz aquele papel).
 _CASTES = ["rainha", "exploradoras", "soldados"]
+
+# Autoconsistência interna: mais fraca que o cross-check entre rotas (mesmo
+# corpus, não fontes independentes) — por isso os tetos são menores que os
+# de cross_check.py (_AGREE_BONUS=0.05/_MAX_BONUS=0.10/_CONFLICT_CAP=0.5).
+_INTERNAL_LEXICAL_FLOOR = 0.12   # mesmo piso do cross_check: abaixo disto,
+                                  # os dois fatos falam de assuntos diferentes
+_INTERNAL_BONUS = 0.03
+_INTERNAL_CONFLICT_CAP = 0.6
 
 
 class CognitiveFallback:
@@ -37,6 +58,7 @@ class CognitiveFallback:
         self._seed = SeedKnowledge()
         self._wiki = WikiKnowledge()
         self._limits = Limitations()
+        self._nlp = NLPProcessor()
         from backend.cognitive.relevance_gate import RelevanceGate
         self._gate = RelevanceGate()
 
@@ -77,6 +99,10 @@ class CognitiveFallback:
         verdict = self._gate.verdict(goal, gathered)
         knowledge = [] if verdict["declare_limitation"] else verdict["kept"]
         result = self._brain.think(goal, knowledge)
+        # B3: a nota de honestidade e a decisão de "baixa confiança" usam a
+        # confiança CRUA declarada pelo raciocínio — a mesma disciplina do
+        # RouteCalibrator/ConfidenceCalibrator (corrige DEPOIS de decidir com
+        # o número original, nunca um laço sobre a própria correção).
         low = result.confidence < 0.5
         note = self._honesty_note(goal) if low else ""
         answer = result.answer
@@ -91,9 +117,16 @@ class CognitiveFallback:
         gaps = list(result.gaps)
         if verdict["declare_limitation"] and verdict["reason"]:
             gaps = [verdict["reason"]] + gaps
+        consistency = self._self_consistency(goal, knowledge, result.confidence)
+        confidence = result.confidence
+        if consistency:
+            confidence = max(0.0, min(1.0, confidence + consistency["adjustment"]))
+            confidence = round(confidence, 4)
+            if consistency["verdict"] == "conflito_interno":
+                gaps = [consistency["reason"]] + gaps
         return {
             "answer": answer,
-            "confidence": result.confidence,
+            "confidence": confidence,
             "domain": result.domain,
             "hypotheses": result.hypotheses,
             "gaps": gaps,
@@ -104,7 +137,49 @@ class CognitiveFallback:
             "seed_used": len(knowledge) - memory_used,
             "source": "cognitive_fallback",
             "critique_ok": result.critique_ok,
+            "self_consistency": consistency,
         }
+
+    def _self_consistency(
+        self, goal: str, knowledge: list[str], base_confidence: float
+    ) -> dict[str, Any] | None:
+        """Confere o fato mais provável de sustentar a resposta contra o
+        SEGUNDO fato mais relevante da própria evidência reunida — mesmos
+        detectores do cross_check (B2), aplicados dentro de uma rota só.
+
+        None quando não há o que conferir (menos de 2 fatos, ou o segundo
+        nem bate com a pergunta, ou os dois falam de assuntos diferentes
+        demais para se confirmarem) — nunca inventa um veredito."""
+        if len(knowledge) < 2:
+            return None
+        scored = sorted(
+            ((k, self._nlp.similarity(goal, k)) for k in knowledge),
+            key=lambda kv: kv[1], reverse=True,
+        )
+        if scored[0][1] <= 0 or scored[1][1] <= 0:
+            return None
+        top, second = scored[0][0], scored[1][0]
+
+        conflito = numeric_conflict(top, second)
+        if conflito is not None:
+            valores_a, valores_b = conflito
+            return {
+                "verdict": "conflito_interno",
+                "reason": (
+                    f"o fato mais relevante cita {valores_a} e o segundo "
+                    f"mais relevante cita {valores_b} — nenhum número em "
+                    f"comum entre os dois fatos que a colônia reuniu"
+                ),
+                "adjustment": min(0.0, _INTERNAL_CONFLICT_CAP - base_confidence),
+            }
+        if lexical_overlap(top, second) >= _INTERNAL_LEXICAL_FLOOR:
+            return {
+                "verdict": "confirmado_interno",
+                "reason": "um segundo fato reunido independentemente "
+                          "corrobora o mais relevante",
+                "adjustment": _INTERNAL_BONUS,
+            }
+        return None
 
     def _honesty_note(self, goal: str) -> str:
         """Nota transparente sobre os limites da resposta atual."""

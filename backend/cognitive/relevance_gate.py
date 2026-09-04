@@ -9,12 +9,26 @@ dólar, CEP). Esta porta corrige isso de forma honesta:
 - fatos inatos só passam se a **sobreposição real** com a pergunta for
   suficiente — um único termo fraco não basta.
 
-Offline, determinístico, sem dependências. Aditivo.
+Limiar proporcional (Precisão Offline v1 · item 4, achado do multi-hop de
+comparação corrigido na raiz agora): `min_overlap` era um número fixo — e
+uma pergunta curta sobre UM único assunto ("o que é bactéria?") legitimamente
+só tem 1 termo significativo em comum com uma definição curta, então
+SEMPRE falhava, mesmo com o fato certo em mãos. `min_overlap` agora é o
+TETO, não o valor fixo: o exigido é `min(min_overlap, termos
+significativos da pergunta)`. Perguntas com vocabulário mais rico (3+
+termos) continuam exigindo a sobreposição cheia — a proteção original
+contra uma única palavra solta destravando um fato desconexo não muda.
+
+Offline, determinístico, sem dependências pesadas (só o NLPProcessor que
+o resto da colônia já usa, para reaproveitar o MESMO filtro de stopwords
+em vez de duplicar uma lista nova). Aditivo.
 """
 from __future__ import annotations
 
 import re
 import unicodedata
+
+from backend.nlp.processor import NLPProcessor
 
 # Marcas de que a pergunta pede dado atual/externo (precisa de web real).
 _TEMPORAL = {
@@ -40,6 +54,7 @@ class RelevanceGate:
 
     def __init__(self, min_overlap: int = 2) -> None:
         self._min = min_overlap
+        self._nlp = NLPProcessor()
 
     def is_temporal(self, goal: str) -> bool:
         """A pergunta pede dado atual/externo que exige web real?"""
@@ -49,15 +64,27 @@ class RelevanceGate:
         g = _norm(goal)
         return "em tempo real" in g or "quanto custa" in g
 
+    def _significant(self, text: str) -> set[str]:
+        """Termos que carregam sentido — sem stopword, sem palavra de
+        1-2 letras. `top=50` é só um teto generoso (nenhuma pergunta ou
+        fato real tem 50+ termos distintos); na prática devolve TODOS os
+        termos significativos, não um recorte."""
+        return set(self._nlp.keywords(text, top=50))
+
     def relevant_facts(self, goal: str, facts: list[str]) -> list[str]:
-        """Mantém só os fatos com sobreposição real suficiente com a pergunta."""
-        q = _tokens(goal)
+        """Mantém só os fatos com sobreposição real suficiente com a pergunta.
+
+        O exigido é `min(min_overlap, termos significativos da pergunta)`
+        — nunca mais que o teto configurado, mas cai para o que a própria
+        pergunta tem quando ela é curta e focada num só assunto."""
+        q = self._significant(goal)
         if not q:
             return []
+        exigido = min(self._min, len(q))
         kept: list[str] = []
         for fact in facts:
-            overlap = len(q & _tokens(fact))
-            if overlap >= self._min:
+            overlap = len(q & self._significant(fact))
+            if overlap >= exigido:
                 kept.append(fact)
         return kept
 

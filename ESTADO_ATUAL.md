@@ -97,7 +97,7 @@ campo-visível → ID-legado. Os 4 JS originais **não foram alterados** (MD5 ac
 **Limitações reais (sem otimismo inventado):**
 - **Memória:** `POST /memory/remember` retorna `stored:false` e o recall fica vazio **sem** o store vetorial opcional (chromadb + sentence-transformers). Os endpoints funcionam; a **persistência** exige essas libs opcionais.
 - **Chat sem internet:** o motor de raciocínio é offline e conservador — sem rede (ou conhecimento fornecido) responde "sem evidências suficientes". Num deploy com rede ele pesquisa. (No sandbox, a busca externa é bloqueada.)
-- **Aba Colônia (rede/hierarquia):** o diagrama de castas usa a **topologia** do módulo `live_dashboard.js` (estrutura das 6 castas). As contagens por casta ainda **não** vêm de um endpoint por-casta (não existe um; `/hive/swarm` dá estados de bots). O SVG é ilustrativo da estrutura, não contagem viva.
+- **Aba Colônia (rede/hierarquia):** o diagrama usa a **topologia** fixa das 6 castas-base (fato do sistema, `backend/hivemind/castes_base.py`), mas a **contagem por casta agora é real** — soma de `GET /hive/formations` (bots das formações ainda em curso). Sem formação ativa, mostra "nenhuma agora"/"sem dados" honestamente, nunca um número inventado. Não existe endpoint dedicado por-casta; esta soma é a fonte de verdade disponível hoje.
 - **Aba Ambiente:** os itens sem endpoint real (arquivos indexados, processos, nós/relações do grafo) aparecem como **"—"** de propósito (não há rota que exponha esses números).
 - **Barras cognitivas:** refletem o resultado real de `/mind/think`, porém **mapeadas** (não há endpoint de ativação por-camada).
 

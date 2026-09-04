@@ -187,7 +187,7 @@
   }
 
   function onTab(name) {
-    if (name === "colony" && window.AntDashboard) AntDashboard.mount("org-hierarchy", "colony-network");
+    if (name === "colony" && window.AntDashboard) AntDashboard.mount("colony-hierarchy", "colony-network");
     if (name === "cognitive") { if (window.AntCognitive) AntCognitive.mount("cognitive-center"); fillCognition(); }
     if (name === "resources") fillResources();
     if (name === "queen") fillQueen();

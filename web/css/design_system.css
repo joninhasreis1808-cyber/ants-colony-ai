@@ -17,6 +17,12 @@
 .caste-queen{--caste:var(--queen)} .caste-explorer{--caste:var(--scout)}
 .caste-worker{--caste:var(--soil)} .caste-gardener{--caste:var(--leaf)}
 .caste-soldier{--caste:var(--soldier)} .caste-nurse{--caste:var(--nurse)}
+/* castas-base reais (7.2), usadas pela Colônia (rede/hierarquia) e pela
+   Cognição (formations_panel.js) — mesmas 6 de backend/hivemind/castes_base.py */
+.caste-exploradores{--caste:var(--scout)} .caste-construtores{--caste:var(--soil)}
+.caste-coletores{--caste:var(--leaf)} .caste-costureiros{--caste:var(--nurse)}
+.caste-operarias{--caste:var(--ember)} .caste-soldados{--caste:var(--soldier)}
+.caste-rainha{--caste:var(--queen)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 .ant-shell,.ant-shell *{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
@@ -202,6 +208,12 @@ select.field{padding:0 12px;cursor:pointer}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
 .legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--muted)}
 .legend span::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--lc,var(--amber))}
+/* nós/conexões da rede viva (live_dashboard.js) — cor vem de --caste, herdada
+   das classes .caste-* acima; raio real varia conforme bots atuando agora */
+.colony-node{fill:var(--caste,var(--amber));transition:r .3s ease,opacity .3s ease}
+.colony-node.idle{opacity:.4}
+.colony-link{stroke:var(--border);stroke-width:1.4;opacity:.3;fill:none}
+.colony-link.transmitting{opacity:.75;stroke-dasharray:4 4;animation:march 2.2s linear infinite}
 
 .caste-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--rs);
   background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--cc,var(--amber));margin-bottom:8px}

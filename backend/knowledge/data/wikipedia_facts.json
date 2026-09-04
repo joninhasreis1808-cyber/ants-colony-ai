@@ -130,5 +130,149 @@
     "title": "Molécula",
     "extract": "Uma molécula é um grupo eletricamente neutro que possui pelo menos dois átomos, todos ligados entre si mediante uma ligação covalente. O grupo possui dois ou mais átomos que são mantidos juntos por forças de atração conhecidas como ligações químicas; dependendo do contexto, o termo pode ou não incluir iões que satisfaçam este critério. Na física quântica, química orgânica e bioquímica, a distinção de iões é excluída e normalmente utiliza-se a molécula é frequentemente quando se refere a íões poliatómicos.",
     "url": "https://pt.wikipedia.org/wiki/Mol%C3%A9cula"
+  },
+  {
+    "query": "Número primo",
+    "title": "Número primo",
+    "extract": "Um número primo é um número natural maior que 1 que não pode ser formado pela multiplicação de outros dois naturais menores. Um número natural maior que 1 que não é primo é chamado de número composto. Por exemplo, 5 é primo porque as únicas maneiras de escrevê-lo como um produto, 1 × 5 ou 5 × 1, envolvem o próprio 5. No entanto, 4 é composto porque é um produto (2 × 2) no qual ambos os números são menores que 4. Os primos são centrais na teoria dos números devido ao teorema fundamental da aritmética: todo número natural maior que 1 ou é um primo, ou pode ser fatorado como um produto de primos de maneira única, salvo pela ordem dos fatores.",
+    "url": "https://pt.wikipedia.org/wiki/N%C3%BAmero_primo"
+  },
+  {
+    "query": "Teorema de Pitágoras",
+    "title": "Teorema de Pitágoras",
+    "extract": "Na matemática, o teorema de Pitágoras é uma relação matemática entre os comprimentos dos lados de qualquer triângulo retângulo. Na geometria euclidiana, o teorema afirma que:",
+    "url": "https://pt.wikipedia.org/wiki/Teorema_de_Pit%C3%A1goras"
+  },
+  {
+    "query": "Blockchain",
+    "title": "Blockchain",
+    "extract": "A blockchain é uma tecnologia de registro distribuído que visa a descentralização como medida de segurança. São bases de registros e dados distribuídos e compartilhados, que têm a função de criar um índice global para todas as transações que ocorrem em um determinado mercado. Funciona como um livro-razão, só que de forma pública, compartilhada e universal, permitindo mecanismos de consenso e confiança na comunicação direta entre duas partes, ou seja, sem o intermédio de terceiros. Está constantemente crescendo à medida que novos blocos são adicionados a ela por um novo conjunto de registros. Os blocos são adicionados à blockchain de modo linear e cronológico. Cada nó - qualquer computador que conectado a essa rede que tem a tarefa de validar e repassar transações - obtém uma cópia da blockchain após o ingresso na rede. A blockchain possui informação completa sobre endereços e saldos diretamente do bloco gênese até o bloco mais recentemente concluído.",
+    "url": "https://pt.wikipedia.org/wiki/Blockchain"
+  },
+  {
+    "query": "Sistema binário",
+    "title": "Sistema binário",
+    "extract": "Em astronomia, sistema binário é um sistema composto por dois corpos celestes orbitando em torno de um centro de massa comum, ligados gravitacionalmente entre si e que à vista desarmada, ou com uma pequena ampliação, aparentam serem apenas um. O termo é frequentemente utilizado para referir-se a estrelas binárias, mas também é utilizado em outros sistemas, tais como asteroides, planetas, e galáxias. Segundo recenseamentos efectuados entre as estrelas da Via Láctea, um terço dos sistemas estelares são binários.",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_bin%C3%A1rio"
+  },
+  {
+    "query": "Rede neural artificial",
+    "title": "Rede neural artificial",
+    "extract": "Em ciência da computação e campos relacionados, redes neurais artificiais (português brasileiro) ou redes neuronais artificiais (português europeu) (RNAs) são modelos computacionais inspirados pelo sistema nervoso central de um animal que são capazes de realizar o aprendizado de máquina bem como o reconhecimento de padrões. Redes neurais artificiais geralmente são apresentadas como sistemas de \"neurônios interconectados, que podem computar valores de entradas\", simulando o comportamento de redes neurais biológicas.",
+    "url": "https://pt.wikipedia.org/wiki/Rede_neural_artificial"
+  },
+  {
+    "query": "Floresta Amazônica",
+    "title": "Amazônia",
+    "extract": "Amazônia(pt-BR) ou Amazónia(pt-PT?) é uma floresta latifoliada úmida que cobre a maior parte da Bacia Amazônica na América do Sul. Esta bacia abrange 7 milhões de quilômetros quadrados distribuído por nove países: Brasil, Bolívia, Peru, Colômbia, Equador, Venezuela, Guiana, Guiana Francesa e Suriname, dos quais 5 milhões e meio de quilômetros quadrados são cobertos pela esta floresta tropical.",
+    "url": "https://pt.wikipedia.org/wiki/Amaz%C3%B4nia"
+  },
+  {
+    "query": "Monte Everest",
+    "title": "Monte Evereste",
+    "extract": "Monte Everest ou, na sua forma portuguesa, Evereste, também conhecido no Nepal como Sagarmāthā (सगरमाथा), no Tibete como Chomolungma e Zhūmùlǎngmǎ Fēng em chinês (珠穆朗玛峰), é a montanha de maior altitude da Terra. Seu pico está a 8 848,86 metros acima do nível do mar, na subcordilheira Mahalangur Himal dos Himalaias. A fronteira internacional entre o distrito nepalês do Solukhumbu e o distrito de Tingri da Região Autônoma do Tibete da República Popular da China passa no cume. O maciço do Everest inclui diversos outros picos situados acima da zona da morte, incluindo os picos do Lhotse (8 516 m), Nuptse (7 855 m) e Changtse (7 580 m), entre outros. O nome em inglês foi atribuído em 1865 pela Royal Geographical Society sob recomendação de Andrew Waugh, diretor do Survey of India, o organismo central de cartografia e topografia da Índia britânica. Não tendo conseguido saber os nomes locais da montanha, Waugh batizou-a com o nome do seu antecessor no Survey of India, George Everest.",
+    "url": "https://pt.wikipedia.org/wiki/Monte_Evereste"
+  },
+  {
+    "query": "Oceano Pacífico",
+    "title": "Oceano Pacífico",
+    "extract": "O Oceano Pacífico é a maior e mais profunda das cinco divisões oceânicas da Terra. Estende-se do Oceano Ártico, ao norte, até o Oceano Antártico ou, dependendo da definição, até a Antártida, ao sul, e é limitado pelos continentes da Ásia e da Austrália, a oeste, e pela América, a leste.",
+    "url": "https://pt.wikipedia.org/wiki/Oceano_Pac%C3%ADfico"
+  },
+  {
+    "query": "Deserto do Saara",
+    "title": "Deserto do Saara",
+    "extract": "O Deserto do Saara (português brasileiro) ou Deserto do Sara ou Deserto do Sáara (português europeu) é conhecido por ser o maior deserto quente do mundo. Oficialmente, é o terceiro maior deserto da Terra, logo após a Antártida e o Ártico, pois estas duas também são consideradas desertos.",
+    "url": "https://pt.wikipedia.org/wiki/Deserto_do_Saara"
+  },
+  {
+    "query": "Grande Barreira de Coral",
+    "title": "Grande Barreira de Coral",
+    "extract": "A Grande Barreira de Coral Australiana é uma imensa faixa de corais composta por cerca de 2 900 recifes, 600 ilhas continentais e 300 atóis de coral, situada entre as praias do nordeste da Austrália e Papua-Nova Guiné, que possui 2 200 quilômetros de comprimento, com largura variando de 30 km a 740 km.",
+    "url": "https://pt.wikipedia.org/wiki/Grande_Barreira_de_Coral"
+  },
+  {
+    "query": "Rio Nilo",
+    "title": "Rio Nilo",
+    "extract": "O Nilo é um rio do continente africano, considerado o segundo mais extenso curso d'água do mundo. Situado no nordeste do continente africano, sua nascente está a sul da linha do Equador e sua foz ocorre no mar Mediterrâneo. Ele segue essa trajetória há 30 milhões de anos.",
+    "url": "https://pt.wikipedia.org/wiki/Rio_Nilo"
+  },
+  {
+    "query": "Revolução Industrial",
+    "title": "Revolução Industrial",
+    "extract": "Revolução Industrial, também chamada de Primeira Revolução Industrial, foi a transição para novos processos de produção, na Grã-Bretanha, na Europa continental e nos Estados Unidos, a partir de c. 1760 até algum momento entre 1820 e 1840. Essa transição incluiu a passagem de métodos de produção manual para a produção mecânica, novos processos de fabricação de produtos químicos e metalúrgicos, o uso de energia a vapor e hidráulica, o desenvolvimento de máquinas-ferramentas e a ascensão do sistema fabril mecanizado. Além do aumento da produção, houve também, nesse período, um crescimento populacional sem precedentes. A indústria têxtil foi dominante da Revolução Industrial, em termos de geração de emprego, valor da produção e volume de capital, além de também ter sido a primeira a usar os novos métodos e técnicas.",
+    "url": "https://pt.wikipedia.org/wiki/Revolu%C3%A7%C3%A3o_Industrial"
+  },
+  {
+    "query": "Segunda Guerra Mundial",
+    "title": "Segunda Guerra Mundial",
+    "extract": "Segunda Guerra Mundial foi um conflito militar global que durou de 1939 a 1945, envolvendo a maioria das nações do mundo — incluindo todas as grandes potências — organizadas em duas alianças militares opostas: os Aliados e o Eixo. Foi a guerra mais abrangente da história, com mais de 100 milhões de militares mobilizados. Em estado de \"guerra total\", os principais envolvidos dedicaram toda sua capacidade econômica, industrial e científica a serviço dos esforços de guerra, deixando de lado a distinção entre recursos civis e militares. Marcado por um número significante de ataques contra civis, incluindo o Holocausto e a única vez em que armas nucleares foram utilizadas em combate, foi o conflito mais letal da história da humanidade, que resultou na morte de 50-70 milhões de pessoas.",
+    "url": "https://pt.wikipedia.org/wiki/Segunda_Guerra_Mundial"
+  },
+  {
+    "query": "Idade Média",
+    "title": "Idade Média",
+    "extract": "Idade Média é um período da história da Europa, compreendido entre os séculos V e XV. Inicia-se com a Queda do Império Romano do Ocidente e termina durante a transição para a Idade Moderna. A Idade Média é o período intermédio da divisão clássica da História ocidental em três períodos: a Antiguidade, Idade Média e Idade Moderna, sendo frequentemente dividido em Alta e Baixa Idade Média.",
+    "url": "https://pt.wikipedia.org/wiki/Idade_M%C3%A9dia"
+  },
+  {
+    "query": "Império Romano",
+    "title": "Império Romano",
+    "extract": "Império Romano foi o período pós-republicano da antiga civilização romana, caracterizado por uma forma de governo autocrática liderada por um imperador e por extensas possessões territoriais em volta do mar Mediterrâneo na Europa, África e Ásia. A república que o antecedeu ao longo de cinco séculos encontrava-se numa situação de elevada instabilidade, na sequência de diversas guerras civis e conflitos políticos, durante os quais Júlio César foi nomeado ditador perpétuo e foi assassinado em 44 a.C. As guerras civis culminaram na vitória de Otávio, filho adotivo de César, sobre Marco António e Cleópatra na batalha de Áccio em 31 a.C. Detentor de uma autoridade inquestionável, em 27 a.C. o senado romano atribuiu a Otávio poderes absolutos e o novo título Augusto, assinalando desta forma o fim da república.",
+    "url": "https://pt.wikipedia.org/wiki/Imp%C3%A9rio_Romano"
+  },
+  {
+    "query": "Revolução Francesa",
+    "title": "Revolução Francesa",
+    "extract": "Revolução Francesa foi um período, entre 1789 e 1799, de intensa agitação política e social na França, que teve um impacto duradouro na história do país e, mais amplamente, em todo o continente europeu. A monarquia absolutista que tinha governado a nação durante séculos entrou em colapso em apenas três anos. A sociedade francesa passou por uma transformação épica, quando privilégios feudais, aristocráticos e religiosos evaporaram-se sob um ataque sustentado de grupos políticos radicais, das massas nas ruas e de camponeses na região rural do país. Antigos ideais da tradição e da hierarquia de monarcas, aristocratas e da Igreja Católica foram abruptamente derrubados pelos novos princípios de Liberté, Égalité, Fraternité. As casas reais da Europa ficaram aterrorizadas com a revolução e iniciaram um movimento contrário que, até 1814, tinha restaurado a antiga monarquia, mas muitas reformas importantes tornaram-se permanentes. O mesmo aconteceu com os antagonismos entre os partidários e inimigos da revolução, que lutaram politicamente ao longo dos próximos dois séculos.",
+    "url": "https://pt.wikipedia.org/wiki/Revolu%C3%A7%C3%A3o_Francesa"
+  },
+  {
+    "query": "Grandes navegações",
+    "title": "Era dos Descobrimentos",
+    "extract": "A era dos descobrimentos é a designação dada ao período da história que decorreu entre o século XV e o início do século XVII, durante o qual, inicialmente, portugueses, depois espanhóis e, posteriormente, alguns outros países europeus exploraram intensivamente o globo terrestre em busca de novas rotas de comércio. Os historiadores geralmente referem-se à \"era dos descobrimentos\" como as explorações marítimas pioneiras realizadas por portugueses e espanhóis entre os séculos XV e XVI, que estabeleceram relações com a África, América e Ásia, em busca de uma rota alternativa para as \"Índias\", movidos pelo comércio de ouro, prata e especiarias. Estas explorações no Atlântico e Índico foram seguidas por outros países da Europa, como França, Inglaterra e Países Baixos, que exploraram as rotas comerciais portuguesas e espanholas até ao oceano Pacífico, chegando à Austrália em 1606 e à Nova Zelândia em 1642. A exploração europeia perdurou até realizar o mapeamento global do mundo, resultando numa nova divisão mundial, e no contato entre civilizações distantes, alcançando as fronteiras mais remotas mais tarde, já no século XX.",
+    "url": "https://pt.wikipedia.org/wiki/Era_dos_Descobrimentos"
+  },
+  {
+    "query": "Independência do Brasil",
+    "title": "Independência do Brasil",
+    "extract": "Independência do Brasil foi o processo histórico de separação política entre o Reino do Brasil e o Reino de Portugal e Algarves, ocorrido entre 1821 e 1825, no contexto das transformações políticas do mundo atlântico provocadas pelas revoluções liberais e pelas guerras napoleônicas. O processo envolveu disputas políticas, militares e diplomáticas entre grupos favoráveis à manutenção do vínculo com Portugal e defensores da autonomia brasileira, culminando na formação do Império do Brasil.",
+    "url": "https://pt.wikipedia.org/wiki/Independ%C3%AAncia_do_Brasil"
+  },
+  {
+    "query": "Energia elétrica",
+    "title": "Energia elétrica",
+    "extract": "Energia elétrica é uma forma de energia que se origina da energia potencial elétrica, baseada na geração de diferenças de potencial elétrico, permitindo estabelecer corrente elétrica entre dois pontos e os fenômenos físicos envolvidos. Pode ser obtida também a partir da energia cinética. Mediante a transformação adequada é possível obter que tal energia mostre-se em outras formas finais de uso direto, em forma de luz, movimento ou calor, segundo os elementos da conservação da energia.",
+    "url": "https://pt.wikipedia.org/wiki/Energia_el%C3%A9trica"
+  },
+  {
+    "query": "Telefone",
+    "title": "Telefone",
+    "extract": "Um telefone é um dispositivo de telecomunicações que permite que dois ou mais usuários conduzam uma conversa quando estão muito distantes um do outro para serem facilmente ouvidos diretamente. Um telefone converte o som, normalmente e de forma mais eficiente a voz humana, em sinais eletrônicos que são transmitidos por meio de cabos e outros canais de comunicação para outro telefone que reproduz o som para o usuário receptor. O termo é derivado do em grego clássico: τῆλε; romaniz.: tēle – trad.: “distante” e φωνή, que juntos significam voz distante.",
+    "url": "https://pt.wikipedia.org/wiki/Telefone"
+  },
+  {
+    "query": "Motor de combustão interna",
+    "title": "Motor de combustão interna",
+    "extract": "Motor de combustão interna é uma máquina térmica que transforma a energia proveniente de uma reação química em energia mecânica. O processo de conversão dá-se através de ciclos termodinâmicos que envolvem expansão, compressão e mudança de temperatura dos gases. A sua criação se dá durante o processo da Revolução Industrial no século XVIII, período em que ocorrem as transições e a introdução dos novos processos de manufatura. No ano de 1860 que surgiu a ideia de construir uma máquina que utilizasse o benzeno como combustível se concretizando apenas em 1866, realizada pelo engenheiro e físico alemão Nicolaus Otto o qual determinou o ciclo teórico sob que trabalha o motor de explosão, conhecido como ciclo Otto.",
+    "url": "https://pt.wikipedia.org/wiki/Motor_de_combust%C3%A3o_interna"
+  },
+  {
+    "query": "Sistema imunológico",
+    "title": "Sistema imunitário",
+    "extract": "O sistema imunitário, sistema imunológico ou ainda sistema imune é um sistema de estruturas e processos biológicos que protegem o organismo contra doenças. De modo a funcionar corretamente, o sistema imunitário deve detectar uma imensa variedade de agentes, desde os vírus aos parasitas, e distingui-los do tecido saudável do próprio corpo. O cientista que cunhou o termo foi Ilya Ilyich Mechnikov em 1882, que é considerado o pai da imunologia.",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_imunit%C3%A1rio"
+  },
+  {
+    "query": "Bactéria",
+    "title": "Bactéria",
+    "extract": "Bactéria é um tipo de célula biológica. Elas constituem um grande domínio de micro-organismos procariontes. Possuindo tipicamente alguns micrômetros de comprimento, as bactérias podem ter diversos formatos, variando de esferas até bastões e espirais.",
+    "url": "https://pt.wikipedia.org/wiki/Bact%C3%A9ria"
+  },
+  {
+    "query": "Fóssil",
+    "title": "Fóssil",
+    "extract": "O termo fóssil é proveniente do latim fossilis, que significa “tirado da terra”. Os fósseis são restos de seres vivos ou de evidências de suas atividades biológicas preservados em diversos materiais. Essa preservação ocorre principalmente em rochas, mas pode ocorrer também em materiais como sedimento, gelo, piche, resina, solo e caverna, e os exemplos mais citados são ossos e caules fossilizados, conchas, ovos e pegadas. A Paleontologia é a principal disciplina científica que utiliza fósseis como objeto de estudo, instaurada com a aceitação dos trabalhos de Georges Cuvier. Nessa área do conhecimento, os fósseis fornecem dados importantes quanto à evolução biológica, datação e reconstituição da história geológica da Terra.",
+    "url": "https://pt.wikipedia.org/wiki/F%C3%B3ssil"
   }
 ]

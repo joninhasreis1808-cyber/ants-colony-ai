@@ -59,6 +59,14 @@ class Recruiter:
         inviolável. E **sem histórico o viés é zero**: `formation_hint()` devolve
         `{}`, todos empatam em 0.0 e a ordenação estável do Python preserva
         exatamente a formação de hoje.
+
+        Contract Net limitado (fund. 04): quando duas castas do MESMO estágio
+        disputam (confiança empatada — inclusive o empate 0/0 de sempre, sem
+        histórico), o desempate agora tem um terceiro critério, o custo que
+        cada bot propõe para a skill que o trouxe (`propose_cost`). Sem custo
+        declarado (padrão 1.0 para todo mundo), esse critério empata também e
+        a ordenação estável do Python preserva a formação de hoje — byte a
+        byte, o mesmo comportamento de antes desta extensão.
         """
 
         def rank(bot: Bot) -> int:
@@ -71,8 +79,17 @@ class Recruiter:
                     best = min(best, i)
             return best
 
+        def cost(bot: Bot) -> float:
+            """Menor custo proposto entre as skills pedidas que este bot
+            atende — a proposta mais favorável dele para ESTA disputa."""
+            oferece = set(bot.skills) & set(needs)
+            if not oferece or not hasattr(bot, "propose_cost"):
+                return 1.0
+            return min(bot.propose_cost(n) for n in oferece)
+
         hint = self._formation_hint()
-        return sorted(bots, key=lambda b: (rank(b), -hint.get(b.name, 0.0)))
+        return sorted(bots, key=lambda b: (rank(b), -hint.get(b.name, 0.0),
+                                           cost(b)))
 
     @staticmethod
     def _formation_hint() -> dict[str, float]:

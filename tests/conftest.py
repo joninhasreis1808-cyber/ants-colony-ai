@@ -80,6 +80,8 @@ def reset_learner():
             reset_verify_cycle()  # isolamento: contador de falhas por missão
             from backend.hivemind.colony_state import reset_colony_state_machine
             reset_colony_state_machine()  # isolamento: última atividade real
+            from backend.security.site_safety import reset_site_safety_checker
+            reset_site_safety_checker()  # isolamento: assinaturas aprendidas
         except Exception:  # noqa: BLE001
             pass
 

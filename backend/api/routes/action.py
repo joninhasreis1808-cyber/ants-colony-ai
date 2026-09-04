@@ -24,6 +24,10 @@ class NavigateIn(BaseModel):
     url: str
 
 
+class SiteCheckIn(BaseModel):
+    url: str
+
+
 class FileIn(BaseModel):
     user_id: str
     op: str  # create | delete
@@ -42,10 +46,29 @@ def _guard(user: str, action: str, resource: str) -> None:
         raise HTTPException(403, f"permissão negada para {action}")
 
 
+@router.post("/site-check", dependencies=[Depends(require_owner)])
+async def site_check(body: SiteCheckIn) -> dict[str, Any]:
+    """SiteSafetyCheck (item 7 · domínio novo): julga uma URL sem navegar
+    até ela. "Verifique se este link é seguro" vira isto, direto."""
+    from backend.security.site_safety import get_site_safety_checker
+    return get_site_safety_checker().check(body.url).to_dict()
+
+
 @router.post("/navigate", dependencies=[Depends(require_owner)])
 async def navigate(body: NavigateIn) -> dict[str, Any]:
-    """Navega em um site (requer nível LIMITED)."""
+    """Navega em um site (requer nível LIMITED).
+
+    SiteSafetyCheck (item 7) roda ANTES: "perigoso"/"invalido" recusa a
+    navegação — mesma assimetria do resto do projeto, um sinal fraco
+    ("suspeito") não impede, só viaja junto na resposta para o dono decidir.
+    """
     _guard(body.user_id, "web.navigate", body.url)
+    from backend.security.site_safety import get_site_safety_checker
+    safety = get_site_safety_checker().check(body.url)
+    if safety.verdict in ("perigoso", "invalido"):
+        raise HTTPException(
+            403, f"SiteSafetyCheck recusou a navegação ({safety.verdict}): "
+                 f"{'; '.join(safety.reasons) or 'URL malformada'}")
     try:
         from backend.action.web_navigator import WebNavigator
     except ImportError:  # pragma: no cover
@@ -55,7 +78,8 @@ async def navigate(body: NavigateIn) -> dict[str, Any]:
         raise HTTPException(503, "navegador indisponível")
     with nav:
         nav.navigate(body.url)
-        return {"url": body.url, "links": nav.extract_links()[:20]}
+        return {"url": body.url, "links": nav.extract_links()[:20],
+                "safety": safety.to_dict()}
 
 
 @router.post("/file", dependencies=[Depends(require_owner)])

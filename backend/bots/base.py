@@ -32,6 +32,15 @@ class Bot(ABC):
         self.memory = memory
         self._emit = emit
 
+    def propose_cost(self, task_type: str) -> float:
+        """Custo autodeclarado para este tipo de tarefa (fund. 04 · Contract
+        Net limitado para formação). Sem opinião mais específica, todo bot
+        propõe o mesmo custo neutro — o desempate entre castas concorrentes
+        fica só por confiança medida (`formation_hint`), como hoje. Uma
+        subclasse só precisa sobrescrever isto se genuinamente souber que é
+        mais cara/barata que outra casta para o mesmo tipo de tarefa."""
+        return 1.0
+
     async def emit(
         self, task_id: str, phase: Phase, message: str, **data: Any
     ) -> None:

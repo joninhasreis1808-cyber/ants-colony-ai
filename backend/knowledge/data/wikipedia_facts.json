@@ -274,5 +274,29 @@
     "title": "Fóssil",
     "extract": "O termo fóssil é proveniente do latim fossilis, que significa “tirado da terra”. Os fósseis são restos de seres vivos ou de evidências de suas atividades biológicas preservados em diversos materiais. Essa preservação ocorre principalmente em rochas, mas pode ocorrer também em materiais como sedimento, gelo, piche, resina, solo e caverna, e os exemplos mais citados são ossos e caules fossilizados, conchas, ovos e pegadas. A Paleontologia é a principal disciplina científica que utiliza fósseis como objeto de estudo, instaurada com a aceitação dos trabalhos de Georges Cuvier. Nessa área do conhecimento, os fósseis fornecem dados importantes quanto à evolução biológica, datação e reconstituição da história geológica da Terra.",
     "url": "https://pt.wikipedia.org/wiki/F%C3%B3ssil"
+  },
+  {
+    "query": "Célula (biologia)",
+    "title": "Célula",
+    "extract": "Célula é a unidade estrutural e funcional básica de todas as formas de vida ou organismos. O termo vem da palavra latina cellula cujo significado é 'pequeno aposento'. Uma célula biológica consiste basicamente em uma membrana celular semipermeável que envolve o citoplasma, o qual contém o material genético. A maioria das células só é visível ao microscópio. Com exceção de tipos celulares altamente diferenciados, a maioria das células é capaz de replicação e síntese de proteínas e alguns tipos delas são móveis. As células surgiram na Terra há cerca de quatro bilhões de anos.",
+    "url": "https://pt.wikipedia.org/wiki/C%C3%A9lula"
+  },
+  {
+    "query": "Átomo",
+    "title": "Átomo",
+    "extract": "Átomo é uma unidade básica de matéria que consiste num núcleo central de carga elétrica positiva envolto por uma nuvem de eletrões de carga negativa. O núcleo atómico é composto por protões e neutrões. Os eletrões de um átomo estão ligados ao núcleo por força eletromagnética. Da mesma forma, um grupo de átomos pode estar ligado entre si através de ligações químicas baseadas na mesma força, formando uma molécula. Um átomo que tenha o mesmo número de protões e eletrões é eletricamente neutro, enquanto que um com número diferente pode ter carga positiva ou negativa, sendo desta forma denominado ião. Os átomos são classificados de acordo com o número de protões no seu núcleo: o número de protões determina o elemento químico e o número de neutrões determina o isótopo desse elemento.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81tomo"
+  },
+  {
+    "query": "Dinossauro",
+    "title": "Dinossauros",
+    "extract": "Dinossauros ou dinossáurios constituem um grupo de répteis, membros do clado Dinosauria. Acredita-se que os dinossauros apareceram há, pelo menos, 233 milhões de anos, e que, por mais de 167 milhões de anos, foram o grupo animal dominante na Terra, num período geológico de tempo que vai desde o período Triássico até o final do período Cretáceo, há cerca de 66 milhões de anos, quando um evento catastrófico ocasionou a extinção em massa de quase todos os dinossauros, com exceção de algumas espécies emplumadas, as aves.",
+    "url": "https://pt.wikipedia.org/wiki/Dinossauros"
+  },
+  {
+    "query": "Big Bang",
+    "title": "Big Bang",
+    "extract": "Big-bang, bigue-bangue ou grande expansão é a teoria cosmológica dominante sobre o desenvolvimento inicial do universo. Os cosmólogos usam o termo \"Big Bang\" para se referir à ideia de que o universo estava originalmente muito quente e denso em algum tempo finito no passado. Desde então tem se resfriado pela expansão ao estado diluído atual e continua em expansão atualmente. A teoria é sustentada por explicações mais completas e precisas a partir de evidências científicas disponíveis e da observação. Medições detalhadas da taxa de expansão do universo colocam o Big Bang em cerca de 13,8 bilhões * de anos atrás, que é considerada a idade do universo.",
+    "url": "https://pt.wikipedia.org/wiki/Big_Bang"
   }
 ]

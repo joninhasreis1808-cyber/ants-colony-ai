@@ -20,10 +20,28 @@ resposta final — sinal mais fraco que o cross-check entre rotas (é o
 mesmo corpus, não fontes independentes de verdade), por isso o ajuste de
 confiança é menor.
 
+Multi-hop de comparação (Precisão Offline v1 · item 4, parte 2): a segunda
+metade do item. Escopo deliberadamente estreito — NÃO é decomposição
+genérica de qualquer pergunta complexa (isso ficaria arriscado demais de
+over-engenheirar, mesmo alerta já registrado para o Contract Net do
+roadmap anterior). Só perguntas de COMPARAÇÃO claramente identificáveis
+("diferença entre X e Y") — hoje a colônia falha nelas de um jeito
+específico: `gather_knowledge` recupera os fatos de X e de Y corretamente
+(a busca híbrida funciona), mas `RelevanceGate` (min_overlap=2) descarta
+os DOIS, porque cada fato sozinho só compartilha 1 termo (o próprio nome
+da entidade) com a pergunta composta — nenhum fato "vence" sozinho, e a
+colônia declarava limitação mesmo tendo os dois fatos em mãos. Achado
+verificado, não corrigido no RelevanceGate em si (mudar aquele limiar
+afeta toda pergunta do app, não só comparação); aqui a saída é buscar
+cada entidade DIRETO (`SeedKnowledge`/`WikiKnowledge.recall(entidade)`,
+sem passar pelo portão), decompondo a pergunta em duas buscas focadas em
+vez de uma busca só, diluída.
+
 Tudo offline e aditivo: não altera o pipeline P-D-C-A dos bots.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from backend.cognition.cross_check import lexical_overlap, numeric_conflict
@@ -32,6 +50,15 @@ from backend.intelligence.limitations import Limitations
 from backend.knowledge.wiki_knowledge import WikiKnowledge
 from backend.memory.seed_knowledge import SeedKnowledge
 from backend.nlp.processor import NLPProcessor
+
+# Só o marcador mais inequívoco de comparação em PT-BR — "diferença(s)
+# entre X e Y". Deliberadamente não tenta "compare X e Y" nem "X vs Y":
+# são ambíguos demais para extrair X/Y por regex sem arriscar cortar no
+# lugar errado (ex.: "compare o preço de mercado e o valor histórico").
+_COMPARISON = re.compile(
+    r"diferen[çc]as?\s+entre\s+(.+?)\s+e\s+(.+?)\s*[\?\.]?\s*$",
+    re.IGNORECASE,
+)
 
 # Camadas cognitivas que o orquestrador realmente aciona ao pensar.
 _LAYERS = [
@@ -93,6 +120,19 @@ class CognitiveFallback:
         self, goal: str, prior: list[str] | None = None
     ) -> dict[str, Any]:
         """Produz a resposta do cérebro próprio para o objetivo dado."""
+        # Multi-hop de comparação (item 4 · parte 2): tentado ANTES do
+        # caminho de pergunta única — se não for uma comparação reconhecível,
+        # ou nenhuma das duas entidades resolver, cai no caminho de sempre
+        # sem custo (aditivo, nunca substitui o comportamento existente).
+        # Perguntas temporais continuam exigindo web, mesmo em formato de
+        # comparação ("diferença entre o dólar hoje e ontem").
+        if not self._gate.is_temporal(goal):
+            par = _COMPARISON.search((goal or "").strip())
+            if par:
+                comparado = self._answer_comparison(
+                    goal, par.group(1).strip(" ?."), par.group(2).strip(" ?."))
+                if comparado is not None:
+                    return comparado
         gathered = self.gather_knowledge(goal, prior)
         # Porta de relevância (7.2 · D.2): descarta seed irrelevante e, em
         # perguntas de dado atual/externo sem web, força a declaração honesta.
@@ -138,6 +178,76 @@ class CognitiveFallback:
             "source": "cognitive_fallback",
             "critique_ok": result.critique_ok,
             "self_consistency": consistency,
+        }
+
+    def _lookup_entity(self, entity: str) -> tuple[str, float] | None:
+        """Busca UMA entidade direto no conhecimento inato (sem RelevanceGate
+        — a busca já é focada por natureza, o filtro genérico só atrapalha
+        aqui). Devolve o fato + a similaridade real com o nome da entidade,
+        ou None se nada bater (a própria busca híbrida já exige score > 0)."""
+        hit = (self._wiki.recall(entity, limit=1)
+               or self._seed.recall(entity, limit=1))
+        if not hit:
+            return None
+        return hit[0], self._nlp.similarity(entity, hit[0])
+
+    def _answer_comparison(
+        self, goal: str, entity_a: str, entity_b: str
+    ) -> dict[str, Any] | None:
+        """Responde uma pergunta de comparação decompondo em duas buscas
+        focadas — uma por entidade — e juntando o que cada uma achou.
+
+        NUNCA deriva a diferença em si (isso exigiria interpretar as duas
+        definições, algo que um motor de regras não faz com segurança):
+        junta as duas definições lado a lado, com a fonte de cada uma, e
+        deixa quem lê comparar. Se nenhuma das duas entidades resolver,
+        devolve None — o caminho de pergunta única de sempre assume."""
+        if not entity_a or not entity_b or entity_a.lower() == entity_b.lower():
+            return None
+        achado_a = self._lookup_entity(entity_a)
+        achado_b = self._lookup_entity(entity_b)
+        if achado_a is None and achado_b is None:
+            return None
+
+        partes: list[str] = []
+        gaps: list[str] = []
+        sims: list[float] = []
+        for nome, achado in ((entity_a, achado_a), (entity_b, achado_b)):
+            if achado is None:
+                gaps.append(f"sem conhecimento próprio sobre '{nome}'")
+                continue
+            fato, sim = achado
+            partes.append(f"{nome.capitalize()}: {fato}")
+            sims.append(sim)
+
+        prefacio = ("Não derivo a diferença sozinha — aqui está o que sei "
+                    "de cada um, para você comparar:")
+        answer = prefacio + "\n\n" + "\n\n".join(partes)
+        confidence = round(min(0.4 + (sum(sims) / len(sims)), 0.95), 4)
+        if len(partes) == 1:            # só uma das duas resolveu
+            confidence = round(confidence * 0.8, 4)
+        low = confidence < 0.5
+        if low:
+            gaps = [self._honesty_note(goal)] + gaps
+
+        return {
+            "answer": answer,
+            "confidence": confidence,
+            "domain": "comparação",
+            "hypotheses": len(partes),
+            "gaps": gaps,
+            "layers": list(_LAYERS),
+            "castes": list(_CASTES),
+            "knowledge_used": len(partes),
+            "memory_used": 0,
+            "seed_used": len(partes),
+            "source": "cognitive_fallback",
+            "critique_ok": len(partes) == 2,
+            "self_consistency": None,
+            "multi_hop": {
+                "kind": "comparacao", "entities": [entity_a, entity_b],
+                "resolved": len(partes),
+            },
         }
 
     def _self_consistency(

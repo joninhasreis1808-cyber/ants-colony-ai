@@ -1,12 +1,13 @@
 """Conhecimento geral importado da Wikipédia PT-BR (Precisão Offline v1 ·
-item 2). Corpus estático — 46 tópicos (22 da primeira importação + 24
-recuperados numa segunda rodada, depois que a primeira esbarrou em rate
-limit HTTP 429 da API pública), importados uma única vez via scripts/
-import_wikipedia_facts.py e retry_missing_wikipedia_facts.py (o app nunca
-chama a Wikipédia em runtime). Este arquivo prova: o corpus carrega, o
-ranqueamento delega de verdade ao HybridStore (mesma peça do item 1),
-cada trecho devolvido cita a fonte, e o CognitiveFallback de fato reúne
-esse conhecimento — não só a peça isolada (mesma lição do #92)."""
+item 2). Corpus estático — os 50 tópicos originalmente pedidos, completos
+depois de três rodadas (22 na primeira, 24 recuperadas na segunda depois
+de rate limit HTTP 429, 4 últimas na terceira com espera bem maior entre
+chamadas), importados uma única vez via scripts/import_wikipedia_facts.py
+e os dois scripts de reimportação (o app nunca chama a Wikipédia em
+runtime). Este arquivo prova: o corpus carrega, o ranqueamento delega de
+verdade ao HybridStore (mesma peça do item 1), cada trecho devolvido cita
+a fonte, e o CognitiveFallback de fato reúne esse conhecimento — não só a
+peça isolada (mesma lição do #92)."""
 from __future__ import annotations
 
 from backend.hivemind.cognitive_fallback import CognitiveFallback
@@ -15,7 +16,7 @@ from backend.knowledge.wiki_knowledge import WikiKnowledge
 
 def test_corpus_carrega_as_entradas_importadas():
     wk = WikiKnowledge()
-    assert len(wk) >= 40  # 46 depois da segunda rodada; tolera novas rodadas
+    assert len(wk) >= 45  # 50 depois da terceira rodada; tolera novas rodadas
 
 
 def test_recall_traz_o_fato_certo_e_cita_a_fonte():

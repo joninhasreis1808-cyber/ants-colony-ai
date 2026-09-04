@@ -365,10 +365,21 @@ class Hivemind(MemoryMixin, SwarmMixin):
         colônia usa confirmação humana quando existe, verificação cruzada quando
         não, e a auto-consistência só como último recurso — declarando sempre
         qual das três camadas sustentou a observação.
+
+        Precisão Offline v1 · item 3: o MESMO sinal também alimenta o
+        `RouteCalibrator` — os priors da Cartógrafa (`success_probability`
+        por rota) deixam de ser só o chute do catálogo e passam a puxar em
+        direção à taxa de acerto real de cada rota, conforme a evidência
+        se acumula. `source` aqui já é o nome da rota (computation/memory/
+        reasoning/web_search coincidem 1:1 com o catálogo; seed_knowledge/
+        own_memory ainda não têm ponte com knowledge_base — declarado, não
+        perseguido nesta rodada).
         """
         if not isinstance(confidence, (int, float)):
             return
-        from backend.evaluation.confidence_calibration import get_calibrator
+        from backend.evaluation.confidence_calibration import (
+            get_calibrator, get_route_calibrator,
+        )
         from backend.evaluation.correctness_signal import best_signal
         sinal = best_signal(
             human=Hivemind._human_verdict(task_id),
@@ -377,6 +388,9 @@ class Hivemind(MemoryMixin, SwarmMixin):
             escalate_human=bool(escalate_human))
         get_calibrator().record(float(confidence), correct=sinal.correct,
                                 weight=sinal.weight)
+        if source:
+            get_route_calibrator().record(source, correct=sinal.correct,
+                                          weight=sinal.weight)
 
     @staticmethod
     def _human_verdict(task_id: str):

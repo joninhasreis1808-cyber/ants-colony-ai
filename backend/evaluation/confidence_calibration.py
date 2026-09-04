@@ -124,3 +124,91 @@ def get_calibrator() -> "ConfidenceCalibrator":
     if _INSTANCE is None:
         _INSTANCE = ConfidenceCalibrator()
     return _INSTANCE
+
+
+class RouteCalibrator:
+    """Calibração por ROTA (Precisão Offline v1 · item 3), irmã de
+    `ConfidenceCalibrator` — mesmo princípio (não corrige sem amostra
+    suficiente), eixo diferente: aqui o que se mede é a taxa de acerto real
+    de cada rota da Cartógrafa (`backend/cognition/cartographer.py`), não a
+    faixa de confiança declarada.
+
+    Os priors do catálogo da Cartógrafa (`success_probability` por rota)
+    sempre foram constantes chutadas à mão, nunca recalibradas pelo
+    resultado observado. Este calibrador fecha esse laço, reaproveitando o
+    MESMO sinal de acerto em camadas (B3, `correctness_signal.py`) que já
+    alimenta `ConfidenceCalibrator` — não inventa um sinal novo.
+
+    Correção proporcional à evidência: com poucas amostras, o prior do
+    catálogo quase não se move; a partir de `full_trust` amostras
+    (ponderadas), a taxa observada domina. Sem amostra suficiente, o prior
+    passa intacto — nunca uma correção fabricada.
+    """
+
+    def __init__(self, min_samples: int = 5, full_trust: int = 20) -> None:
+        if min_samples < 1:
+            raise ValueError("min_samples deve ser >= 1")
+        if full_trust < min_samples:
+            raise ValueError("full_trust deve ser >= min_samples")
+        self._min = min_samples
+        self._full_trust = full_trust
+        self._hits: dict[str, float] = {}
+        self._count: dict[str, float] = {}
+        self._raw: dict[str, int] = {}
+
+    def record(self, route: str, correct: bool, weight: float = 1.0) -> None:
+        """Registra o desfecho real de uma rota, com o PESO do sinal (B3) —
+        mesmo par (correct, weight) que `ConfidenceCalibrator.record` recebe."""
+        if not route:
+            return
+        w = max(0.0, float(weight))
+        self._count[route] = self._count.get(route, 0.0) + w
+        self._raw[route] = self._raw.get(route, 0) + 1
+        if correct:
+            self._hits[route] = self._hits.get(route, 0.0) + w
+
+    def reset(self) -> None:
+        """Zera toda calibração acumulada — isolamento entre testes/execuções."""
+        self._hits.clear()
+        self._count.clear()
+        self._raw.clear()
+
+    def raw_count(self, route: str) -> int:
+        return self._raw.get(route, 0)
+
+    def observed_rate(self, route: str) -> float | None:
+        """Taxa de acerto REAL observada para esta rota (ou None, sem amostra)."""
+        if self._raw.get(route, 0) < self._min or self._count.get(route, 0) <= 0:
+            return None
+        return self._hits.get(route, 0.0) / self._count[route]
+
+    def calibrate(self, route: str, prior: float) -> float:
+        """Prior do catálogo puxado em direção à taxa real, proporcional ao
+        tanto de evidência já visto. Sem amostra suficiente, devolve o prior
+        intacto — nunca inventa uma correção."""
+        rate = self.observed_rate(route)
+        if rate is None:
+            return prior
+        w = min(1.0, self.raw_count(route) / self._full_trust)
+        return round(prior * (1 - w) + rate * w, 4)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            route: {
+                "raw": self._raw[route],
+                "weight": round(self._count[route], 4),
+                "observed_rate": self.observed_rate(route),
+            }
+            for route in self._raw
+        }
+
+
+_ROUTE_INSTANCE: "RouteCalibrator | None" = None
+
+
+def get_route_calibrator() -> "RouteCalibrator":
+    """Singleton de processo — calibração por rota, alimentada pelas missões reais."""
+    global _ROUTE_INSTANCE
+    if _ROUTE_INSTANCE is None:
+        _ROUTE_INSTANCE = RouteCalibrator()
+    return _ROUTE_INSTANCE

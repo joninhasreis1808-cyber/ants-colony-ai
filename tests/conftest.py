@@ -103,9 +103,16 @@ def reset_learner():
         # missão real da suíte — um teste que devolve uma resposta exata com
         # confiança 1.0 podia sair com confiança corrigida para baixo por
         # missões de outros arquivos, sem relação nenhuma com este cálculo.
+        # get_route_calibrator() (Precisão Offline v1 · item 3) tem o mesmo
+        # risco, só que por ROTA: um teste que força várias respostas erradas
+        # via "computation" mudaria o success_probability dessa rota para
+        # QUALQUER outro teste que rode a Cartógrafa depois, em outro arquivo.
         try:
-            from backend.evaluation.confidence_calibration import get_calibrator
+            from backend.evaluation.confidence_calibration import (
+                get_calibrator, get_route_calibrator,
+            )
             get_calibrator().reset()
+            get_route_calibrator().reset()
         except Exception:  # noqa: BLE001
             pass
 

@@ -15,12 +15,26 @@ Rotas indisponíveis (sem conectividade, intenção incompatível) ficam de fora
 escolha, mas continuam no mapa — a Rainha vê o que NÃO deu para tentar e por quê.
 O `bias` é o viés da memória de experiência (B3): rotas que já deram certo para
 objetivos parecidos sobem; as que falharam descem.
+
+`P(sucesso)` (Precisão Offline v1 · item 3): antes era só o chute do
+catálogo abaixo, para sempre. Agora `RouteCalibrator`
+(`backend/evaluation/confidence_calibration.py`) puxa esse número em
+direção à taxa de acerto REAL de cada rota, medida pelas missões reais —
+proporcional à evidência acumulada; sem amostra suficiente, o chute passa
+intacto. `computation`/`reasoning`/`web_search` já recebem esse sinal (o
+nome da rota bate 1:1 com a proveniência real das missões);
+`knowledge_base`/`deep_research`/`device_action` ainda não têm essa ponte
+— declarado, não perseguido aqui. `memory` também é calibrada, mas
+`_apply()` (abaixo) sempre sobrescreve seu `success_probability` com um
+valor por-pergunta (memória quente ou não) — mais específico que a média
+histórica; a calibração fica sem efeito visível ali, de propósito.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 from backend.cognitive.intent_router import get_intent_router
+from backend.evaluation.confidence_calibration import get_route_calibrator
 
 
 @dataclass
@@ -94,8 +108,10 @@ class Cartographer:
         known = bool(ctx.get("known", False))     # resposta já na memória?
         deep = bool(ctx.get("deep")) or self._looks_deep(goal)
 
+        cal = get_route_calibrator()
         routes: list[Route] = []
         for name, caste, ps, eg, rel, cost, risk in _CATALOG:
+            ps = cal.calibrate(name, ps)
             r = Route(name=name, caste=caste, success_probability=ps,
                       evidence_gain=eg, reliability=rel, cost=cost, risk=risk)
             self._apply(r, intent=intent, online=online, known=known, deep=deep)

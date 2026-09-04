@@ -14,7 +14,29 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from backend.memory.embedder import SparseVector, default_embedder
 from backend.memory.schemas import EncodedMemory, Memory, MemoryType
+
+
+def _embedding_do_registro(rec: dict) -> SparseVector:
+    """Embedding de um registro salvo, migrando o formato antigo.
+
+    Antes os vetores eram DENSOS (`list[float]`, 768 posições) e vinham de
+    um embedder sem stopwords, sem radical e sem peso por raridade. Não dá
+    para convertê-los: os valores são de outro algoritmo, e comparar um
+    vetor velho com uma consulta nova daria similaridade sem sentido — sem
+    erro nenhum, só recall silenciosamente errado. Como o `content` está
+    salvo junto, o certo é RECALCULAR a partir dele.
+    """
+    emb = rec.get("embedding")
+    if isinstance(emb, dict):
+        return {int(k): float(v) for k, v in emb.items()}
+    if isinstance(emb, list) and emb:          # formato antigo -> recalcula
+        try:
+            return default_embedder().embed(str(rec.get("content", "")))
+        except Exception:                       # noqa: BLE001
+            return {}
+    return {}
 from backend.memory.store_retrieval import RetrievalMixin
 from backend.memory.vector_backend import make_collection
 
@@ -28,7 +50,7 @@ class DistributedStore(RetrievalMixin):
                  persist_key: str = "ltm_store") -> None:
         self._cols = {name: make_collection(backend) for name in _COLLECTIONS}
         self._memories: dict[str, Memory] = {}
-        self._embeddings: dict[str, list[float]] = {}
+        self._embeddings: dict[str, SparseVector] = {}
         # `persist` é qualquer objeto com `get_json`/`set_json` — na prática o
         # KVStore do projeto, mas a interface mínima mantém isto testável sem
         # SQLite de verdade.
@@ -104,10 +126,10 @@ class DistributedStore(RetrievalMixin):
     def all_memories(self) -> list[Memory]:
         return list(self._memories.values())
 
-    def embedding_of(self, memory_id: str) -> list[float] | None:
+    def embedding_of(self, memory_id: str) -> SparseVector | None:
         return self._embeddings.get(memory_id)
 
-    def all_embeddings(self) -> dict[str, list[float]]:
+    def all_embeddings(self) -> dict[str, SparseVector]:
         return dict(self._embeddings)
 
     def count(self) -> int:
@@ -142,7 +164,8 @@ class DistributedStore(RetrievalMixin):
              "emotional_weight": m.emotional_weight,
              "access_count": m.access_count, "last_access": m.last_access,
              "timestamp": m.timestamp,
-             "embedding": self._embeddings.get(m.id, [])}
+             "embedding": {str(k): v for k, v in
+                           (self._embeddings.get(m.id) or {}).items()}}
             for m in self._memories.values()
         ]}
 
@@ -166,7 +189,7 @@ class DistributedStore(RetrievalMixin):
                 )
             except (KeyError, ValueError):
                 continue           # registro corrompido: pula, não derruba o boot
-            emb = rec.get("embedding") or []
+            emb = _embedding_do_registro(rec)
             self._memories[mem.id] = mem
             self._embeddings[mem.id] = emb
             for name in self._targets_for(mem_type, mem.emotional_weight):

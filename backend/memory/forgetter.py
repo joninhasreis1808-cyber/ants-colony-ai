@@ -6,9 +6,9 @@ idênticas e reporta a saúde geral do sistema.
 """
 from __future__ import annotations
 
-import numpy as np
 
 from backend.memory.distributed_store import DistributedStore
+from backend.memory.embedder import cosine
 from backend.memory.reports import Report
 from backend.memory.schemas import MemoryType
 
@@ -66,11 +66,11 @@ class AdaptiveForgetter:
         for i, a in enumerate(ids):
             if a in gone:
                 continue
-            va = np.asarray(embs[a])
+            va = embs[a]
             for b in ids[i + 1:]:
                 if b in gone:
                     continue
-                if self._cosine(va, np.asarray(embs[b])) > threshold:
+                if cosine(va, embs[b]) > threshold:
                     weaker = self._weaker(a, b)
                     self._store.remove(weaker)
                     gone.add(weaker)
@@ -101,6 +101,3 @@ class AdaptiveForgetter:
         return a if (ma.strength if ma else 0) <= (mb.strength if mb else 0) \
             else b
 
-    def _cosine(self, a: np.ndarray, b: np.ndarray) -> float:
-        na, nb = np.linalg.norm(a), np.linalg.norm(b)
-        return float(np.dot(a, b) / (na * nb)) if na and nb else 0.0

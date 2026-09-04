@@ -11,8 +11,14 @@ enc = NeuralEncoder(HashingEmbedder())
 def test_encode_creates_embedding():
     data = MemoryInput(content="Python é uma linguagem de programação")
     encoded = enc.encode(data, attention_score=0.6)
-    assert len(encoded.embedding) == 768
-    assert abs(sum(v * v for v in encoded.embedding) - 1.0) < 1e-6  # normalizado
+    # vetor ESPARSO (dimensão -> peso): só os radicais que o texto tem de
+    # fato, não 4096 posições quase todas zero.
+    assert isinstance(encoded.embedding, dict)
+    assert encoded.embedding, "texto com conteúdo precisa gerar vetor"
+    assert len(encoded.embedding) < 30, "esparso: um punhado de radicais"
+    assert all(isinstance(k, int) for k in encoded.embedding)
+    norma = sum(v * v for v in encoded.embedding.values())
+    assert abs(norma - 1.0) < 1e-6  # normalizado
 
 
 def test_encode_extracts_features():

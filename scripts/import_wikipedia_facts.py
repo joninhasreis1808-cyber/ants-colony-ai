@@ -113,10 +113,13 @@ def fetch_summary(title: str) -> dict | None:
     }
 
 
-def run_import(topics: list[str], out_path: str) -> None:
-    """Busca cada tópico e grava o resultado em `out_path`. Reutilizada pelo
-    script de reimportação dos tópicos que faltaram (retry_missing_
-    wikipedia_facts.py) — mesma lógica, lista de tópicos diferente."""
+def run_import(topics: list[str], out_path: str, delay: float = DELAY_S) -> None:
+    """Busca cada tópico e grava o resultado em `out_path`. Reutilizada pelos
+    scripts de reimportação (retry_missing_wikipedia_facts.py,
+    retry_final4_wikipedia_facts.py) — mesma lógica, lista de tópicos e
+    espera entre chamadas diferentes (rodadas menores, com poucos tópicos
+    teimosos, podem esperar bem mais entre cada um sem custo real de
+    tempo)."""
     results = []
     ok, skipped = 0, 0
     for i, topic in enumerate(topics, 1):
@@ -127,7 +130,7 @@ def run_import(topics: list[str], out_path: str) -> None:
             ok += 1
         else:
             skipped += 1
-        time.sleep(DELAY_S)
+        time.sleep(delay)
 
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump(results, fh, ensure_ascii=False, indent=2)

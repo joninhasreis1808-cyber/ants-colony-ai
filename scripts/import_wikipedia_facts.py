@@ -35,7 +35,9 @@ USER_AGENT = (
     "AntsColonyKnowledgeImport/1.0 "
     "(importacao unica para base de conhecimento offline; sem uso comercial)"
 )
-DELAY_S = 0.6  # educado com a API pública — nada de rajada
+DELAY_S = 1.0  # educado com a API pública — nada de rajada (subiu de 0.6s:
+                # a primeira rodada teve 28/50 falhas espalhadas sem padrão
+                # de título — suspeita de limite de taxa intermitente)
 
 # Escala moderada (item 2): ~50 tópicos gerais, evergreen (sem dado que
 # muda com o tempo — sem pessoas vivas, sem estatística que envelhece),
@@ -61,19 +63,41 @@ TOPICS = [
 ]
 
 
+# Códigos que valem tentar de novo (transitório) — 404 NÃO está aqui: página
+# realmente não existe com este título, tentar de novo não muda nada.
+_RETRYABLE_HTTP = {429, 500, 502, 503, 504}
+_RETRIES = 3
+_BACKOFF_S = (2.0, 5.0, 10.0)  # cresce a cada tentativa — dá tempo de um
+                                # eventual limite de taxa passar
+
+
 def fetch_summary(title: str) -> dict | None:
     url = API.format(urllib.parse.quote(title, safe=""))
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.load(resp)
-    except urllib.error.HTTPError as exc:
-        print(f"  [erro {exc.code}] {title}", file=sys.stderr)
-        return None
-    except Exception as exc:  # noqa: BLE001 - reporta e segue para o próximo
-        print(f"  [erro] {title}: {exc}", file=sys.stderr)
-        return None
+    data = None
+    for attempt in range(_RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.load(resp)
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code not in _RETRYABLE_HTTP or attempt == _RETRIES - 1:
+                print(f"  [erro {exc.code}] {title}: {exc.reason}", file=sys.stderr)
+                return None
+            print(f"  [tentativa {attempt + 1} falhou, HTTP {exc.code}] {title} "
+                  f"— tentando de novo em {_BACKOFF_S[attempt]}s", file=sys.stderr)
+            time.sleep(_BACKOFF_S[attempt])
+        except Exception as exc:  # noqa: BLE001 - rede/timeout: vale tentar de novo
+            if attempt == _RETRIES - 1:
+                print(f"  [erro] {title}: {type(exc).__name__}: {exc}", file=sys.stderr)
+                return None
+            print(f"  [tentativa {attempt + 1} falhou] {title}: "
+                  f"{type(exc).__name__}: {exc} — tentando de novo em "
+                  f"{_BACKOFF_S[attempt]}s", file=sys.stderr)
+            time.sleep(_BACKOFF_S[attempt])
 
+    if data is None:
+        return None
     if data.get("type") == "disambiguation":
         print(f"  [pulado: desambiguação] {title}", file=sys.stderr)
         return None
@@ -89,12 +113,14 @@ def fetch_summary(title: str) -> dict | None:
     }
 
 
-def main() -> None:
-    out_path = sys.argv[1] if len(sys.argv) > 1 else "wikipedia_import_output.json"
+def run_import(topics: list[str], out_path: str) -> None:
+    """Busca cada tópico e grava o resultado em `out_path`. Reutilizada pelo
+    script de reimportação dos tópicos que faltaram (retry_missing_
+    wikipedia_facts.py) — mesma lógica, lista de tópicos diferente."""
     results = []
     ok, skipped = 0, 0
-    for i, topic in enumerate(TOPICS, 1):
-        print(f"[{i}/{len(TOPICS)}] {topic}", file=sys.stderr)
+    for i, topic in enumerate(topics, 1):
+        print(f"[{i}/{len(topics)}] {topic}", file=sys.stderr)
         item = fetch_summary(topic)
         if item:
             results.append(item)
@@ -108,6 +134,11 @@ def main() -> None:
 
     print(f"\nPronto: {ok} importados, {skipped} pulados/com erro.", file=sys.stderr)
     print(f"Gravado em: {out_path}", file=sys.stderr)
+
+
+def main() -> None:
+    out_path = sys.argv[1] if len(sys.argv) > 1 else "wikipedia_import_output.json"
+    run_import(TOPICS, out_path)
 
 
 if __name__ == "__main__":

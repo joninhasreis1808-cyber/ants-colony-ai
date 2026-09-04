@@ -37,6 +37,13 @@
 .cam-state.act { color: var(--amber); }
 .cam-state.done { color: var(--leaf, #5faa72); }
 .cam-state.fail { color: var(--muted); }
+/* Nível 3 (item 6 §3): "confiança de cada passo" — só aparece quando um
+   evento real trouxe o número; nunca uma estimativa preenchida à toa. */
+.cam-conf {
+  font-family: var(--mono); font-size: 10.5px; color: var(--dim);
+  border: 1px solid var(--border); border-radius: 12px; padding: 3px 10px;
+  white-space: nowrap;
+}
 .cam-phases { display: flex; gap: 6px; margin: 14px 0 10px; }
 .cam-ph {
   flex: 1; text-align: center; font-family: var(--mono); font-size: 10.5px;
@@ -50,8 +57,21 @@
   overflow-wrap: break-word;
 }
 .cam-log { font-family: var(--mono); font-size: 11px; color: var(--muted); max-height: 132px; overflow-y: auto; }
-.cam-ln { display: flex; gap: 9px; padding: 2px 0; overflow-wrap: anywhere; }
-.cam-ln span { color: var(--dim); min-width: 38px; text-transform: uppercase; font-size: 9.5px; padding-top: 2px; }
+.cam-ln { display: flex; gap: 9px; padding: 2px 0; overflow-wrap: anywhere; flex-wrap: wrap; }
+.cam-ln > span:first-child { color: var(--dim); min-width: 38px; text-transform: uppercase; font-size: 9.5px; padding-top: 2px; }
+.cam-ln-data { color: var(--dim); font-style: italic; }
+/* Nível 3 (item 6 §3): "fica escondido até ser pedido" — mesmo padrão do
+   cartão epistêmico (epistemic_card.css .epi-head/.epi-body). */
+.cam-trace-toggle {
+  display: block; width: 100%; text-align: left; font-family: var(--mono);
+  font-size: 10.5px; color: var(--muted); padding: 8px 0 0; margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.cam-trace-toggle:hover { color: var(--text); }
+.cam-trace {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  max-height: 260px; overflow-y: auto; margin-top: 8px; padding-top: 4px;
+}
 .cam-roster { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .cam-chip {
   display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono);

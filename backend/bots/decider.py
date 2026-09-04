@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from backend.bots.base import Bot
+from backend.core import Phase
 
 
 class DeciderBot(Bot):
@@ -35,6 +36,14 @@ class DeciderBot(Bot):
         summary = interp.get("summary", "")
         confidence = self._confidence(interp, sources)
         answer = summary or "Sem evidências suficientes para concluir."
+        # Nível 3 do item 6 (§3): "confiança de cada passo" no rastro real do
+        # bot, não só no resultado final da missão — mesmo padrão que o
+        # NavigatorBot já usa para anunciar os providers tentados.
+        await self.emit(
+            task_id, Phase.DO,
+            f"Decidiu com confiança {confidence}",
+            confidence=confidence, n_sources=len(sources),
+        )
         return {
             "goal": plan["goal"],
             "answer": answer,

@@ -14,12 +14,22 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from backend.memory.embedder import SparseVector, default_embedder
+from backend.memory.embedder import (
+    ALGO_VERSION, SparseVector, default_embedder,
+)
 from backend.memory.schemas import EncodedMemory, Memory, MemoryType
 
 
-def _embedding_do_registro(rec: dict) -> SparseVector:
-    """Embedding de um registro salvo, migrando o formato antigo.
+def _recalcula(rec: dict) -> SparseVector:
+    """Reembeda a partir do `content` salvo (a única fonte confiável)."""
+    try:
+        return default_embedder().embed(str(rec.get("content", "")))
+    except Exception:                           # noqa: BLE001
+        return {}
+
+
+def _embedding_do_registro(rec: dict, algo_atual: bool = True) -> SparseVector:
+    """Embedding de um registro salvo, migrando formato E algoritmo.
 
     Antes os vetores eram DENSOS (`list[float]`, 768 posições) e vinham de
     um embedder sem stopwords, sem radical e sem peso por raridade. Não dá
@@ -27,15 +37,21 @@ def _embedding_do_registro(rec: dict) -> SparseVector:
     vetor velho com uma consulta nova daria similaridade sem sentido — sem
     erro nenhum, só recall silenciosamente errado. Como o `content` está
     salvo junto, o certo é RECALCULAR a partir dele.
+
+    O formato denso se reconhece pela forma (lista). Já uma troca de
+    ALGORITMO dentro do formato esparso é invisível — um dict de antes e um
+    de agora são indistinguíveis olhando só para eles. Foi o que a dobra de
+    acentos (item 9) provocou: todo radical acentuado mudou de dimensão. Por
+    isso `algo_atual` vem de fora, do carimbo de versão gravado no estado:
+    quando não bate, recalcula igual ao caso denso.
     """
     emb = rec.get("embedding")
     if isinstance(emb, dict):
+        if not algo_atual:                      # algoritmo velho -> recalcula
+            return _recalcula(rec)
         return {int(k): float(v) for k, v in emb.items()}
-    if isinstance(emb, list) and emb:          # formato antigo -> recalcula
-        try:
-            return default_embedder().embed(str(rec.get("content", "")))
-        except Exception:                       # noqa: BLE001
-            return {}
+    if isinstance(emb, list) and emb:           # formato antigo -> recalcula
+        return _recalcula(rec)
     return {}
 from backend.memory.store_retrieval import RetrievalMixin
 from backend.memory.vector_backend import make_collection
@@ -157,7 +173,7 @@ class DistributedStore(RetrievalMixin):
 
     def to_state(self) -> dict[str, Any]:
         """Todas as memórias + seus embeddings, serializáveis em JSON."""
-        return {"memories": [
+        return {"embedding_algo": ALGO_VERSION, "memories": [
             {"id": m.id, "content": m.content, "mem_type": m.mem_type.value,
              "strength": m.strength, "attention_score": m.attention_score,
              "features": m.features, "associations": m.associations,
@@ -173,6 +189,9 @@ class DistributedStore(RetrievalMixin):
         """Reconstrói memórias, embeddings E as coleções vetoriais a partir
         de um `to_state()` anterior — usado no boot, quando `persist` tem
         algo gravado de uma execução passada."""
+        # Sem carimbo = estado gravado antes de existir versionamento,
+        # logo anterior à dobra de acentos: tratar como algoritmo velho.
+        algo_atual = state.get("embedding_algo") == ALGO_VERSION
         for rec in state.get("memories") or []:
             try:
                 mem_type = MemoryType(rec["mem_type"])
@@ -189,7 +208,7 @@ class DistributedStore(RetrievalMixin):
                 )
             except (KeyError, ValueError):
                 continue           # registro corrompido: pula, não derruba o boot
-            emb = _embedding_do_registro(rec)
+            emb = _embedding_do_registro(rec, algo_atual)
             self._memories[mem.id] = mem
             self._embeddings[mem.id] = emb
             for name in self._targets_for(mem_type, mem.emotional_weight):

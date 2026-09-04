@@ -37,8 +37,15 @@ class CooccurrenceEmbeddings:
                         self._cooc[w][toks[j]] += 1
 
     def vector(self, word: str) -> dict[str, float]:
-        """Vetor esparso PMI de uma palavra (contexto -> peso)."""
-        w = stem(word.lower())
+        """Vetor esparso PMI de uma palavra (contexto -> peso).
+
+        A consulta passa pelo MESMO `tokenize` que `fit()` usou para montar
+        o índice. Antes fazia `stem(word.lower())` por fora dele, e no dia
+        em que `tokenize` passou a dobrar acento a busca por "feromônios"
+        deixou de achar a chave "feromonios" que ela própria indexou —
+        índice e consulta precisam falar a mesma língua."""
+        toks = tokenize(word)
+        w = stem(toks[0]) if toks else ""
         ctx = self._cooc.get(w)
         if not ctx or self._total == 0:
             return {}

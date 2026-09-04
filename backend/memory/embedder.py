@@ -43,6 +43,17 @@ from backend.nlp.processor import _STOP, idf, stem, tokenize
 
 DIM = 4096
 
+# Versão do algoritmo de embedding. Sobe SEMPRE que uma mudança alterar a
+# dimensão em que um texto cai — porque aí o vetor gravado antes deixa de
+# conversar com a consulta nova, e o sintoma não é erro: é recall errado em
+# silêncio. `DistributedStore` grava esta versão junto do estado e
+# recalcula do `content` quando ela não bate.
+#   1 = denso 768, sem stopword/radical/peso (pré-item 7)
+#   2 = esparso 4096, com stopword + radical + IDF (item 7)
+#   3 = idem, sobre token SEM acento (item 9) — "bactéria" saiu da
+#       dimensão 2277 para a 430, e todo radical acentuado mudou junto
+ALGO_VERSION = 3
+
 # Vetor esparso: dimensão -> peso. Dimensões ausentes valem zero.
 SparseVector = dict[int, float]
 

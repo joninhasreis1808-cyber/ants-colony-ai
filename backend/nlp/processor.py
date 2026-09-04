@@ -50,6 +50,36 @@ Duas decisões deliberadas, ambas verificadas antes de escrever o código:
 
 Medido antes de ligar, sobre 198 perguntas com resposta conhecida:
 acerto do top-1 sobe de 78,8% para 82,8% (10 casos melhoram, 2 pioram).
+
+Dobra de acentos na raiz (Precisão Offline v1 · item 9)
+-------------------------------------------------------
+`tokenize` devolve token SEM acento, e por isso toda comparação de texto
+da colônia — `keywords`, `similarity`, `tfidf`, o `HybridStore` que roda
+em cima deles e o `HashingEmbedder` — passou a tratar "bactéria" e
+"bacteria" como a mesma palavra. Antes não tratava: quem digitava sem
+acento, o normal no celular, perdia respostas que a colônia tinha em mãos.
+
+Medido ponta a ponta nas 18 perguntas de
+`test_precisao_offline_efeito_somado.py`, só mudando a grafia:
+
+    acentuada  : 13/18  ->  13/18   (inalterado, de propósito)
+    sem acento :  6/18  ->  13/18   (9/18 com só o portão corrigido, #127)
+
+A dobra tinha de ser na RAIZ, não no `HybridStore`. Corrigir só lá seria
+impossível de fazer direito, e a razão é o stemming: dobrar DEPOIS do
+radical não junta "operações" (-> "opera") com "operacoes" (-> "operaco"),
+porque o sufixo "ções" só casa acentuado. E dobrar antes exige que as
+listas de referência deste módulo dobrem junto — senão "não" deixa de
+casar com a stopword e vira termo significativo (o mesmo erro de ordem
+documentado no `RelevanceGate`). São as três listas + os sufixos, todos
+aqui: por isso a correção mora neste arquivo, e não no chamador.
+
+Consequência que exigiu migração: o `_slot()` do embedder faz hash do
+radical, então TODO radical acentuado mudou de dimensão ("bactéria":
+2277 -> 430). Vetor gravado antes desta mudança não conversa mais com
+consulta nova — sem erro nenhum, só recall silenciosamente errado. O
+`DistributedStore` passou a gravar a versão do algoritmo e a RECALCULAR
+do `content` quando ela não bate; ver `embedder.ALGO_VERSION`.
 """
 from __future__ import annotations
 
@@ -57,27 +87,47 @@ import json
 import math
 import os
 import re
+import unicodedata
 from collections import Counter
 from functools import lru_cache
 
+
+def fold(text: str) -> str:
+    """Tira o acento, preservando a letra ("bactéria" -> "bacteria").
+
+    Toda comparação de texto da colônia passa por aqui, via `tokenize`.
+    As listas de referência abaixo são dobradas COM a mesma função — ver
+    o cabeçalho do módulo para o porquê de não poder ser só o texto."""
+    return "".join(c for c in unicodedata.normalize("NFKD", str(text))
+                   if not unicodedata.combining(c))
+
+
 # Stopwords em pt/en (núcleo pequeno, o bastante para filtrar ruído).
-_STOP = frozenset("""
+# Escritas acentuadas porque é assim que se lê, e dobradas na definição
+# para casar com o token dobrado — se ficassem acentuadas, "não" viraria
+# termo significativo no dia em que `tokenize` passou a dobrar.
+_STOP = frozenset(fold("""
 a o e é de do da em um uma que com para por os as no na se não sua seu
 the a an of to in is it and or for on with as at by this that be are was
-""".split())
+""").split())
 
-# Léxico de sentimento (pt/en), pesos simples.
-_POS = frozenset("""bom ótimo excelente incrível maravilhoso sucesso feliz
+# Léxico de sentimento (pt/en), pesos simples. Dobrado pelo mesmo motivo:
+# "ótimo" nunca mais chegaria aqui acentuado.
+_POS = frozenset(fold("""bom ótimo excelente incrível maravilhoso sucesso feliz
 gosto adorei positivo melhor eficiente rápido good great excellent amazing
-happy success love best fast wonderful""".split())
-_NEG = frozenset("""ruim péssimo terrível horrível falha erro triste odeio
+happy success love best fast wonderful""").split())
+_NEG = frozenset(fold("""ruim péssimo terrível horrível falha erro triste odeio
 negativo pior lento problema bug bad terrible awful hate worst slow fail
-error problem sad""".split())
+error problem sad""").split())
 
-# Sufixos para um stemming leve em português.
-_SUFFIXES = ("mente", "ções", "ção", "ismo", "ista", "ável", "ível",
-             "ando", "endo", "indo", "ados", "adas", "ada", "ado", "ar",
-             "er", "ir", "es", "s")
+# Sufixos para um stemming leve em português. Também dobrados: o radical é
+# calculado sobre token já sem acento, e "ções" jamais casaria com
+# "operacoes" — era o que fazia "operações" e "operacoes" darem radicais
+# diferentes ("opera" e "operaco").
+_SUFFIXES = tuple(fold(s) for s in
+                  ("mente", "ções", "ção", "ismo", "ista", "ável", "ível",
+                   "ando", "endo", "indo", "ados", "adas", "ada", "ado", "ar",
+                   "er", "ir", "es", "s"))
 
 
 # Corpus estático que serve de base para o IDF. Lido direto do arquivo, sem
@@ -87,8 +137,12 @@ _IDF_CORPUS = os.path.normpath(os.path.join(
 
 
 def tokenize(text: str) -> list[str]:
-    """Divide o texto em tokens minúsculos alfanuméricos."""
-    return re.findall(r"[a-zà-ú0-9]+", text.lower())
+    """Divide o texto em tokens minúsculos alfanuméricos, SEM acento.
+
+    A classe do regex continua aceitando letra acentuada — é preciso, para
+    não partir "bactéria" em "bact" + "ria"; a dobra vem depois, sobre o
+    token inteiro."""
+    return [fold(t) for t in re.findall(r"[a-zà-ú0-9]+", str(text).lower())]
 
 
 def stem(word: str) -> str:

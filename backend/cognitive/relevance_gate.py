@@ -19,6 +19,34 @@ significativos da pergunta)`. Perguntas com vocabulário mais rico (3+
 termos) continuam exigindo a sobreposição cheia — a proteção original
 contra uma única palavra solta destravando um fato desconexo não muda.
 
+Dobra de acentos (regressão achada ao medir o efeito somado da frente)
+----------------------------------------------------------------------
+O `_tokens` original passava por `_norm` e TIRAVA o acento. Ao trocar por
+`_significant` acima, o item 6 ganhou a filtragem de stopword de verdade
+— o gate velho aprovava fato por causa do "que", que tem 3 letras e
+escapava do corte por tamanho — mas levou a normalização junto, e ninguém
+viu porque toda pergunta de teste era escrita acentuada, igual ao corpus.
+Medido ponta a ponta nas 18 perguntas de
+`test_precisao_offline_efeito_somado.py`, só mudando a grafia:
+
+    acentuada  : colônia 5/8 | geral 8/10   (13/18)
+    sem acento : colônia 1/8 | geral 5/10   ( 6/18)
+
+Quem digita "o que e uma bacteria?" — o normal no celular — perdia
+metade das respostas que a colônia já tinha em mãos.
+
+A ordem importa e é contra-intuitiva: a dobra vem DEPOIS do `keywords()`.
+Normalizar o texto antes parece mais simples e está errado, porque a
+lista de stopwords tem "não" acentuado e não tem "nao" — desacentuando
+primeiro, "não" deixa de casar com a stopword e vira termo significativo:
+
+    "o que não é um átomo?"   antes  -> {'atomo', 'nao'}   (2 termos)
+                              depois -> {'atomo'}          (1 termo)
+
+E como `exigido = min(min_overlap, len(q))`, o termo fantasma AUMENTA a
+exigência — o portão ficaria mais rígido pelo motivo errado. Dobrar
+depois preserva a filtragem de stopword exatamente como está.
+
 Offline, determinístico, sem dependências pesadas (só o NLPProcessor que
 o resto da colônia já usa, para reaproveitar o MESMO filtro de stopwords
 em vez de duplicar uma lista nova). Aditivo.
@@ -66,10 +94,14 @@ class RelevanceGate:
 
     def _significant(self, text: str) -> set[str]:
         """Termos que carregam sentido — sem stopword, sem palavra de
-        1-2 letras. `top=50` é só um teto generoso (nenhuma pergunta ou
-        fato real tem 50+ termos distintos); na prática devolve TODOS os
-        termos significativos, não um recorte."""
-        return set(self._nlp.keywords(text, top=50))
+        1-2 letras, sem acento. `top=50` é só um teto generoso (nenhuma
+        pergunta ou fato real tem 50+ termos distintos); na prática
+        devolve TODOS os termos significativos, não um recorte.
+
+        A dobra de acento vem DEPOIS do `keywords()`, nunca antes — ver o
+        cabeçalho do módulo para o porquê (normalizar na entrada faz
+        "não" escapar da lista de stopwords e virar termo significativo)."""
+        return {_norm(t) for t in self._nlp.keywords(text, top=50)}
 
     def relevant_facts(self, goal: str, facts: list[str]) -> list[str]:
         """Mantém só os fatos com sobreposição real suficiente com a pergunta.

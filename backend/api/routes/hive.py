@@ -8,6 +8,7 @@ from __future__ import annotations
 from backend.monitoring.silent_failures import swallow
 
 import asyncio
+import os
 import time
 from typing import Any
 
@@ -28,7 +29,7 @@ router = APIRouter(tags=["hive"])
 # Estado de processo compartilhado pela colmeia.
 BUS = EventBus()
 ROUTER = ProviderRouter()
-MEMORY = SharedMemory("ants.db")
+MEMORY = SharedMemory(os.environ.get("ANTS_DB", "ants.db"))
 # Enxame persistente: feromônios e energia sobrevivem entre tarefas.
 PHEROMONES = PheromoneField()
 LIFECYCLE = ColonyLifecycle()

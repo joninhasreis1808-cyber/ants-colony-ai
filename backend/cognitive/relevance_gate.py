@@ -125,6 +125,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from backend.knowledge.aliases import equivalentes, expandir
 from backend.nlp.processor import NLPProcessor, stem, tokenize
 
 # Marcas de que a pergunta pede dado atual/externo (precisa de web real).
@@ -201,10 +202,23 @@ class RelevanceGate:
         if not q:
             return []
         exigido = min(self._min, len(q))
+        # Cada termo da pergunta vale também pelos seus apelidos: "dna" não
+        # aparece uma vez sequer no artigo de ácido desoxirribonucleico, e
+        # sem isto a sobreposição é ZERO e o fato certo morre aqui, antes
+        # de qualquer outra regra do portão poder opinar.
+        # Só os apelidos entram — a comparação segue sobre os MESMOS termos
+        # de antes, sem radicalizar. Radicalizar aqui foi uma mudança que
+        # eu fiz junto por descuido: ela afrouxa o portão além do que esta
+        # correção promete (fez "vírus"/"viru" casar com variantes) e
+        # dissolveu o guard do multi-hop. Os termos dos apelidos são
+        # idênticos aos seus radicais, então nada disso era necessário para
+        # os apelidos funcionarem. Uma mudança, um efeito.
+        q_com_apelidos = {eq for termo in q for eq in equivalentes(termo)}
+        com_apelidos = expandir(goal)
         kept: list[tuple[float, str]] = []
         for fact in facts:
-            sim = self._nlp.similarity(goal, fact)
-            passa_contagem = len(q & self._significant(fact)) >= exigido
+            sim = self._nlp.similarity(com_apelidos, fact)
+            passa_contagem = len(q_com_apelidos & self._significant(fact)) >= exigido
             if passa_contagem or sim >= self._piso:
                 kept.append((sim, fact))
         # Mais parecido primeiro: quem consome isto (`_best_evidence`, a
@@ -254,16 +268,31 @@ class RelevanceGate:
         """
         if not kept:
             return kept
-        sobrou = [f for f in kept if self._nlp.similarity(goal, f) >= _PISO_RECUSA]
+        # Apelidos entram SÓ na medição: "o que é o DNA?" não compartilha
+        # palavra nenhuma com o artigo de ácido desoxirribonucleico e marca
+        # 0,0000, abaixo de qualquer piso. Com os apelidos juntos, 0,1733.
+        com_apelidos = expandir(goal)
+        sobrou = [f for f in kept
+                  if self._nlp.similarity(com_apelidos, f) >= _PISO_RECUSA]
         if not sobrou:
             return []
         termos = self._significant(goal)
+        # O núcleo sai da pergunta ORIGINAL, nunca da expandida: os
+        # apelidos são acrescentados no fim, e tirá-lo do texto expandido
+        # faria o apelido virar o núcleo — o assunto da pergunta passaria a
+        # depender de qual sinônimo o mapa tem, não do que foi perguntado.
         nucleo = self._nucleo(goal)
         if nucleo is None or len(termos) > _MAX_TERMOS_FOCADA:
             return sobrou
-        alvo = stem(nucleo)
+        # `equivalentes` devolve forma de SUPERFÍCIE (é o que a contagem de
+        # sobreposição acima precisa). Aqui a comparação é por RADICAL, para
+        # que "enxame" no fato case com "enxames" na pergunta — então os dois
+        # lados são radicalizados explicitamente. Os dois chamadores desta
+        # camada querem representações diferentes; deixar isso implícito já
+        # fez o apelido falhar em silêncio uma vez.
+        alvos = {stem(a) for a in equivalentes(nucleo)}
         com_o_nucleo = [f for f in sobrou
-                        if alvo in {stem(t) for t in tokenize(f)}]
+                        if alvos & {stem(t) for t in tokenize(f)}]
         return com_o_nucleo or []
 
     def verdict(self, goal: str, facts: list[str]) -> dict:

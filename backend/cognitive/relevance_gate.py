@@ -47,6 +47,42 @@ E como `exigido = min(min_overlap, len(q))`, o termo fantasma AUMENTA a
 exigência — o portão ficaria mais rígido pelo motivo errado. Dobrar
 depois preserva a filtragem de stopword exatamente como está.
 
+Ranking por similaridade (resposta confiantemente errada)
+---------------------------------------------------------
+Contar termos fazia a colônia responder ERRADO com confiança — pior que
+recusar, e invisível para os testes de honestidade, que só cobrem
+pergunta de dado atual:
+
+    "como funciona um vulcão?"  ->  Blockchain   (confiança 0,49)
+
+O fato certo estava reunido, carregando o termo mais distintivo da
+pergunta, e perdeu para dois genéricos:
+
+    overlap={'vulcao'}                Vulcão      1 termo -> descartado
+    overlap={'como', 'funciona'}      Blockchain  2 termos -> mantido
+
+O `similarity()` já sabia a resposta (Vulcão 0,3329 x Blockchain 0,0852);
+o portão é que decidia antes dele e entregava a escolha errada já feita.
+É isto que explica a medição do PR #126 — o IDF do item 5 "não mudava
+nada" porque nunca chegava a escolher. Agora o portão RESGATA por
+similaridade o que a contagem descartaria, e devolve ordenado.
+
+A mudança é ADITIVA: tudo que passava pela contagem continua passando. O
+piso (0,28) só resgata, nunca recusa — foi medido, não chutado (fato certo
+no topo fica entre 0,31 e 0,68; errado no topo nunca passa de 0,26).
+
+Piso como critério de RECUSA foi testado e rejeitado: a similaridade cai
+com o tamanho da pergunta — o mesmo fato certo tira 0,3917 em "o que são
+feromônios?" e 0,2303 em "o que são feromônios e como coordenam uma
+colônia?" — então recusar por piso puniria pergunta longa que a colônia
+responde certo.
+
+Fica declarado o que NÃO é do portão: "como as formigas se comunicam?"
+ainda erra, e a causa é o stemmer, não isto aqui — "comunicam" e
+"comunicarem" não caem no mesmo radical (nem "decisões"/"decisão", nem
+"enxame"/"enxames"), então o fato certo perde por pouco. Medido, não
+suposto.
+
 Offline, determinístico, sem dependências pesadas (só o NLPProcessor que
 o resto da colônia já usa, para reaproveitar o MESMO filtro de stopwords
 em vez de duplicar uma lista nova). Aditivo.
@@ -73,6 +109,12 @@ def _norm(text: str) -> str:
     return "".join(c for c in text if not unicodedata.combining(c))
 
 
+# Piso de similaridade para RESGATAR um fato que a contagem de termos
+# descartaria. Medido: quando o melhor fato está certo, a similaridade fica
+# entre 0,31 e 0,68; quando está errado, nunca passa de 0,26. 0,28 cai no vão.
+_PISO_SIMILARIDADE = 0.28
+
+
 def _tokens(text: str) -> set[str]:
     return {t for t in re.findall(r"\w+", _norm(text)) if len(t) > 2}
 
@@ -80,8 +122,10 @@ def _tokens(text: str) -> set[str]:
 class RelevanceGate:
     """Decide se a colônia pode responder com o que tem, ou deve se declarar."""
 
-    def __init__(self, min_overlap: int = 2) -> None:
+    def __init__(self, min_overlap: int = 2,
+                 piso: float = _PISO_SIMILARIDADE) -> None:
         self._min = min_overlap
+        self._piso = piso
         self._nlp = NLPProcessor()
 
     def is_temporal(self, goal: str) -> bool:
@@ -113,12 +157,16 @@ class RelevanceGate:
         if not q:
             return []
         exigido = min(self._min, len(q))
-        kept: list[str] = []
+        kept: list[tuple[float, str]] = []
         for fact in facts:
-            overlap = len(q & self._significant(fact))
-            if overlap >= exigido:
-                kept.append(fact)
-        return kept
+            sim = self._nlp.similarity(goal, fact)
+            passa_contagem = len(q & self._significant(fact)) >= exigido
+            if passa_contagem or sim >= self._piso:
+                kept.append((sim, fact))
+        # Mais parecido primeiro: quem consome isto (`_best_evidence`, a
+        # autoconsistência) recebe o melhor candidato na frente.
+        kept.sort(key=lambda par: par[0], reverse=True)
+        return [fact for _, fact in kept]
 
     def verdict(self, goal: str, facts: list[str]) -> dict:
         """Resumo da decisão: usar conhecimento ou declarar limitação.

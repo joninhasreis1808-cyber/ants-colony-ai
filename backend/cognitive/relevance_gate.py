@@ -83,6 +83,39 @@ ainda erra, e a causa é o stemmer, não isto aqui — "comunicam" e
 "enxame"/"enxames"), então o fato certo perde por pouco. Medido, não
 suposto.
 
+Só o que é SOBRE a pergunta (fato que apenas encosta no assunto)
+------------------------------------------------------------------
+Dois casos de resposta confiantemente errada, com causas diferentes, os
+dois achados sondando a colônia FORA do benchmark que eu mesmo escrevi:
+
+    "o que é a fotossíntese?"      -> ENERGIA SOLAR  (confiança 0,49)
+    "o que é o teorema de Bayes?"  -> PITÁGORAS      (confiança 0,62)
+
+Nenhum dos dois assuntos existe no corpus; o certo era recusar.
+
+  1. O texto de Energia solar MENCIONA fotossíntese, então a sobreposição
+     batia — e com um só termo significativo na pergunta o exigido cai
+     para 1. Mas a similaridade era 0,0715, contra 0,31 a 0,68 de todo
+     acerto real. `_PISO_RECUSA` separa isso com folga de 2x.
+
+  2. "teorema de Bayes" e "teorema de Pitágoras" dividem a FORMA: a
+     similaridade dá 0,3401, ACIMA do menor acerto (0,3116) — nenhum piso
+     pega. O que denuncia é "bayes" não aparecer no fato.
+
+O NÚCLEO NÃO É O TERMO DE MAIOR IDF. Isso foi tentado e falhou: em "como
+funciona um vulcão?" o IDF de "funciona" empata com o de "vulcao" (4,24
+os dois, corpus de 50 textos), o desempate pegou o genérico e a regra
+reprovou a resposta CERTA — o mesmo defeito que ela existia para
+corrigir, e a mesma fraqueza que já tinha derrubado a ideia de pesar a
+sobreposição por IDF. O núcleo é o ÚLTIMO termo significativo: em
+pergunta portuguesa o assunto cai no fim.
+
+A regra do núcleo só vale para pergunta focada (até 3 termos): pergunta
+longa tem mais de um jeito certo de ser respondida.
+
+Medido: 15/18 mantidos nas duas grafias, honestidade 5/5, e os cinco
+assuntos fora do corpus passam a recusar.
+
 Offline, determinístico, sem dependências pesadas (só o NLPProcessor que
 o resto da colônia já usa, para reaproveitar o MESMO filtro de stopwords
 em vez de duplicar uma lista nova). Aditivo.
@@ -92,7 +125,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-from backend.nlp.processor import NLPProcessor
+from backend.nlp.processor import NLPProcessor, stem, tokenize
 
 # Marcas de que a pergunta pede dado atual/externo (precisa de web real).
 _TEMPORAL = {
@@ -113,6 +146,17 @@ def _norm(text: str) -> str:
 # descartaria. Medido: quando o melhor fato está certo, a similaridade fica
 # entre 0,31 e 0,68; quando está errado, nunca passa de 0,26. 0,28 cai no vão.
 _PISO_SIMILARIDADE = 0.28
+
+# Piso de RECUSA: abaixo disto o melhor fato não é sobre a pergunta, só
+# encosta nela. Medido — acerto no topo nunca fica abaixo de 0,31; fato
+# que deveria ser recusado nunca passa de 0,072. 0,15 fica no meio, com
+# folga de 2x para os dois lados.
+_PISO_RECUSA = 0.15
+
+# A regra do termo raro só vale para pergunta FOCADA. Numa pergunta longa
+# é legítimo responder por outro pedaço dela — "o que são feromônios e
+# como coordenam uma colônia?" tem resposta certa que não cita feromônio.
+_MAX_TERMOS_FOCADA = 3
 
 
 def _tokens(text: str) -> set[str]:
@@ -168,6 +212,60 @@ class RelevanceGate:
         kept.sort(key=lambda par: par[0], reverse=True)
         return [fact for _, fact in kept]
 
+    def _nucleo(self, goal: str) -> str | None:
+        """O assunto da pergunta: o ÚLTIMO termo significativo dela.
+
+        Não é o de maior IDF — isso foi medido e falhou. Num corpus de 50
+        textos o IDF não distingue verbo genérico de assunto: em "como
+        funciona um vulcão?" o "funciona" empata com "vulcao" (4,24 os
+        dois) e o desempate pegava o genérico, reprovando a resposta
+        CERTA. É a mesma fraqueza que já tinha reprovado a ideia de pesar
+        a sobreposição por IDF.
+
+        Em pergunta portuguesa o assunto cai no fim ("o que é o teorema de
+        BAYES?", "como funciona um VULCÃO?"), e isso se sustentou em todos
+        os casos medidos."""
+        significativos = self._significant(goal)
+        na_ordem = [t for t in tokenize(goal) if t in significativos]
+        return na_ordem[-1] if na_ordem else None
+
+    def _so_o_que_e_sobre_a_pergunta(self, goal: str, kept: list[str]) -> list[str]:
+        """Descarta fato que apenas ENCOSTA no assunto.
+
+        Dois defeitos reais, com causas diferentes e medidas separadas:
+
+        1. "o que é a fotossíntese?" devolvia ENERGIA SOLAR (confiança
+           0,49) — aquele texto MENCIONA fotossíntese de passagem, então a
+           sobreposição de termos batia. Mas a similaridade era 0,0715,
+           contra 0,31 a 0,68 de todo acerto real. O piso de recusa pega.
+
+        2. "o que é o teorema de Bayes?" devolvia PITÁGORAS (confiança
+           0,62) — e aqui a similaridade é 0,3401, ACIMA do menor acerto:
+           nenhum piso pega, porque a pergunta e o fato compartilham a
+           forma ("teorema", "matemática"). O que denuncia é o termo que
+           decide a pergunta, "bayes", não aparecer em lugar nenhum do
+           fato. Medido: nos acertos, o núcleo SEMPRE aparece.
+
+        A regra 2 só vale para pergunta focada (até 3 termos). Sem essa
+        guarda ela reprovaria "o que são feromônios e como coordenam uma
+        colônia?", que é respondida certo pelo fato de coordenação — sem
+        citar feromônio. Pergunta longa tem mais de um jeito certo de ser
+        respondida; pergunta de um assunto só, não.
+        """
+        if not kept:
+            return kept
+        sobrou = [f for f in kept if self._nlp.similarity(goal, f) >= _PISO_RECUSA]
+        if not sobrou:
+            return []
+        termos = self._significant(goal)
+        nucleo = self._nucleo(goal)
+        if nucleo is None or len(termos) > _MAX_TERMOS_FOCADA:
+            return sobrou
+        alvo = stem(nucleo)
+        com_o_nucleo = [f for f in sobrou
+                        if alvo in {stem(t) for t in tokenize(f)}]
+        return com_o_nucleo or []
+
     def verdict(self, goal: str, facts: list[str]) -> dict:
         """Resumo da decisão: usar conhecimento ou declarar limitação.
 
@@ -181,6 +279,7 @@ class RelevanceGate:
                 "kept": [],
             }
         kept = self.relevant_facts(goal, facts)
+        kept = self._so_o_que_e_sobre_a_pergunta(goal, kept)
         if not kept:
             return {
                 "declare_limitation": True,

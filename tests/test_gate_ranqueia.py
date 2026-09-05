@@ -91,13 +91,20 @@ def test_o_resgate_e_aditivo_nao_troca_um_pelo_outro():
 
 def test_pergunta_longa_nao_e_punida():
     """A razão de o piso não ser critério de recusa: a similaridade dilui
-    com o tamanho da pergunta. Esta é respondida certo e tem de continuar
-    sendo."""
+    com o tamanho da pergunta. Esta é respondida e tem de continuar sendo.
+
+    A asserção cobra RELEVÂNCIA, não uma metade específica. A pergunta tem
+    duas partes ("o que são feromônios" E "como coordenam uma colônia") e
+    escolher qualquer uma delas é resposta legítima — exigir a primeira era
+    especificidade a mais da minha parte, e quebrou quando o stemmer
+    melhorou e o fato sobre coordenação passou a ganhar com folga (0,3400
+    contra os 0,2387 dos feromônios). Um empate técnico virou vitória clara
+    de um fato que responde de verdade; isso é melhora, não regressão."""
     texto = (CognitiveFallback()
              .answer("o que são feromônios e como coordenam uma colônia?")
              .get("answer") or "").lower()
     assert "suficiente" not in texto, f"passou a recusar: {texto[:150]}"
-    assert "feromôn" in texto or "feromon" in texto, texto[:150]
+    assert any(t in texto for t in ("feromôn", "feromon", "coorden")), texto[:150]
 
 
 def test_ordena_do_mais_parecido_para_o_menos():

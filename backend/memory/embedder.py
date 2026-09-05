@@ -52,7 +52,10 @@ DIM = 4096
 #   2 = esparso 4096, com stopword + radical + IDF (item 7)
 #   3 = idem, sobre token SEM acento (item 9) — "bactéria" saiu da
 #       dimensão 2277 para a 430, e todo radical acentuado mudou junto
-ALGO_VERSION = 3
+#   4 = idem, com o stemmer que reduz plural antes de cortar sufixo
+#       (item 10) — "decisões" deixou de virar "deciso" e virou "decisao",
+#       mudando de dimensão junto com toda palavra de plural irregular
+ALGO_VERSION = 4
 
 # Vetor esparso: dimensão -> peso. Dimensões ausentes valem zero.
 SparseVector = dict[int, float]

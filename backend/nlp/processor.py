@@ -80,6 +80,41 @@ radical, então TODO radical acentuado mudou de dimensão ("bactéria":
 consulta nova — sem erro nenhum, só recall silenciosamente errado. O
 `DistributedStore` passou a gravar a versão do algoritmo e a RECALCULAR
 do `content` quando ela não bate; ver `embedder.ALGO_VERSION`.
+
+Stemmer que reduz plural antes de cortar (Precisão Offline v1 · item 10)
+------------------------------------------------------------------------
+O `stem` era uma lista de sufixos aplicada crua. Medido sobre 27 pares
+morfologicamente relacionados do português real, só SETE caíam no mesmo
+radical — terminação verbal nunca saía ("comunicam" ficava inteira
+enquanto "comunicar" virava "comunic"), plural irregular não era tratado
+("decisões" -> "deciso" contra "decisão" -> "decisao") e "enxames"
+perdia o "es" sem casar com "enxame". Era isso que fazia a colônia
+responder "como as formigas se comunicam?" com o fato de Castas: o termo
+que decidia a pergunta não casava com o do fato certo.
+
+A ordem é o miolo: reduzir o PLURAL primeiro, cortar sufixo depois. E ela
+resolve de graça a sobre-radicalização declarada no #128 — com o plural
+já normalizado, a regra "ção" deixa de ser necessária para juntar
+"decisão"/"decisões", e "vulcão" para de virar "vul".
+
+Medido no fluxo, não só em pares:
+
+    ponta a ponta (18 perguntas) : 14/18 -> 15/18   (nas duas grafias)
+    recall do embedder (150)     : 94,0% -> 98,0%
+    top-1 por similaridade (200) : 96,0% -> 98,0%
+    honestidade                  :   5/5 ->   5/5
+
+Uma variante MAIS agressiva foi medida e rejeitada: cortar "a"/"o" final
+(gênero e 3ª pessoa) acertava mais pares — 25/27 contra 19/27 — e no
+fluxo real o recall CAIU para 97,3%, além de juntar "porta"/"portar" e
+"celular"/"célula". Par de palavras é proxy; recuperação é o que vale.
+
+O corte exige sobrar 3 letras — é o que separa "casa" de "casar". A
+exceção é "acao", que exige 4: com 3 ele junta "coração" e "corar" em
+"cor", e com 4 ainda junta o caso útil, "coordenação" com "coordenam".
+
+Como o radical mudou, mudou também a dimensão do embedder: `ALGO_VERSION`
+foi para 4 e o estado gravado antes é recalculado do `content`.
 """
 from __future__ import annotations
 
@@ -120,14 +155,29 @@ _NEG = frozenset(fold("""ruim péssimo terrível horrível falha erro triste ode
 negativo pior lento problema bug bad terrible awful hate worst slow fail
 error problem sad""").split())
 
-# Sufixos para um stemming leve em português. Também dobrados: o radical é
-# calculado sobre token já sem acento, e "ções" jamais casaria com
-# "operacoes" — era o que fazia "operações" e "operacoes" darem radicais
-# diferentes ("opera" e "operaco").
-_SUFFIXES = tuple(fold(s) for s in
-                  ("mente", "ções", "ção", "ismo", "ista", "ável", "ível",
-                   "ando", "endo", "indo", "ados", "adas", "ada", "ado", "ar",
-                   "er", "ir", "es", "s"))
+# Plural -> singular. Aplicado ANTES de qualquer outro corte, e é o que
+# torna desnecessária a antiga regra "ção" — era ela que sobre-radicalizava
+# "vulcão" para "vul" (custo declarado no #128). Reduzindo o plural primeiro,
+# "decisão"/"decisões" já caem juntos em "decisao" sem cortar o miolo.
+_PLURAL = (("oes", "ao"), ("aes", "ao"), ("ais", "al"), ("eis", "el"),
+           ("ois", "ol"), ("ns", "m"), ("res", "r"), ("zes", "z"),
+           ("ses", "s"), ("les", "l"))
+
+# Sufixos verbais e derivacionais, do mais longo para o mais curto — a ordem
+# importa ("arem" tem de ser tentado antes de "em"). Já dobrados, porque o
+# token chega sem acento (ver a seção da dobra acima).
+_SUFFIXES = ("issimo", "issima", "mente", "acao", "amento", "imento",
+             "aremos", "eremos", "iremos", "assem", "essem", "issem",
+             "arem", "erem", "irem", "aram", "eram", "iram",
+             "amos", "emos", "imos", "ando", "endo", "indo",
+             "aria", "eria", "iria", "ados", "adas", "idos", "idas",
+             "ada", "ado", "ida", "ido", "ismo", "ista", "avel", "ivel",
+             "ancia", "encia", "am", "em", "ar", "er", "ir", "ou", "es")
+
+# Quanto tem de SOBRAR para o corte valer. O padrão é 3; "acao" exige 4
+# porque com 3 ele junta "coração" e "corar" em "cor" — e com 4 ainda
+# junta "coordenação" com "coordenam", que é o caso útil.
+_MINIMO = {"acao": 4}
 
 
 # Corpus estático que serve de base para o IDF. Lido direto do arquivo, sem
@@ -145,12 +195,27 @@ def tokenize(text: str) -> list[str]:
     return [fold(t) for t in re.findall(r"[a-zà-ú0-9]+", str(text).lower())]
 
 
+def _singular(w: str) -> str:
+    """Reduz plural a singular. Só age em palavra terminada em "s"."""
+    if not w.endswith("s") or len(w) <= 3:
+        return w
+    for fim, troca in _PLURAL:
+        if w.endswith(fim) and len(w) - len(fim) + len(troca) >= 3:
+            return w[: -len(fim)] + troca
+    return w[:-1] if len(w) > 3 else w
+
+
 def stem(word: str) -> str:
-    """Stemming leve: remove sufixos comuns (heurístico)."""
+    """Radical: reduz o plural e então corta sufixo verbal/derivacional.
+
+    O corte exige que sobrem ao menos 3 letras — é o que segura a
+    sobre-radicalização (sem isso "casa" e "casar" caem no mesmo lugar).
+    """
+    w = _singular(word)
     for suf in _SUFFIXES:
-        if len(word) > len(suf) + 2 and word.endswith(suf):
-            return word[: -len(suf)]
-    return word
+        if len(w) - len(suf) >= _MINIMO.get(suf, 3) and w.endswith(suf):
+            return w[: -len(suf)]
+    return w
 
 
 @lru_cache(maxsize=1)

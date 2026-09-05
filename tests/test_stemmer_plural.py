@@ -53,6 +53,13 @@ SEPARADOS = [
     ("vulcão", "vulgar"), ("falcão", "falta"), ("coração", "corar"),
     ("mente", "mentira"), ("casa", "casar"), ("porta", "portar"),
     ("celular", "célula"), ("verdade", "verde"),
+    # Achados quando o corpus triplicou (#134): o sufixo "aria", posto aqui
+    # para condicional verbal (falaria, comeria), cortava SUBSTANTIVO —
+    # "operárias" virava "oper", igual a "operação", e o artigo novo de
+    # Transporte ("operações comerciais") passou a ganhar de "o que são as
+    # operárias?" por 0,3384 contra 0,2785. "padaria" virava "pad".
+    ("operária", "operação"), ("operárias", "operações"),
+    ("padaria", "padre"), ("secretaria", "secreto"),
 ]
 
 
@@ -94,6 +101,14 @@ def test_acao_exige_sobrar_mais_letras():
     ("coordenação" com "coordenam") e larga o coração em paz."""
     assert _r("coordenação") == _r("coordenam")
     assert _r("coração") != _r("corar")
+
+
+def test_substantivo_em_aria_nao_e_cortado():
+    """O corpus pequeno escondia este defeito: não havia artigo com que
+    colidir. Só apareceu quando o corpus foi de 50 para 135 artigos —
+    medir com pouco dado esconde erro de sobre-radicalização."""
+    assert _r("operárias") != _r("operações")
+    assert _r("padaria") != _r("padre")
 
 
 def test_palavra_curta_nao_e_destruida():

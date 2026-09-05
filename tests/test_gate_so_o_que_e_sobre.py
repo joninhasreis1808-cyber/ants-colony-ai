@@ -54,10 +54,22 @@ def _resposta(pergunta: str) -> str:
 
 
 def test_fato_que_so_menciona_o_assunto_nao_vira_resposta():
-    """Causa 1, presa: o texto de Energia solar cita fotossíntese."""
-    texto = _resposta("o que é a fotossíntese?")
-    assert _recusa(texto), texto[:160]
-    assert "energia solar" not in texto.lower()
+    """Causa 1, presa.
+
+    O exemplo original era "o que é a fotossíntese?" -> ENERGIA SOLAR: o
+    texto de energia solar CITA fotossíntese de passagem. Esse exemplo
+    dissolveu quando o corpus ganhou um artigo próprio de Fotossíntese
+    (#134) — e isso é melhora, não regressão: a colônia passou a responder
+    a pergunta em vez de recusá-la.
+
+    A CLASSE do defeito continua e é ela que fica presa: assunto ausente
+    do corpus, cujo nome aparece de passagem em algum artigo, não pode
+    virar resposta. "Sonata" e "ópera" aparecem citadas dentro do artigo de
+    Música sem serem o assunto dele."""
+    for pergunta in ("o que é uma sonata para piano?", "o que é a ópera italiana?"):
+        texto = _resposta(pergunta)
+        assert _recusa(texto), f"{pergunta}: {texto[:150]}"
+        assert "música é uma forma de arte" not in texto.lower()
 
 
 def test_forma_parecida_nao_basta():
@@ -69,8 +81,11 @@ def test_forma_parecida_nao_basta():
 
 
 def test_assunto_fora_do_corpus_e_recusado():
-    for pergunta in ("quem foi Machado de Assis?", "como se faz pão?",
-                     "o que é uma sinfonia?"):
+    """Os assuntos deste teste precisam continuar FORA do corpus para ele
+    seguir valendo. Machado de Assis, pão e sinfonia saíram daqui quando o
+    corpus cresceu (#134) e passaram a ser respondidos — corretamente."""
+    for pergunta in ("o que é o xadrez?", "o que é o origami?",
+                     "o que é o tricô?"):
         texto = _resposta(pergunta)
         assert _recusa(texto), f"{pergunta}: {texto[:120]}"
 

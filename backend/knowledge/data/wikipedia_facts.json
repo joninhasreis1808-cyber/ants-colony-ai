@@ -298,5 +298,515 @@
     "title": "Big Bang",
     "extract": "Big-bang, bigue-bangue ou grande expansão é a teoria cosmológica dominante sobre o desenvolvimento inicial do universo. Os cosmólogos usam o termo \"Big Bang\" para se referir à ideia de que o universo estava originalmente muito quente e denso em algum tempo finito no passado. Desde então tem se resfriado pela expansão ao estado diluído atual e continua em expansão atualmente. A teoria é sustentada por explicações mais completas e precisas a partir de evidências científicas disponíveis e da observação. Medições detalhadas da taxa de expansão do universo colocam o Big Bang em cerca de 13,8 bilhões * de anos atrás, que é considerada a idade do universo.",
     "url": "https://pt.wikipedia.org/wiki/Big_Bang"
+  },
+  {
+    "query": "Gravidade",
+    "title": "Gravidade",
+    "extract": "Na física, gravidade (lat: gravitas, «peso»)? é uma interação fundamental que causa atração mútua entre todas as coisas que têm massa. É, de longe, a mais fraca das quatro interações fundamentais, aproximadamente 1038 vezes mais fraca que a interação forte, 1036 vezes mais fraca que a força eletromagnética e 1029 vezes mais fraca que a interação fraca. Como resultado, não tem influência significativa ao nível das partículas subatómicas. No entanto, a gravidade é a interação mais significativa entre objetos em escala macroscópica e determina o movimento dos planetas, estrelas, galáxias e até mesmo da luz.",
+    "url": "https://pt.wikipedia.org/wiki/Gravidade"
+  },
+  {
+    "query": "Luz",
+    "title": "Luz",
+    "extract": "Luz ou luz visível é a radiação eletromagnética dentro da parte do espectro eletromagnético que é percebida pelo olho humano. A luz visível é geralmente definida como tendo comprimentos de onda na faixa de 400–700 nanômetros (nm), entre o infravermelho e o ultravioleta. Este comprimento de onda significa uma faixa de frequência de aproximadamente 430–750 terahertz (THz).",
+    "url": "https://pt.wikipedia.org/wiki/Luz"
+  },
+  {
+    "query": "Som",
+    "title": "Som",
+    "extract": "Som é a propagação de uma onda mecânica acústica ; é uma onda longitudinal que se propaga de forma circuncêntrica apenas em meios materiais.",
+    "url": "https://pt.wikipedia.org/wiki/Som"
+  },
+  {
+    "query": "Eletricidade",
+    "title": "Eletricidade",
+    "extract": "Eletricidade é o conjunto de fenômenos físicos associados à presença e ao movimento de matéria com carga elétrica. A eletricidade está relacionada ao magnetismo, sendo ambos parte do fenômeno do eletromagnetismo, conforme descrito pelas equações de Maxwell. Fenômenos comuns estão relacionados à eletricidade, incluindo relâmpagos, eletricidade estática, aquecimento elétrico, descargas elétricas e muitos outros.",
+    "url": "https://pt.wikipedia.org/wiki/Eletricidade"
+  },
+  {
+    "query": "Magnetismo",
+    "title": "Magnetismo",
+    "extract": "Em física e demais ciências naturais, magnetismo é a denominação associada ao fenômeno ou conjunto de fenômenos relacionados à atração ou repulsão observada entre determinados objetos materiais — particularmente intensas aos sentidos nos materiais ditos ímãs ou nos materiais ditos ferromagnéticos — e ainda, em perspectiva moderna, entre tais materiais e condutores de correntes elétricas — especificamente entre tais materiais e portadores de carga elétrica em movimento — ou ainda a uma das parcelas da interação total que estabelecem entre si os portadores de carga elétrica quando em movimento — explicitamente a parcela que mostra-se nula na ausência de movimento de um dos dois, ou de ambos, no referencial adotado. Há de se ressaltar que a simples observação de atração ou repulsão entre dois objetos não é suficiente para caracterizar a interação entre os dois como de origem magnética, geralmente confundindo-se com certa facilidade, aos olhos leigos, os fenômenos magnéticos e elétricos. Tais fenômenos elétricos e magnéticos, apesar de hoje saber-se estarem profundamente correlacionados, são comumente considerados e analisados como fenômenos distintos.",
+    "url": "https://pt.wikipedia.org/wiki/Magnetismo"
+  },
+  {
+    "query": "Teoria da relatividade",
+    "title": "Teoria da relatividade",
+    "extract": "Teoria da Relatividade é a denominação dada ao conjunto de duas teorias científicas: a Relatividade Restrita e a Relatividade Geral, propostas e publicadas em 1905 e 1915, respectivamente por Albert Einstein, concluindo estudos precedentes do físico neerlandês Hendrik Lorentz, entre outros. Ela substitui os conceitos independentes de espaço e tempo da Teoria de Newton pela ideia de espaço-tempo como uma entidade geométrica unificada. O espaço-tempo na relatividade especial consiste de uma variedade diferenciável de 4 dimensões, três espaciais e uma temporal, munida de uma métrica pseudo-riemanniana, o que permite que noções de geometria possam ser utilizadas. É nessa teoria, também, que surge a ideia de velocidade da luz invariante.",
+    "url": "https://pt.wikipedia.org/wiki/Teoria_da_relatividade"
+  },
+  {
+    "query": "Mecânica quântica",
+    "title": "Mecânica quântica",
+    "extract": "A mecânica quântica é a teoria física que obtém sucesso no estudo dos sistemas físicos cujas dimensões são próximas ou abaixo da escala atômica, tais como moléculas, átomos, elétrons, prótons e outras partículas subatômicas, muito embora também possa descrever fenômenos macroscópicos em diversos casos.",
+    "url": "https://pt.wikipedia.org/wiki/Mec%C3%A2nica_qu%C3%A2ntica"
+  },
+  {
+    "query": "Termodinâmica",
+    "title": "Termodinâmica",
+    "extract": "A termodinâmica é o ramo da física que estuda as causas e os efeitos de mudanças na temperatura, pressão e volume — e de outras grandezas termodinâmicas fundamentais em casos menos gerais — em sistemas físicos em escala macroscópica. Grosso modo, calor significa \"energia\" em trânsito e dinâmica se relaciona com \"movimento\". Assim, a termodinâmica estuda o movimento da energia e como a energia cria movimento. Historicamente, a termodinâmica se desenvolveu pela necessidade de aumentar a eficiência das primeiras máquinas a vapor, sendo em essência uma ciência experimental, que busca entender as propriedades macroscópicas ou em grande escala da matéria-energia.",
+    "url": "https://pt.wikipedia.org/wiki/Termodin%C3%A2mica"
+  },
+  {
+    "query": "Água",
+    "title": "Água",
+    "extract": "Água (fórmula química: H2O) é uma substância química cujas moléculas são formadas por dois átomos de hidrogênio e um de oxigênio. É abundante no Universo, nomeadamente na Terra, onde cobre grande parte de sua superfície e é o maior constituinte dos fluidos dos seres vivos. As temperaturas do planeta permitem a ocorrência da água em seus três estados físicos principais. A água líquida, que em pequenas quantidades parece incolor, mas manifesta sua coloração azulada em grandes volumes, constitui os oceanos, rios e lagos que cobrem quase três quartos da superfície do planeta. Nas regiões polares, concentram-se as massas de gelo e vapor constitui parte da atmosfera terrestre. Mais especificamente, a água líquida tem duas fases líquida com grandes diferenças de estrutura e densidade.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81gua"
+  },
+  {
+    "query": "Oxigênio",
+    "title": "Oxigénio",
+    "extract": "O oxigénio (português europeu) ou oxigênio (português brasileiro) é um elemento químico de número atómico 8 e símbolo O (8 protões e 8 eletrões) representando com massa atómica 16 u. Constitui parte do grupo dos calcogénios e é um não metal reactivo e um forte agente oxidante que facilmente forma compostos com a maioria doutros elementos, principalmente óxidos. Tem a segunda electronegatividade mais elevada de todos os elementos químicos, superado apenas pelo flúor. Medido pela sua massa, o oxigénio é o terceiro elemento mais abundante do universo, atrás do hidrogénio e hélio, e o mais abundante na crosta terrestre como parte de compostos óxidos, formando praticamente metade da sua massa. Em condições normais de pressão e temperatura, dois átomos do elemento ligam-se para formar o dioxigénio, um gás diatómico com fórmula \nO2. Este gás diatómico constitui 20,8% da atmosfera e é fundamental para suportar a vida terrestre. Não obstante, vários estudos dos níveis de oxigénio atmosférico indicam uma progressão global descendente na proporção deste elemento, principalmente por causa das emissões procedentes da queima de combustíveis fósseis.",
+    "url": "https://pt.wikipedia.org/wiki/Oxig%C3%A9nio"
+  },
+  {
+    "query": "Carbono",
+    "title": "Carbono",
+    "extract": "O carbono é um elemento químico, símbolo C, número atômico 6, massa atómica 12 u, sólido à temperatura ambiente. Como um membro do grupo 14 da tabela periódica, ele é um não metal e tetravalente — portando quatro elétrons disponíveis na forma de ligações covalentes. Há três isótopos com formação natural, com o 12C e 13C sendo estável, onde o 14C é radioativo, decompondo com uma meia-vida de aproximadamente 5730 anos. Ele é um dos poucos elementos químicos que já foram descobertos na antiguidade.",
+    "url": "https://pt.wikipedia.org/wiki/Carbono"
+  },
+  {
+    "query": "Ácido",
+    "title": "Ácido",
+    "extract": "Ácido, no âmbito da química, pode se referir a um composto capaz de transferir Íons (H+) numa reação química (vide ácido de Brønsted), podendo assim diminuir o pH de uma solução aquosa, ou a um composto capaz de formar ligações covalentes (vide ácido de Lewis) com um par de eléctrons. As bases são os análogos opostos aos ácidos.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81cido"
+  },
+  {
+    "query": "PH",
+    "title": "PH",
+    "extract": "Em química, pH é uma escala numérica adimensional utilizada para especificar a acidez ou basicidade de uma solução aquosa. A rigor, o pH é definido como o cologaritmo da atividade de íons hidrônio. Podemos aproximar o cálculo do pH usando a concentração molar o íon hidrônio ao invés da atividade hidrogeniônica. A água pura apresenta pH 7 a 25 °C, pois apresenta a mesma quantidade de íons hidrônio e hidróxido vindos da auto ionização da água. As soluções com valores de pH menor que 7 são ácidas pois apresentam quantidade maior de íons hidrônio e soluções com valores maiores do que 7 são básicas pois apresentam quantidade menor de íons hidrônio em relação aos íons hidróxido. Embora não seja habitual, a escala pode assumir valores abaixo de zero (negativos ou acima de catorze quando se tratando de bases ou ácidos muito fortes. pH é um número e não deve ser confundido com as qualidades neutro, ácido ou básico. Podemos dizer que o pH está baixo ou que o meio está ácido mas não podemos dizer que o pH está ácido. As medidas de pH são importantes em diversas outras áreas de conhecimento além da química, como agricultura, agronomia, aquicultura, biologia, engenharias, medicina, tratamento e purificação de água e muitas outras aplicações.",
+    "url": "https://pt.wikipedia.org/wiki/PH"
+  },
+  {
+    "query": "Metal",
+    "title": "Metal",
+    "extract": "Em química, um metal, do grego antigo métalon pode ser chamado de várias maneiras: pode ser um elemento, uma substância ou uma liga metálica caracterizado pela sua boa condutividade térmica e elétrica, geralmente apresentando uma cor prateada ou amarelada, e uma elevada dureza. Qualquer metal pode ser definido também como um elemento químico que forma aglomerados de átomos com caráter metálico.",
+    "url": "https://pt.wikipedia.org/wiki/Metal"
+  },
+  {
+    "query": "Cristal",
+    "title": "Cristal",
+    "extract": "Um cristal é um sólido no qual os constituintes, sejam eles átomos, moléculas ou íons, estão organizados num padrão tridimensional bem definido, que se repete no espaço, formando uma estrutura com uma geometria específica.",
+    "url": "https://pt.wikipedia.org/wiki/Cristal"
+  },
+  {
+    "query": "Fotossíntese",
+    "title": "Fotossíntese",
+    "extract": "A fotossíntese é um processo realizado por plantas e outros organismos para produzir seu próprio alimento e converter energia luminosa em energia química que, por meio da respiração celular, pode ser liberada posteriormente para alimentar as atividades do organismo. Parte dessa energia química é armazenada em moléculas de carboidratos, como açúcares e amidos, que são sintetizados a partir do dióxido de carbono e da água – daí o nome fotossíntese, do grego phōs, \"luz\", e súnthesis, \"colocar junto\". A maioria das plantas, algas e cianobactérias realizam a fotossíntese; tais organismos são chamados fotoautotróficos. A fotossíntese é amplamente responsável pela produção e manutenção do teor de oxigênio da atmosfera da Terra e fornece a maior parte da energia necessária para a vida no planeta.",
+    "url": "https://pt.wikipedia.org/wiki/Fotoss%C3%ADntese"
+  },
+  {
+    "query": "Proteína",
+    "title": "Proteína",
+    "extract": "Proteínas são macromoléculas biológicas constituídas por uma ou mais cadeias de aminoácidos. As proteínas estão presentes em todos os seres vivos e participam em praticamente todos os processos celulares, desempenhando um vasto conjunto de funções no organismo, como a replicação de ADN, a resposta a estímulos e o transporte de moléculas. Muitas proteínas são enzimas que catalisam reações bioquímicas vitais para o metabolismo. As proteínas têm também funções estruturais ou mecânicas, como é o caso da actina e da miosina nos músculos e das proteínas no citoesqueleto, as quais formam um sistema de andaimes que mantém a forma celular. Outras proteínas são importantes na sinalização celular, resposta imunitária e no ciclo celular. As proteínas diferem entre si fundamentalmente na sua sequência de aminoácidos, que é determinada pela sua sequência genética e que geralmente provoca o seu enovelamento numa estrutura tridimensional específica que determina a sua atividade.",
+    "url": "https://pt.wikipedia.org/wiki/Prote%C3%ADna"
+  },
+  {
+    "query": "Enzima",
+    "title": "Enzima",
+    "extract": "Enzimas são grupos de substâncias orgânicas de natureza normalmente proteica, com atividade intra ou extracelular que têm funções catalisadoras, catalisando reações químicas que, sem a sua presença, dificilmente aconteceriam. Isso é conseguido através do abaixamento da energia de ativação necessária para que se dê uma reação química, resultando no aumento da velocidade da reação e possibilitando o metabolismo dos seres vivos. A capacidade catalítica das enzimas torna-as adequadas para aplicações industriais, como na indústria farmacêutica ou na alimentar.",
+    "url": "https://pt.wikipedia.org/wiki/Enzima"
+  },
+  {
+    "query": "Sistema nervoso",
+    "title": "Sistema nervoso",
+    "extract": "O sistema nervoso é a parte do organismo que transmite sinais entre as suas diferentes partes e coordena as suas ações voluntárias e involuntárias. Na maioria das espécies animais, constitui-se de duas partes principais: o sistema nervoso central (SNC) e o sistema nervoso periférico (SNP).",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_nervoso"
+  },
+  {
+    "query": "Coração",
+    "title": "Coração",
+    "extract": "O coração é um órgão muscular presente nos humanos e em outros animais que bombeia o sangue através dos vasos sanguíneos do sistema circulatório. O sangue fornece ao corpo oxigénio e nutrientes e ajuda a eliminar resíduos metabólicos. Nos humanos, o coração situa-se na cavidade torácica entre os pulmões, num espaço denominado mediastino.",
+    "url": "https://pt.wikipedia.org/wiki/Cora%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Pulmão",
+    "title": "Pulmão",
+    "extract": "O pulmão é o órgão do sistema respiratório responsável pelas trocas gasosas entre o ambiente e o sangue. Sua principal função é oxigenar o sangue e eliminar o dióxido de carbono do corpo.",
+    "url": "https://pt.wikipedia.org/wiki/Pulm%C3%A3o"
+  },
+  {
+    "query": "Sangue",
+    "title": "Sangue",
+    "extract": "O sangue é um fluido corporal que percorre o sistema circulatório em animais vertebrados; formado por uma porção celular de natureza diversificada - pelos \"elementos figurados\" do sangue - que circula em suspensão em meio fluido, o plasma.",
+    "url": "https://pt.wikipedia.org/wiki/Sangue"
+  },
+  {
+    "query": "Osso",
+    "title": "Osso",
+    "extract": "O osso é cada uma das peças formadas por tecido rígido que compõe os esqueletos dos vertebrados. O conjunto dos ossos de um animal é o esqueleto, que sustenta o corpo e serve de apoio para os músculos, permitindo, assim, o movimento, principalmente pelo princípio da alavanca. Certos conjuntos de ossos protegem alguns órgãos internos, como o crânio, que protege o cérebro.",
+    "url": "https://pt.wikipedia.org/wiki/Osso"
+  },
+  {
+    "query": "Músculo",
+    "title": "Músculo",
+    "extract": "O músculo é o tecido responsável pelo movimento de um ser vivo, tanto em movimentos voluntários, com os quais interage com o meio ambiente, como movimentos dos seus órgãos internos, o coração ou o intestino.",
+    "url": "https://pt.wikipedia.org/wiki/M%C3%BAsculo"
+  },
+  {
+    "query": "Hormônio",
+    "title": "Hormona",
+    "extract": "Hormona (português europeu) ou hormônio (português brasileiro) é uma substância química específica fabricada pelo sistema endócrino ou por neurónios altamente especializados e que funciona como um sinalizador celular. O termo provém do grego ormóni (ὁρμῶν) que significa evocar ou excitar.",
+    "url": "https://pt.wikipedia.org/wiki/Hormona"
+  },
+  {
+    "query": "Reprodução",
+    "title": "Reprodução",
+    "extract": "Reprodução, em biologia, refere-se à função através da qual os seres vivos produzem descendentes, dando continuidade à sua espécie.",
+    "url": "https://pt.wikipedia.org/wiki/Reprodu%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Fungo",
+    "title": "Fungi",
+    "extract": "O reino Fungi é um grupo de organismos eucariotas, que inclui micro-organismos tais como as leveduras, os bolores, bem como os mais familiares cogumelos.",
+    "url": "https://pt.wikipedia.org/wiki/Fungi"
+  },
+  {
+    "query": "Planta",
+    "title": "Plantae",
+    "extract": "Plantas são os eucariotos que compõem o reino Plantae; elas são predominantemente fotossintéticas, o que significa que obtêm sua energia da luz solar, utilizando cloroplastos derivados da endossimbiose com cianobactérias para produzir açúcares a partir de dióxido de carbono e água, usando o pigmento verde clorofila. Exceções são as plantas parasitas que perderam os genes para clorofila e fotossíntese e obtêm sua energia de outras plantas ou fungos. A maioria das plantas é multicelular, com exceção de algumas algas verdes.",
+    "url": "https://pt.wikipedia.org/wiki/Plantae"
+  },
+  {
+    "query": "Árvore",
+    "title": "Árvore",
+    "extract": "Árvore é uma planta de tronco lenhoso cujos ramos só saem a certa altura do solo. Em termos biológicos é uma planta permanentemente lenhosa de grande porte, com raízes pivotantes, caule lenhoso do tipo tronco, que forma ramos bem acima do nível do solo e que se estendem até o ápice da raiz.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81rvore"
+  },
+  {
+    "query": "Inseto",
+    "title": "Insetos",
+    "extract": "Insetos são invertebrados hexápodes da classe Insecta. Eles constituem o maior grupo dentro do filo dos artrópodes. Os insetos possuem um exoesqueleto quitinoso, um corpo dividido em três partes, três pares de patas articuladas, olhos compostos e um par de antenas. São o grupo animal mais diverso, com mais de um milhão de espécies descritas; eles representam mais da metade de todas as espécies animais. O sistema nervoso dos insetos consiste em um cérebro e um cordão nervoso ventral. A maioria se reproduz por meio da postura de ovos. Os insetos respiram ar através de um sistema de orifícios pareados ao longo de seus flancos, conectados a pequenos tubos que levam o ar diretamente aos tecidos. O sangue, portanto, não transporta oxigênio; ele está contido apenas parcialmente em vasos sanguíneos, e parte dele circula em uma hemocela aberta. A visão dos insetos é feita principalmente por meio de seus olhos compostos, com ocelos adicionais. Muitos insetos conseguem ouvir, utilizando órgãos timpânicos, que podem estar localizados nas patas ou em outras partes do corpo. Seu olfato é percebido por meio de receptores, geralmente nas antenas e nas peças bucais.",
+    "url": "https://pt.wikipedia.org/wiki/Insetos"
+  },
+  {
+    "query": "Ave",
+    "title": "Aves",
+    "extract": "Aves são uma classe de seres vivos vertebrados endotérmicos caracterizada pela presença de penas, um bico sem dentes, oviparidade de casca rígida, elevado metabolismo, um coração com quatro câmaras e um esqueleto pneumático resistente e leve. As aves estão presentes em todas as regiões do mundo e variam significativamente de tamanho, desde os 5 cm do colibri até aos 2,75 m da avestruz. São a classe de tetrápodes com o maior número de espécies vivas, aproximadamente dez mil, das quais mais de metade são passeriformes. As aves apresentam asas, que são mais ou menos desenvolvidas dependendo da espécie. Os únicos grupos conhecidos sem asas são as moas e as aves-elefante, ambos extintos. As asas, que evoluíram a partir dos membros anteriores, oferecem às aves a capacidade de voar, embora a especiação tenha produzido aves não voadoras, como as avestruzes, pinguins e diversas aves endémicas insulares. Os sistemas digestivo e respiratório das aves estão adaptados ao voo. Algumas espécies de aves que habitam em ecossistemas aquáticos, como os pinguins e a família dos patos, desenvolveram a capacidade de nadar.",
+    "url": "https://pt.wikipedia.org/wiki/Aves"
+  },
+  {
+    "query": "Mamífero",
+    "title": "Mamíferos",
+    "extract": "Mamífero é um animal vertebrado da classe Mammalia. Os mamíferos são caracterizados pela presença de glândulas mamárias produtoras de leite para alimentar seus filhotes, uma ampla região neocortical do cérebro, pelos ou cabelos e três ossículos do ouvido médio. Essas características os distinguem dos répteis e das aves, dos quais seus ancestrais divergiram no Carbonífero, há mais de 300 milhões de anos. Cerca de 6.640 espécies de mamíferos existentes foram descritas e divididas em 27 ordens. O estudo dos mamíferos é chamado de mamalogia. As maiores ordens de mamíferos, em número de espécies, são os roedores, os morcegos e os eulipotíflos. As três seguintes são os primatas, os artiodátilos e os carnívoros.",
+    "url": "https://pt.wikipedia.org/wiki/Mam%C3%ADferos"
+  },
+  {
+    "query": "Estatística",
+    "title": "Estatística",
+    "extract": "Estatística é a ciência que utiliza as teorias probabilísticas para explicar a frequência da ocorrência de eventos, tanto em estudos observacionais quanto em experimentos para modelar a aleatoriedade e a incerteza de forma a estimar ou possibilitar a previsão de fenômenos futuros, conforme o caso.",
+    "url": "https://pt.wikipedia.org/wiki/Estat%C3%ADstica"
+  },
+  {
+    "query": "Infinito",
+    "title": "Infinito",
+    "extract": "Infinito é a qualidade daquilo que não tem fim.",
+    "url": "https://pt.wikipedia.org/wiki/Infinito"
+  },
+  {
+    "query": "Número",
+    "title": "Número",
+    "extract": "Número é um objeto abstrato da matemática usado para descrever a quantidade, ordem ou medida, o conceito de número provavelmente foi um dos primeiros conceitos matemáticos assimilados pela humanidade no processo de contagem.",
+    "url": "https://pt.wikipedia.org/wiki/N%C3%BAmero"
+  },
+  {
+    "query": "Fração",
+    "title": "Fração",
+    "extract": "Fração  é um modo de expressar uma quantidade a partir de uma razão de dois números inteiros. A palavra fração vem do latim fractus e significa \"partido\", dividido ou quebrado.",
+    "url": "https://pt.wikipedia.org/wiki/Fra%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Equação",
+    "title": "Equação",
+    "extract": "Na matemática, uma equação é uma igualdade envolvendo uma ou mais incógnitas de uma expressão algébrica.",
+    "url": "https://pt.wikipedia.org/wiki/Equa%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Logaritmo",
+    "title": "Logaritmo",
+    "extract": "Na matemática, o logaritmo de um número é o expoente a que outro valor fixo, a base, deve ser elevado para produzir este número. Por exemplo, o logaritmo de 1 000 na base 10 é 3 porque 10 elevado ao cubo é 1 000 (1 000 = 10 × 10 × 10 = 103). De maneira geral, para quaisquer dois números reais b e x, onde b é positivo e b ≠ 1,.",
+    "url": "https://pt.wikipedia.org/wiki/Logaritmo"
+  },
+  {
+    "query": "Câncer",
+    "title": "Câncer",
+    "extract": "Câncer (português brasileiro) ou cancro (português europeu), também conhecido como neoplasia maligna é um grupo de doenças que envolvem o crescimento celular anormal, com potencial para invadir e espalhar-se para outras partes do corpo, além do local original. Há mais de cem diferentes cânceres conhecidos que afetam os seres humanos, mas nem todos os tumores são cancerosos (malignos); tumores benignos não se espalham pelo corpo. Sinais e sintomas possíveis incluem surgimento de uma massa cancerígena, sangramento anormal, tosse prolongada, perda de peso inexplicável, mudança nas funções intestinais, entre outros. Apesar de estes sintomas poderem indicar câncer, eles também podem ocorrer devido a outras doenças.",
+    "url": "https://pt.wikipedia.org/wiki/C%C3%A2ncer"
+  },
+  {
+    "query": "Diabetes",
+    "title": "Diabetes mellitus",
+    "extract": "Diabetes mellitus, ou simplesmente diabetes, é um grupo de doenças metabólicas em que se verificam níveis elevados de glicose no sangue durante um longo intervalo de tempo. A elevada quantidade de glicose no sangue pode provocar sintomas, como poliúria, polidipsia e polifagia, mas também pode ser silenciosa, sem gerar nenhum sintoma. Quando não é tratada, a diabetes pode causar várias complicações. Entre as complicações agudas estão a cetoacidose, coma hiperosmolar hiperglicémico ou morte. Entre as complicações a longo prazo estão doenças cardiovasculares, acidentes vasculares cerebrais, doença renal crónica, úlceras no pé e retinopatia diabética.",
+    "url": "https://pt.wikipedia.org/wiki/Diabetes_mellitus"
+  },
+  {
+    "query": "Gripe",
+    "title": "Gripe",
+    "extract": "Influenza, comumente conhecida como Gripe, é uma doença infecciosa causada por diversos vírus ARN da família Orthomyxoviridae e que afeta aves e mamíferos. Os sintomas mais comuns são calafrios, febre, rinorreia, dores de garganta, dores musculares, dores de cabeça, tosse, fadiga e sensação geral de desconforto. Em crianças pode ainda provocar diarreia e dores abdominais. Embora seja frequentemente confundida com a constipação, a gripe é uma doença mais grave provocada por um tipo de vírus diferente.",
+    "url": "https://pt.wikipedia.org/wiki/Gripe"
+  },
+  {
+    "query": "Alergia",
+    "title": "Alergia",
+    "extract": "Alergias são um conjunto de reações causadas por hipersensibilidade do sistema imunitário a agentes que geralmente causam pouco ou nenhum problema na maioria das pessoas. Estas doenças incluem rinite alérgica, alergias alimentares, dermatite atópica, asma alérgica e anafilaxia. Os sintomas mais comuns são olhos vermelhos, manchas que provocam comichão, fluxo nasal abundante, falta de ar ou inchaço. As intolerâncias e intoxicações alimentares são condições distintas.",
+    "url": "https://pt.wikipedia.org/wiki/Alergia"
+  },
+  {
+    "query": "Nutrição",
+    "title": "Nutrição",
+    "extract": "Nutrição é um processo biológico em que os organismos, utilizando-se de alimentos, assimilam nutrientes para a realização de suas funções vitais.",
+    "url": "https://pt.wikipedia.org/wiki/Nutri%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Sono",
+    "title": "Sono",
+    "extract": "Sono é um estado sedentário da mente e do corpo. É caracterizada por consciência alterada, atividade sensorial relativamente inibida, atividade muscular reduzida e interações reduzidas com o ambiente. Distingue-se da vigília por uma capacidade diminuída de reagir a estímulos, mas mais reativa do que um coma ou distúrbios da consciência, com o sono exibindo diferentes padrões cerebrais ativos.",
+    "url": "https://pt.wikipedia.org/wiki/Sono"
+  },
+  {
+    "query": "Exercício físico",
+    "title": "Exercício físico",
+    "extract": "O exercício físico é qualquer atividade que mantém ou aumenta a aptidão física em geral, e tem o objetivo de alcançar a saúde e também a recreação. O motivo da prática de exercícios inclui: o reforço da musculatura e do sistema cardiovascular; o aperfeiçoamento das habilidades atléticas; a perda de peso e/ou a manutenção de alguma parte do corpo.",
+    "url": "https://pt.wikipedia.org/wiki/Exerc%C3%ADcio_f%C3%ADsico"
+  },
+  {
+    "query": "Saúde mental",
+    "title": "Saúde mental",
+    "extract": "A saúde mental abrange o bem-estar emocional, psicológico e social, influenciando a cognição, a percepção e o comportamento. A saúde mental desempenha um papel crucial na vida diária de um indivíduo no gerenciamento do estresse, no relacionamento com outras pessoas e na contribuição para a vida em geral. Segundo a Organização Mundial da Saúde (OMS), é um \"estado de bem-estar no qual o indivíduo realiza suas habilidades, consegue lidar com as tensões normais da vida, consegue trabalhar de forma produtiva e frutífera e pode contribuir para sua comunidade\". Da mesma forma, determina como um indivíduo lida com o estresse, os relacionamentos interpessoais e a tomada de decisões. A saúde mental inclui bem-estar subjetivo, autoeficácia percebida, autonomia, competência, dependência intergeracional e autorrealização do potencial intelectual e emocional, entre outros.",
+    "url": "https://pt.wikipedia.org/wiki/Sa%C3%BAde_mental"
+  },
+  {
+    "query": "Música",
+    "title": "Música",
+    "extract": "Música é uma forma de arte que se constitui na combinação de vários sons e ritmos, seguindo uma pré-organização ao longo do tempo.",
+    "url": "https://pt.wikipedia.org/wiki/M%C3%BAsica"
+  },
+  {
+    "query": "Sinfonia",
+    "title": "Sinfonia",
+    "extract": "Sinfonia é uma palavra de origem grega [συμφωνία] que significa \"Todos os sons juntos\".",
+    "url": "https://pt.wikipedia.org/wiki/Sinfonia"
+  },
+  {
+    "query": "Literatura",
+    "title": "Literatura",
+    "extract": "Literatura é a arte que usa a linguagem escrita como meio de expressão, seja em prosa ou em verso, de acordo com princípios teóricos e práticos; sendo o conjunto de textos escritos ou orais nos quais se reconhece um valor estético. O conjunto de características que definem um texto como literário recebe o nome de literariedade e é tema de ávida discussão entre estudiosos. Também são discutidas as categorias que distinguem esses textos entre si, chamadas de gêneros literários.",
+    "url": "https://pt.wikipedia.org/wiki/Literatura"
+  },
+  {
+    "query": "Pintura",
+    "title": "Pintura",
+    "extract": "A pintura refere-se genericamente à técnica de aplicar pigmento em forma pastosa, líquida ou em pó a uma superfície, a fim de colori-la, atribuindo-lhe matizes, tons e texturas.",
+    "url": "https://pt.wikipedia.org/wiki/Pintura"
+  },
+  {
+    "query": "Cinema",
+    "title": "Cinema",
+    "extract": "Cinema, conhecido também como Sétima Arte e, em alguns contextos, cinematografia, é um termo que pode ser definido como a técnica e a arte que reproduz fotogramas de forma rápida e sequencial, criando \"ilusão de movimento\", bem como a indústria que produz essas imagens. O termo \"cinema\" também é comumente utilizado para designar a sala onde são projetados esses filmes.",
+    "url": "https://pt.wikipedia.org/wiki/Cinema"
+  },
+  {
+    "query": "Teatro",
+    "title": "Teatro",
+    "extract": "Teatro é uma forma de arte em que um ator, ou conjunto de atores, interpreta uma história ou atividades para o público em um determinado lugar. Com o auxílio de dramaturgos ou de situações improvisadas, de diretores e técnicos, o espetáculo tem como objetivo apresentar uma situação e despertar sentimentos no público. Também denomina-se teatro o edifício onde se desenvolve esta forma de arte, podendo também ser local de apresentações para a dança, recitais, etc.",
+    "url": "https://pt.wikipedia.org/wiki/Teatro"
+  },
+  {
+    "query": "Fotografia",
+    "title": "Fotografia",
+    "extract": "Fotografia: do grego φῶς [fós] (\"luz\") e γραφίς [grafis] ou γραφή [grafé] (“escrita”), significa \"escrever ou desenhar com luz e contraste\"; noutros termos, é essencialmente a técnica de criação de imagens por meio de exposição luminosa, fixando-as em uma superfície sensível. A primeira fotografia reconhecida remonta ao ano de 1826 e é atribuída ao francês Joseph Nicéphore Niépce. Contudo, a invenção da fotografia não é obra de um só autor, mas um processo de acúmulo de avanços por parte de muitas pessoas, trabalhando, juntas ou em paralelo, ao longo de muitos anos. Se por um lado os princípios fundamentais da fotografia se estabeleceram há décadas e, desde a introdução do filme fotográfico colorido, quase não sofreram mudanças, por outro, os avanços tecnológicos têm sistematicamente possibilitado melhorias na qualidade das imagens produzidas, agilização das etapas do processo de produção e a redução de custos, popularizando o uso da fotografia.",
+    "url": "https://pt.wikipedia.org/wiki/Fotografia"
+  },
+  {
+    "query": "Arquitetura",
+    "title": "Arquitetura",
+    "extract": "Arquitetura (português brasileiro) ou arquitectura (português europeu) é a disciplina que tem como finalidade a organização do espaço antropizado em que vive o ser humano. É a arte e a técnica de projetar, construir e decorar abrigos, edifícios e estruturas distinguindo-se das habilidades associadas à construção. É tanto o processo quanto o produto de esboçar, conceber, planear, projetar e construir edifícios ou outras estruturas, de acordo com as suas aspirações, possibilidades técnicas contemporâneas e visões estéticas. É a arte de moldar e criar espaços utilizáveis para as necessidades humanas. O termo em latim: architectūra; em grego clássico: ἀρχιτέκτων ; em grego clássico: ἀρχι- em grego clássico: τέκτων.",
+    "url": "https://pt.wikipedia.org/wiki/Arquitetura"
+  },
+  {
+    "query": "Dança",
+    "title": "Dança",
+    "extract": "A dança é a arte de fazer movimentos ritmados com o corpo. É uma expressão artística e cênica que envolvem os movimentos corporais em sua relação com diferentes estilos musicais. É o uso do corpo seguindo movimentos previamente estabelecidos (coreografia) ou improvisados, com passos ritmados ao som e compasso de uma música, A dança é praticada desde os tempos pré-históricos, e por isso geralmente se diz que ela é uma expressão cultural que acompanha a humanidade. É uma das três principais artes cênicas da antiguidade, ao lado do teatro e da música, pois no antigo Egito existia danças astro-teológicas e na Grécia era frequentemente vinculada aos jogos.",
+    "url": "https://pt.wikipedia.org/wiki/Dan%C3%A7a"
+  },
+  {
+    "query": "Poesia",
+    "title": "Poesia",
+    "extract": "Poesia é a expressão ou gênero literário caracterizada pela presença de ritmo verbal, conotação e linguagem figurada. Os textos produzidos sob esse modo de expressão recebem o nome de poema e são geralmente escritos em verso, além de servirem normalmente para a expressão lírica ou épica.",
+    "url": "https://pt.wikipedia.org/wiki/Poesia"
+  },
+  {
+    "query": "Brasil",
+    "title": "Brasil",
+    "extract": "Brasil, oficialmente República Federativa do Brasil, é o maior país da América do Sul e da região da América Latina, sendo o quinto maior do mundo em área territorial, com cerca de 8,5 milhões de quilômetros quadrados, e o sétimo em população. É o único país na América onde se fala majoritariamente a língua portuguesa e o maior país lusófono do planeta, além de ser uma das nações mais multiculturais e etnicamente diversas, em decorrência da forte imigração oriunda de variados locais do mundo. Sua atual constituição, promulgada em 1988, concebe o Brasil como uma república federativa presidencialista, formada pela união de 26 estados, do Distrito Federal e dos 5 571 municípios.",
+    "url": "https://pt.wikipedia.org/wiki/Brasil"
+  },
+  {
+    "query": "Língua portuguesa",
+    "title": "Língua portuguesa",
+    "extract": "Língua portuguesa, também designada português, é uma língua indo-europeia românica flexiva ocidental originada no galego-português falado no Reino da Galiza e no norte de Portugal. Com a criação do Reino de Portugal em 1139 e a expansão para o sul na sequência da Reconquista, deu-se a difusão da língua pelas terras conquistadas e, mais tarde, com as descobertas portuguesas, para o Brasil, África e outras partes do mundo. O português foi usado, naquela época, não somente nas cidades conquistadas pelos portugueses, mas também por muitos governantes locais nos seus contatos com outros estrangeiros poderosos. Especialmente nessa altura, a língua portuguesa também influenciou várias línguas.",
+    "url": "https://pt.wikipedia.org/wiki/L%C3%ADngua_portuguesa"
+  },
+  {
+    "query": "Machado de Assis",
+    "title": "Machado de Assis",
+    "extract": "Joaquim Maria Machado de Assis foi um escritor brasileiro, amplamente reconhecido por críticos, estudiosos, escritores e leitores como o maior expoente da literatura brasileira. Sua produção literária abrangeu praticamente todos os gêneros, incluindo poesia, romance, crônica, dramaturgia, conto, folhetim, jornalismo e crítica literária. Machado de Assis testemunhou a Abolição da Escravatura e a transição política do Brasil, com o golpe da proclamação da República em substituição ao Império, além de diversos eventos significativos no final do século XIX e início do século XX, sendo um notável comentador e relator dos acontecimentos político-sociais de sua época.",
+    "url": "https://pt.wikipedia.org/wiki/Machado_de_Assis"
+  },
+  {
+    "query": "Futebol",
+    "title": "Futebol",
+    "extract": "Futebol - originalmente futebol associado, e também referido como futebol de campo ou futebol de onze - é um esporte de equipe jogado entre dois times de 11 jogadores cada um e um árbitro que se ocupa da correta aplicação das normas. É considerado o desporto mais popular do mundo, pois cerca de 270 milhões de pessoas participam das suas várias competições. É jogado num campo retangular gramado, com uma baliza em cada lado do campo. O objetivo do jogo é deslocar uma bola através do campo para colocá-la dentro da baliza adversária, ação que se denomina gol(pt-BR) ou golo(pt-PT?). A equipe que marca mais gols ao término da partida é a vencedora.",
+    "url": "https://pt.wikipedia.org/wiki/Futebol"
+  },
+  {
+    "query": "Carnaval",
+    "title": "Carnaval",
+    "extract": "Carnaval é um festival do cristianismo ocidental que ocorre antes da estação litúrgica da Quaresma. Os principais eventos ocorrem tipicamente durante fevereiro ou início de março, durante o período historicamente conhecido como Tempo da Septuagésima. O Carnaval normalmente envolve uma festa pública e/ou desfile, combinando alguns elementos circenses, máscaras e uma festa pública de rua. As pessoas usam trajes durante muitas dessas celebrações, permitindo-lhes perder a sua individualidade cotidiana e experimentar um sentido elevado de unidade social.",
+    "url": "https://pt.wikipedia.org/wiki/Carnaval"
+  },
+  {
+    "query": "Amazônia brasileira",
+    "title": "Amazônia Legal",
+    "extract": "A Amazônia Legal é uma área que engloba nove estados do Brasil pertencentes à bacia Amazônica, instituído pelo governo federal via lei 1 806/1953, reunindo regiões de idênticas características, com o intuito de melhor planejar o desenvolvimento socioeconômico da região amazônica. É formada por nove estados brasileiros: Acre, Amapá, Amazonas, pelo norte de Mato Grosso, Pará, Rondônia, Roraima, Tocantins e parte do estado do Maranhão, perfazendo uma superfície de aproximadamente 5 015 067,86 quilômetros quadrados correspondente a cerca de 58,93%% do território brasileiro. Sua população, no entanto, corresponde a 12,32% do total de habitantes do Brasil, ou cerca de 28,1 milhões de pessoas.",
+    "url": "https://pt.wikipedia.org/wiki/Amaz%C3%B4nia_Legal"
+  },
+  {
+    "query": "Culinária do Brasil",
+    "title": "Culinária do Brasil",
+    "extract": "A culinária do Brasil é fruto de uma mistura de ingredientes europeus, indígenas e africanos. Muitos dos componentes das receitas e técnicas de preparo são de origem indígena, tendo sofrido modificações por parte dos portugueses e dos escravos oriundos da África. Esses faziam adaptações dos seus pratos típicos substituindo os ingredientes que faltassem por correspondentes locais. A feijoada à brasileira, o feijão tropeiro e a moqueca são exemplos disso. Os escravos trazidos ao Brasil desde meados do século XVI somaram à culinária nacional elementos como o azeite de dendê e o cuscuz. E as levas de imigrantes recebidas pelo país entre os séculos XIX e XX, vindos em grande número da Europa, trouxeram algumas novidades ao cardápio nacional e concomitantemente fortaleceram o consumo de diversos ingredientes.",
+    "url": "https://pt.wikipedia.org/wiki/Culin%C3%A1ria_do_Brasil"
+  },
+  {
+    "query": "Inteligência artificial",
+    "title": "Inteligência artificial",
+    "extract": "Inteligência artificial é, de forma genérica, a capacidade de máquinas demonstrarem inteligência, raciocínio e aprendizado de forma semelhante ao pensamento humano. O campo busca desenvolver máquinas autónomas ou sistemas especialistas capazes de simular o comportamento humano e realizar tarefas complexas de forma independente. Trata-se de um sistema que permite aos computadores executar funções avançadas, como a análise de dados em grande escala e a formulação de previsões ou recomendações. Como campo de pesquisa na ciência da computação, dedica-se ao estudo e desenvolvimento de métodos e softwares que capacitam as máquinas a perceberem o seu ambiente e a utilizarem o aprendizado para tomar ações que maximizem as hipóteses de atingir objetivos definidos.",
+    "url": "https://pt.wikipedia.org/wiki/Intelig%C3%AAncia_artificial"
+  },
+  {
+    "query": "Internet",
+    "title": "Internet",
+    "extract": "A Internet é um sistema global de redes de computadores interligadas que utilizam um conjunto próprio de protocolos com o propósito de servir progressivamente usuários no mundo inteiro. É uma rede de várias outras redes, que consiste de milhões de empresas privadas, públicas, acadêmicas e de governo, com alcance local e global e que está ligada por uma ampla variedade de tecnologias de rede eletrônica, sem fio e ópticas. A Internet traz uma extensa gama de recursos de informação e serviços, tais como os documentos inter-relacionados de hipertextos da World Wide Web (WWW), redes ponto a ponto (peer-to-peer) e infraestrutura de apoio a correio eletrônico (e-mails).",
+    "url": "https://pt.wikipedia.org/wiki/Internet"
+  },
+  {
+    "query": "Computador",
+    "title": "Computador",
+    "extract": "Computador é uma máquina que pode ser programada para realizar automaticamente sequências de operações aritméticas ou lógicas (computação). Os computadores eletrônicos digitais modernos podem executar conjuntos genéricos de operações conhecidos como programas, que permitem que os computadores executem uma ampla gama de tarefas. Os termos sistema de computador ou sistema computacional podem se referir a um computador nominalmente completo que inclui hardware, sistema operacional, software e equipamento periférico necessário e usado para operação completa; ou a um grupo de computadores vinculados e que funcionam juntos, como uma rede de computadores ou cluster de computadores.",
+    "url": "https://pt.wikipedia.org/wiki/Computador"
+  },
+  {
+    "query": "Algoritmo",
+    "title": "Algoritmo",
+    "extract": "Em matemática e ciência da computação, um algoritmo é uma sequência finita de ações executáveis que visam obter uma solução para um determinado tipo de problema. Segundo Dasgupta, Papadimitriou e Vazirani; \"Algoritmos são procedimentos precisos, não ambíguos, padronizados, eficientes e corretos.\".",
+    "url": "https://pt.wikipedia.org/wiki/Algoritmo"
+  },
+  {
+    "query": "Banco de dados",
+    "title": "Banco de dados",
+    "extract": "Na informática, banco de dados (português brasileiro) ou base de dados (português europeu) é um conjunto de arquivos ou dados relacionados, contendo registros sobre pessoas, lugares ou informações em geral, normalmente acessíveis de maneira eletrônica. É um tipo de armazenamento de dados baseado no uso de um sistema de gerenciamento de banco de dados (DBMS) - um software que interage com usuários finais, aplicativos e com o próprio banco de dados, para captura e análise. O DBMS também abrange os recursos essenciais fornecidos para administrar o banco de dados. A soma total do banco de dados, do DBMS e dos aplicativos associados pode ser chamada de sistema de banco de dados. Muitas vezes, o termo \"banco de dados\" também é usado de forma vaga para se referir a qualquer DBMS, sistema de banco de dados ou um aplicativo associado ao banco de dados.",
+    "url": "https://pt.wikipedia.org/wiki/Banco_de_dados"
+  },
+  {
+    "query": "Sistema operacional",
+    "title": "Sistema operativo",
+    "extract": "Sistema operativo (português europeu) ou sistema operacional (português brasileiro) é um software que gerencia os recursos de um dispositivo, como a memória e o processamento, permite a execução de programas e aplicativos, define qual programa recebe atenção do processador, cria um sistema de arquivos, e fornece uma interface entre o computador e o usuário (português brasileiro) ou utilizador (português europeu). Embora possa ser executado imediatamente após a máquina ser ligada, a maioria dos computadores pessoais de hoje o executa através de outro programa armazenado em uma memória não-volátil ROM chamado BIOS num processo chamado \"bootstrapping\", conceito em inglês usado para designar processos autossustentáveis, ou seja, capazes de prosseguirem sem ajuda externa. Após executar testes e iniciar os componentes da máquina, o BIOS procura pelo sistema operacional em alguma unidade de armazenamento, geralmente o Disco Rígido, e a partir daí, o sistema operacional \"toma\" o controle da máquina. O sistema operacional reveza sua execução com a de outros programas, como se estivesse vigiando, controlando e orquestrando todo o processo computacional.",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_operativo"
+  },
+  {
+    "query": "Linguagem de programação",
+    "title": "Linguagem de programação",
+    "extract": "A linguagem de programação é um método padronizado, formado por um conjunto de regras sintáticas e semânticas, de implementação de um código fonte - que pode ser compilado e transformado em um programa de computador, ou usado como script interpretado - que informará instruções de processamento ao computador. Permite que um programador especifique precisamente quais os dados que o computador irá atuar, como estes dados serão armazenados ou transmitidos e, quais ações devem ser tomadas de acordo com as circunstâncias. Linguagens de programação podem ser usadas para expressar algoritmos com precisão.",
+    "url": "https://pt.wikipedia.org/wiki/Linguagem_de_programa%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Robótica",
+    "title": "Robótica",
+    "extract": "Robótica é um ramo educacional e tecnológico que trata de sistemas compostos por partes mecânicas automáticas em conjunto com circuitos integrados, tornando sistemas mecânicos motorizados controlados por circuitos elétricos e inteligência computacional. A robótica é objeto de estudo de diversas áreas: computação, aeroespacial, mecânica, automação, elétrica, etc.",
+    "url": "https://pt.wikipedia.org/wiki/Rob%C3%B3tica"
+  },
+  {
+    "query": "Democracia",
+    "title": "Democracia",
+    "extract": "Democracia é um sistema de governo no qual o poder do Estado é investido no povo ou em sua população em geral. Numa definição minimalista de democracia, os governantes são eleitos através de eleições justas e competitivas, enquanto definições mais abrangentes associam também a democracia às garantias de liberdades civis e direitos humanos. Contrasta com formas de governo em que o poder não é investido na população geral, como em sistemas autoritários. A opinião pública do mundo ocidental é fortemente favorável aos sistemas democráticos de governo. De acordo com os Índices de Democracia V-Dem e The Economist Democracy Index, menos de metade da população mundial vivia numa democracia em 2022.",
+    "url": "https://pt.wikipedia.org/wiki/Democracia"
+  },
+  {
+    "query": "Inflação",
+    "title": "Inflação",
+    "extract": "Em economia, a inflação é um aumento geral nos preços de bens e serviços em uma economia. Quando o nível geral de preços aumenta, cada unidade de moeda compra menos bens e serviços; consequentemente, a inflação corresponde a uma redução do poder de compra do dinheiro. O oposto da inflação é a deflação, uma diminuição sustentada do nível geral de preços de bens e serviços. A medida comum de inflação é a taxa de inflação, a variação percentual anualizada de um índice de preços geral. Como os preços não aumentam todos na mesma proporção, o índice de preços ao consumidor (IPC) é frequentemente usado para esse fim.",
+    "url": "https://pt.wikipedia.org/wiki/Infla%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Moeda",
+    "title": "Moeda",
+    "extract": "Moeda é um meio de troca pelo qual são efetuadas transações monetárias, um ativo financeiro que serve como forma imediata de solver débitos ou adquirir produtos/serviços, com aceitabilidade geral e disponibilidade imediata, e confere ao seu titular direito de saque sobre o produto social.",
+    "url": "https://pt.wikipedia.org/wiki/Moeda"
+  },
+  {
+    "query": "Socialismo",
+    "title": "Socialismo",
+    "extract": "Socialismo é uma filosofia política, social e econômica que abrange uma gama de sistemas econômicos e sociais caracterizados pela propriedade social dos meios de produção. Inclui as teorias políticas e movimentos associados a tais sistemas. A propriedade social pode ser pública, coletiva, cooperativa ou patrimonial. Embora nenhuma definição única englobe os muitos tipos de socialismo, a propriedade social é o elemento comum. Os tipos de socialismo variam com base no papel dos mercados e do planejamento na alocação de recursos e na estrutura de gestão das organizações. Os socialistas discordam sobre se o governo, particularmente o governo existente, é o veículo correto para a mudança.",
+    "url": "https://pt.wikipedia.org/wiki/Socialismo"
+  },
+  {
+    "query": "Educação",
+    "title": "Educação",
+    "extract": "A educação é uma atividade proposital direcionada para atingir determinados objetivos, como transmitir conhecimentos ou promover habilidades e traços de caráter. Esses objetivos podem incluir o desenvolvimento da compreensão, racionalidade, bondade e honestidade. Vários pesquisadores e filósofos pensam e enfatizam o papel do pensamento crítico para distinguir educação de doutrinação. Alguns teóricos exigem que a educação resulte em uma melhoria do aluno, enquanto outros preferem uma definição de valor neutro do termo. Em um sentido ligeiramente diferente, a educação também pode se referir, não ao processo, mas ao produto desse processo: os estados mentais e as disposições possuídas pelas pessoas educadas. A educação originou-se como a transmissão do patrimônio cultural de uma geração para outra. Hoje, os objetivos educacionais abrangem cada vez mais novas ideias, como a libertação dos alunos, habilidades necessárias para a sociedade moderna, empatia e habilidades vocacionais complexas.",
+    "url": "https://pt.wikipedia.org/wiki/Educa%C3%A7%C3%A3o"
+  },
+  {
+    "query": "Pão",
+    "title": "Pão",
+    "extract": "Pão é um alimento obtido pelo cozimento de uma massa alimentar de consistência elástica, elaborada basicamente com farinha de cereal, água, sal/açúcar. A evidência de ocorrência mais antiga de pão é na Europa datado em 30 mil anos a.C..",
+    "url": "https://pt.wikipedia.org/wiki/P%C3%A3o"
+  },
+  {
+    "query": "Café",
+    "title": "Café",
+    "extract": "O café é uma bebida preparada a partir dos grãos torrados do fruto do cafeeiro. Tradicionalmente consumido quente, também pode ser servido gelado. A bebida contém cafeína, substância com efeito estimulante, cuja concentração varia conforme o método de preparo, situando-se geralmente entre 80 e 140 mg por cerca de 207 ml.",
+    "url": "https://pt.wikipedia.org/wiki/Caf%C3%A9"
+  },
+  {
+    "query": "Agricultura",
+    "title": "Agricultura",
+    "extract": "Agricultura é a prática de cultivar plantas e criar gado. Foi o principal desenvolvimento na ascensão da civilização humana sedentária, por meio da qual o uso de espécies domesticadas criou excedentes de alimentos que permitiram às pessoas viver nas cidades. A história da agricultura começou há milhares de anos. Depois de coletar grãos silvestres por pelo menos 105 mil anos, os primeiros agricultores começaram a plantá-los há cerca de 11,5 mil anos. Animais como porcos, ovelhas e bois foram domesticados há mais de 10 mil anos. As plantas foram cultivadas independentemente em pelo menos onze regiões do mundo. Desde o século XX, no entanto, a agricultura industrial baseada na monocultura em grande escala passou a dominar a produção agrícola, embora cerca de 2 bilhões de pessoas ainda dependiam da agricultura de subsistência.",
+    "url": "https://pt.wikipedia.org/wiki/Agricultura"
+  },
+  {
+    "query": "Culinária",
+    "title": "Culinária",
+    "extract": "A culinária é a arte de cozinhar, ou seja, o acto de confeccionar alimentos. Ela evoluiu ao longo da história dos povos para tornar-se parte da cultura de cada povo. Está invariavelmente associada à cozinha, pois este é o local ideal para cozinhar. Os métodos de culinária variam de região para região, não só os ingredientes, como também as técnicas culinárias e os próprios utensílios. Por exemplo, a cataplana é um recipiente para cozinhar alimentos típico do Algarve, equivalente à tajine de Marrocos. A alheira de Mirandela é um dos alimentos mais exclusivos da cozinha portuguesa, enquanto na culinária do Brasil, os pratos típicos incluem a feijoada brasileira e o churrasco. O cozinheiro principal é normalmente conhecido como chef, assim reconhecido pela sua boa cozinha e dotes culinários.",
+    "url": "https://pt.wikipedia.org/wiki/Culin%C3%A1ria"
+  },
+  {
+    "query": "Fogo",
+    "title": "Fogo",
+    "extract": "Fogo é a oxidação rápida de um material no processo químico exotérmico de combustão, liberando calor, luz e vários produtos de reação. As chamas são produzidas em um determinado ponto da reação de combustão chamado de \"ponto de ignição\". A chama é a parte visível do fogo e consiste principalmente de dióxido de carbono, vapor de água, oxigênio e nitrogênio. Se estiverem suficientemente quentes, os gases podem tornar-se ionizados para produzir plasma. Dependendo das substâncias acesas e das impurezas externas, a cor da chama e a intensidade do fogo serão diferentes.",
+    "url": "https://pt.wikipedia.org/wiki/Fogo"
+  },
+  {
+    "query": "Roda",
+    "title": "Roda",
+    "extract": "Roda é um componente rotativo que se destina a girar sobre um mancal de eixo. A roda é um dos principais componentes da roda e do eixo, uma das seis máquinas simples. Rodas, em conjunto com eixos, permitem que objetos pesados sejam movidos facilmente, facilitando a movimentação ou o transporte, enquanto suportam uma carga ou realizam trabalho em máquinas. Rodas também são usadas para outros fins, como leme de navio, volante, roda de oleiro e volante de inércia.",
+    "url": "https://pt.wikipedia.org/wiki/Roda"
+  },
+  {
+    "query": "Eletrodoméstico",
+    "title": "Eletrodoméstico",
+    "extract": "Os eletrodomésticos são aparelhos eléctricos usados para facilitar várias tarefas domésticas, tais como cozinhar e conservar os alimentos, limpar a casa, tratar da roupa, no banheiro e nos cuidados de beleza e também como formas de entretenimento.",
+    "url": "https://pt.wikipedia.org/wiki/Eletrodom%C3%A9stico"
+  },
+  {
+    "query": "Transporte",
+    "title": "Transporte",
+    "extract": "Transporte é o movimento de pessoas e mercadorias entre locais. O campo de transporte apresenta diversas características a nível de infraestrutura, veículos e operações comerciais. Por infraestrutura entende-se a rede viária, de transporte rodoviário, ferroviário, aéreo, fluvial, tubular, etc. que é usada, assim como os terminais como estradas, aeroportos, estações ferroviárias, portos, terminais de autocarro e todo o tipo de equipamento similar. Os veículos, como automóveis, bicicletas, autocarros, comboios e aviões, ou as próprias pessoas ou animais quando viajam a pé, geralmente trafegam por uma qualquer rede. As operações comerciais estão relacionadas com a maneira como os veículos operam na rede e o conjunto de procedimentos especificados para o propósito desejado, incluindo o ambiente legal. Políticas, como por exemplo financiar o sistema, podem ser consideradas parte das operações.",
+    "url": "https://pt.wikipedia.org/wiki/Transporte"
+  },
+  {
+    "query": "Vestuário",
+    "title": "Roupa",
+    "extract": "Roupa, também chamada de vestuário ou indumentária, é qualquer objeto usado para cobrir partes do corpo. Roupas são usadas por vários motivos. Roupas são usadas por questões sociais, culturais, ou por necessidade. Outros objetos que são carregados ao invés de serem vestidos sobre certas partes do corpo são chamadas de acessórios, como por exemplo, sombrinhas, bolsas e mochilas.",
+    "url": "https://pt.wikipedia.org/wiki/Roupa"
   }
 ]

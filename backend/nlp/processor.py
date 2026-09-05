@@ -115,6 +115,21 @@ exceção é "acao", que exige 4: com 3 ele junta "coração" e "corar" em
 
 Como o radical mudou, mudou também a dimensão do embedder: `ALGO_VERSION`
 foi para 4 e o estado gravado antes é recalculado do `content`.
+
+Correção do "aria" (achada quando o corpus triplicou, #134)
+------------------------------------------------------------
+"aria"/"eria"/"iria" entraram na lista como condicional verbal (falaria,
+comeria, partiria) e cortavam SUBSTANTIVO: "operárias" virava "oper", o
+mesmo radical de "operação"; "padaria" virava "pad". Com 50 artigos isso
+passou despercebido porque não havia com que colidir. Com 135, o artigo
+novo de Transporte ("operações comerciais") passou a ganhar de "o que são
+as operárias?" por 0,3384 contra 0,2785 — a colônia respondia TRANSPORTE
+para uma pergunta sobre operárias.
+
+Os três foram removidos. O condicional verbal é raro em texto de
+enciclopédia; substantivo em -aria não é, e o estrago era maior. É um
+lembrete concreto de que medir com pouco dado esconde sobre-radicalização:
+o defeito estava lá desde o item 10 e só a ampliação do corpus o mostrou.
 """
 from __future__ import annotations
 
@@ -170,7 +185,7 @@ _SUFFIXES = ("issimo", "issima", "mente", "acao", "amento", "imento",
              "aremos", "eremos", "iremos", "assem", "essem", "issem",
              "arem", "erem", "irem", "aram", "eram", "iram",
              "amos", "emos", "imos", "ando", "endo", "indo",
-             "aria", "eria", "iria", "ados", "adas", "idos", "idas",
+             "ados", "adas", "idos", "idas",
              "ada", "ado", "ida", "ido", "ismo", "ista", "avel", "ivel",
              "ancia", "encia", "am", "em", "ar", "er", "ir", "ou", "es")
 

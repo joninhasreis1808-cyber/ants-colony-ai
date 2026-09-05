@@ -54,10 +54,17 @@ def test_o_idf_ainda_ganha_do_cosseno_cru():
     sufixo "cao" (o "ção" dobrado) e vira o radical "vul" — raro e muito
     distintivo, então agora a contagem crua já acerta sozinha.
 
-    O exemplo morreu; o ganho não. Medido sobre 200 perguntas com resposta
-    conhecida, o acerto do top-1 é 93,5% no cosseno cru contra 96,0% com
-    IDF. É esse número que sustenta o item, e é ele que fica preso aqui —
-    exemplo isolado é frágil a mudanças de tokenização, agregado não é.
+    O exemplo morreu; o ganho não. E ele CRESCEU quando o corpus cresceu:
+
+        corpus de  50 artigos (200 perguntas): cru 93,5% x IDF 96,0%
+        corpus de 135 artigos (540 perguntas): cru 78,1% x IDF 90,2%
+
+    Com mais documentos há mais competição, e é exatamente aí que pesar o
+    termo raro passa a valer: a vantagem foi de 2,5 pontos para 12. O piso
+    absoluto teve de cair porque a TAREFA ficou mais difícil, não porque a
+    função piorou — o que sustenta o item é a DIFERENÇA, e por isso o
+    primeiro assert é o que importa. Exemplo isolado é frágil a mudanças de
+    tokenização; agregado, não.
     """
     corpus, titulos = _corpus()
     nlp = NLPProcessor()
@@ -80,7 +87,7 @@ def test_o_idf_ainda_ganha_do_cosseno_cru():
         f"o IDF deixou de ajudar: cru {cru}/{total}, com IDF "
         f"{idf_ok}/{total} — a justificativa do item caiu"
     )
-    assert idf_ok / total > 0.94, f"acerto caiu para {idf_ok}/{total}"
+    assert idf_ok / total > 0.88, f"acerto caiu para {idf_ok}/{total}"
 
 
 def test_idf_nunca_e_negativo():

@@ -9,9 +9,39 @@ nunca amarrada a um backend específico — o mesmo `KVStore` (SQLite) que DNA,
 confiança e feedback já usam para sobreviver a reinícios, não um serviço pago
 novo. Sem `persist`, o comportamento é idêntico ao de sempre: tudo em RAM,
 zero I/O, testável sem tocar em disco.
+
+Gravação incremental (amplificação de escrita)
+----------------------------------------------
+Cada mutação reescrevia o snapshot INTEIRO. A amplificação era exatamente
+n/2 e crescia sem teto — medida antes de mexer:
+
+    N=50    3,4 MB escritos para um estado de 134 KB    ( 25x)
+    N=200  53,7 MB escritos para um estado de 536 KB   (100x)
+
+Não era só o loop de carga: uma única memória nova reescrevia todas as
+outras, então o custo de lembrar UMA coisa crescia com tudo o que a
+colônia já sabia. Agora o disco tem um registro por memória
+(`<chave>:m:<id>`) e um índice pequeno com a lista de ids. N=200 escreve
+950 KB — 1,8x.
+
+A gravação continua AUTOMÁTICA a cada mutação, de propósito: trocá-la por
+um flush manual repetiria a classe de defeito do #92 (um ponto de chamada
+esquecido = memória que some no reinício), que é justamente o que o
+comentário do `ltm_store.py` explica ter sido evitado.
+
+E a decisão de comparar CONTEÚDO em vez de pedir um "dirty set" ao
+chamador é pelo mesmo motivo: `AdaptiveForgetter` e `MemoryConsolidator`
+mutam `Memory` in place e depois chamam `persist_now()` sem dizer o que
+tocaram. Exigir que declarassem seria criar de novo o ponto de chamada
+esquecível. O preço é reserializar em RAM para comparar — CPU, não disco.
+
+Fica declarado o que NÃO foi resolvido: `persist_now` ainda percorre todas
+as memórias a cada chamada (O(n) de CPU), porque é assim que detecta
+mutação feita por fora. O que saiu foi o I/O, que era o custo dominante.
 """
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 
 from backend.memory.embedder import (
@@ -56,6 +86,10 @@ def _embedding_do_registro(rec: dict, algo_atual: bool = True) -> SparseVector:
 from backend.memory.store_retrieval import RetrievalMixin
 from backend.memory.vector_backend import make_collection
 
+# Marca do layout incremental no índice — distingue do snapshot antigo,
+# que tinha a chave "memories" com tudo dentro.
+_FORMATO = "incremental-v1"
+
 _COLLECTIONS = ["semantic", "episodic", "procedural", "emotional", "working"]
 
 
@@ -72,10 +106,44 @@ class DistributedStore(RetrievalMixin):
         # SQLite de verdade.
         self._persist = persist
         self._persist_key = persist_key
+        # Espelho do que JÁ está no disco, por id: `persist_now` compara
+        # contra isto e grava só o que mudou de verdade. É o que permite
+        # detectar mutação feita por fora (forgetter/consolidator alteram
+        # `Memory` in place) sem exigir que o chamador declare nada.
+        self._gravado: dict[str, str] = {}
+        self._indice_gravado: list[str] | None = None
         if self._persist is not None:
-            estado = self._persist.get_json(self._persist_key)
-            if estado:
-                self.load_state(estado)
+            self._carregar_do_disco()
+
+    def _carregar_do_disco(self) -> None:
+        """Lê o estado gravado, nos DOIS layouts que podem existir.
+
+        O incremental (índice + um registro por memória) é o de hoje. O
+        snapshot único ("memories" com tudo dentro) é o que já está gravado
+        em disco de execuções anteriores — ele não pode ser ignorado, senão
+        atualizar o código apagaria a memória de quem já usa a colônia. Lido
+        o velho, o primeiro `persist_now` regrava no formato novo.
+        """
+        raiz = self._persist.get_json(self._persist_key)
+        if not raiz:
+            return
+        if "memories" in raiz:                 # snapshot antigo, uma peça só
+            self.load_state(raiz)
+            return
+        registros = []
+        for memory_id in raiz.get("ids") or []:
+            rec = self._persist.get_json(self._chave_registro(memory_id))
+            if rec:
+                registros.append(rec)
+        self.load_state({"embedding_algo": raiz.get("embedding_algo"),
+                         "memories": registros})
+        # O que veio do disco já ESTÁ no disco: registrar o espelho evita
+        # que o primeiro `persist_now` regrave tudo sem necessidade.
+        if raiz.get("embedding_algo") == ALGO_VERSION:
+            for mem in self._memories.values():
+                self._gravado[mem.id] = json.dumps(self._registro(mem),
+                                                   sort_keys=True)
+            self._indice_gravado = list(self._memories)
 
     def store(self, encoded: EncodedMemory) -> str:
         """Armazena a memória nas coleções adequadas ao seu tipo."""
@@ -160,30 +228,86 @@ class DistributedStore(RetrievalMixin):
         self.persist_now()
 
     # ---- Persistência (fundamento 02) ------------------------------------
-    def persist_now(self) -> None:
-        """Grava o estado inteiro no `persist`, se houver um configurado.
+    def _chave_registro(self, memory_id: str) -> str:
+        return f"{self._persist_key}:m:{memory_id}"
 
-        Reescreve o snapshot completo em vez de gravar incrementalmente — o
-        mesmo custo que DNA/confiança/feedback já pagam para o mesmo tipo de
-        estado, e simples o bastante para não esconder bug de sincronismo
-        parcial. Sem `persist`, é um no-op — o comportamento em RAM de sempre.
+    def persist_now(self) -> None:
+        """Sincroniza o disco com a memória, gravando SÓ o que mudou.
+
+        Antes reescrevia o snapshot inteiro a cada mutação: guardar 200
+        memórias escrevia 53,7 MB para um estado de 536 KB — amplificação
+        de 100x, e crescendo com n (era exatamente n/2). Agora cada memória
+        é um registro próprio, e um índice pequeno guarda a lista de ids.
+
+        A comparação é contra `_gravado`, o espelho do que já está no disco,
+        e NÃO contra uma lista de "sujos" declarada por quem chamou. A
+        diferença importa: `AdaptiveForgetter` e `MemoryConsolidator` mutam
+        objetos `Memory` in place e depois chamam este método sem dizer o
+        que tocaram. Um dirty-set exigiria que eles avisassem — e um ponto
+        de chamada esquecido viraria memória que some no reinício, a mesma
+        classe de defeito do #92 que a escrita automática existe para
+        evitar. Comparando o conteúdo, mutação feita por fora é detectada
+        sozinha; o custo é reserializar em RAM, não gravar em disco.
+
+        Sem `persist`, é um no-op — o comportamento em RAM de sempre.
         """
-        if self._persist is not None:
-            self._persist.set_json(self._persist_key, self.to_state())
+        if self._persist is None:
+            return
+        for memory_id, mem in self._memories.items():
+            payload = json.dumps(self._registro(mem), sort_keys=True)
+            if self._gravado.get(memory_id) == payload:
+                continue                      # idêntico ao disco: não grava
+            self._persist.set_json(self._chave_registro(memory_id),
+                                   json.loads(payload))
+            self._gravado[memory_id] = payload
+        # Registros que sumiram da RAM saem do disco também.
+        for memory_id in [k for k in self._gravado if k not in self._memories]:
+            self._apagar_registro(memory_id)
+        self._persist_indice()
+
+    def _apagar_registro(self, memory_id: str) -> None:
+        """Remove um registro do disco (ou o esvazia, se o `persist` do
+        chamador não souber apagar — a interface mínima é get/set_json)."""
+        self._gravado.pop(memory_id, None)
+        chave = self._chave_registro(memory_id)
+        apagar = getattr(self._persist, "delete", None)
+        if callable(apagar):
+            apagar(chave)
+        else:
+            self._persist.set_json(chave, None)
+
+    def _persist_indice(self) -> None:
+        """Grava o índice: versão do algoritmo + a lista de ids.
+
+        Só grava quando o conjunto de ids muda — reforço de força não mexe
+        no índice, e reescrevê-lo à toa traria de volta parte do custo que
+        esta mudança removeu."""
+        ids = list(self._memories)
+        indice = {"formato": _FORMATO, "embedding_algo": ALGO_VERSION,
+                  "ids": ids}
+        if self._indice_gravado == ids:
+            return
+        self._persist.set_json(self._persist_key, indice)
+        self._indice_gravado = list(ids)
+
+    def _registro(self, m: Memory) -> dict[str, Any]:
+        """Uma memória como dicionário serializável (a unidade de gravação)."""
+        return {"id": m.id, "content": m.content, "mem_type": m.mem_type.value,
+                "strength": m.strength, "attention_score": m.attention_score,
+                "features": m.features, "associations": m.associations,
+                "emotional_weight": m.emotional_weight,
+                "access_count": m.access_count, "last_access": m.last_access,
+                "timestamp": m.timestamp,
+                "embedding": {str(k): v for k, v in
+                              (self._embeddings.get(m.id) or {}).items()}}
 
     def to_state(self) -> dict[str, Any]:
-        """Todas as memórias + seus embeddings, serializáveis em JSON."""
-        return {"embedding_algo": ALGO_VERSION, "memories": [
-            {"id": m.id, "content": m.content, "mem_type": m.mem_type.value,
-             "strength": m.strength, "attention_score": m.attention_score,
-             "features": m.features, "associations": m.associations,
-             "emotional_weight": m.emotional_weight,
-             "access_count": m.access_count, "last_access": m.last_access,
-             "timestamp": m.timestamp,
-             "embedding": {str(k): v for k, v in
-                           (self._embeddings.get(m.id) or {}).items()}}
-            for m in self._memories.values()
-        ]}
+        """Todas as memórias + seus embeddings, serializáveis em JSON.
+
+        Continua sendo o formato de snapshot completo — usado por quem quer
+        o estado inteiro numa peça só, e ainda lido por `load_state`."""
+        return {"embedding_algo": ALGO_VERSION,
+                "memories": [self._registro(m) for m in self._memories.values()]}
 
     def load_state(self, state: dict[str, Any]) -> None:
         """Reconstrói memórias, embeddings E as coleções vetoriais a partir

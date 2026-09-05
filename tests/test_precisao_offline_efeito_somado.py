@@ -22,6 +22,28 @@ nasceu. Piso frouxo é rede furada: com 5 e 8 (os originais), uma
 regressão de 17/18 de volta para 13/18 passaria em silêncio — foi o que
 esta revisão encontrou.
 
+O QUE ESTE NÚMERO MEDE — E O QUE ELE NÃO MEDE
+----------------------------------------------
+Ele mede o `CognitiveFallback`, que NÃO é a primeira coisa que o chat
+consulta. `POST /hive/task` tem uma cadeia de prioridade: pergunta passa
+antes por `_answer_from_knowledge` (a base estruturada `facts.json`, ver
+`backend/api/routes/hive.py`), e só cai neste caminho quando aquela não
+tem o assunto.
+
+Ou seja: "17/18" descreve a camada de TRÁS, não o produto inteiro.
+Descoberto ao verificar no navegador — a resposta de "o que é a
+fotossíntese?" na tela não era o texto do artigo da Wikipédia que este
+teste mede, e sim a definição curta do `facts.json`.
+
+O impacto foi MEDIDO, não suposto: das 18 perguntas daqui, apenas UMA
+("o que é uma colônia de formigas?") é interceptada antes. As outras 17
+chegam a este caminho, então o número segue descrevendo bem o que ele se
+propõe a descrever. Mas quem lê 17/18 precisa saber que existe uma camada
+na frente — `test_a_camada_da_frente_continua_pequena` prende isso: se o
+`facts.json` crescer a ponto de interceptar boa parte do benchmark, este
+teste passa a medir cada vez menos do que o usuário recebe, e o teste
+avisa antes que o número vire ficção.
+
 CRITÉRIO — recusa NÃO conta como acerto
 ---------------------------------------
 Vale registrar como esta medição quase saiu errada, porque o erro é fácil
@@ -138,6 +160,24 @@ def test_perguntas_de_conhecimento_geral(cerebro):
     """Era 0/10 antes da frente — a colônia não tinha corpus do mundo."""
     ok, falhas = _acertos(cerebro, GERAL)
     assert ok >= 10, f"caiu para {ok}/{len(GERAL)}:\n" + "\n".join(falhas)
+
+
+def test_a_camada_da_frente_continua_pequena():
+    """A ressalva acima, presa por medição.
+
+    Se o `facts.json` crescer e passar a responder boa parte destas 18
+    perguntas antes do `CognitiveFallback`, o número deste arquivo passa a
+    medir cada vez menos do que o usuário de fato recebe. Não é defeito
+    algum a base crescer — é bom. O que não pode é o número seguir sendo
+    lido como "o que a colônia responde" sem ninguém notar a mudança."""
+    from backend.knowledge.facts_base import get_facts_base
+    fb = get_facts_base()
+    interceptadas = [q for q, _ in COLONIA + GERAL if fb.lookup(q)]
+    assert len(interceptadas) <= 3, (
+        f"{len(interceptadas)} das 18 perguntas agora são respondidas pelo "
+        f"facts.json antes deste caminho: {interceptadas}. Reavalie o que "
+        f"este arquivo está medindo."
+    )
 
 
 def test_honestidade_nao_pode_regredir(cerebro):

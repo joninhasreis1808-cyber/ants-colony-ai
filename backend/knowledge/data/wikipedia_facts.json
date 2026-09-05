@@ -808,5 +808,71 @@
     "title": "Roupa",
     "extract": "Roupa, também chamada de vestuário ou indumentária, é qualquer objeto usado para cobrir partes do corpo. Roupas são usadas por vários motivos. Roupas são usadas por questões sociais, culturais, ou por necessidade. Outros objetos que são carregados ao invés de serem vestidos sobre certas partes do corpo são chamadas de acessórios, como por exemplo, sombrinhas, bolsas e mochilas.",
     "url": "https://pt.wikipedia.org/wiki/Roupa"
+  },
+  {
+    "query": "Genética",
+    "title": "Genética",
+    "extract": "Genética é o ramo da biologia especializado no estudo científico dos genes, a variação genética dos organismos e a hereditariedade, ou seja, a forma como os organismos recebem e transmitem as características biológicas de geração para geração. O termo genética foi primeiramente aplicado para descrever o estudo da variação e hereditariedade, pelo biólogo William Bateson numa carta dirigida a Adam Sedgewick, datada a 18 de abril de 1908.",
+    "url": "https://pt.wikipedia.org/wiki/Gen%C3%A9tica"
+  },
+  {
+    "query": "Álgebra",
+    "title": "Álgebra",
+    "extract": "A álgebra é um ramo da matemática que lida com sistemas abstratos, conhecidos como estruturas algébricas, e com a manipulação de expressões dentro desses sistemas. É uma generalização da aritmética que introduz variáveis e operações algébricas além das operações aritméticas padrão, como a adição e a multiplicação.",
+    "url": "https://pt.wikipedia.org/wiki/%C3%81lgebra"
+  },
+  {
+    "query": "Geometria",
+    "title": "Geometria",
+    "extract": "A geometria é um ramo da matemática preocupado com questões de forma, tamanho e posição relativa de figuras e com as propriedades dos espaços. Um matemático que trabalha no campo da geometria é denominado de geômetra.",
+    "url": "https://pt.wikipedia.org/wiki/Geometria"
+  },
+  {
+    "query": "Probabilidade",
+    "title": "Probabilidade",
+    "extract": "A palavra probabilidade deriva do Latim probare. Informalmente, provável é uma das muitas palavras utilizadas para eventos incertos ou desconhecidos, sendo também substituída por algumas palavras como “sorte”, “risco”, “azar”, \"chance\", “incerteza”, “duvidoso”, dependendo do contexto inseridas à língua portuguesa e na linguagem matemática.",
+    "url": "https://pt.wikipedia.org/wiki/Probabilidade"
+  },
+  {
+    "query": "Samba",
+    "title": "Samba",
+    "extract": "Samba é um gênero musical brasileiro originado a partir de tradições afro-brasileiras da Bahia no final do século XIX e desenvolvido no Rio de Janeiro no início do século XX. A palavra também é usada como prefixo para suas derivações, como o samba urbano carioca ou o samba de roda. O samba tem suas raízes na expressão cultural da África Ocidental e nas tradições folclóricas brasileiras, especialmente aquelas ligadas ao samba rural primitivo dos períodos colonial e imperial, é considerado um dos mais importantes fenômenos culturais do Brasil e um dos símbolos do país. Presente na língua portuguesa ao menos desde o século XIX, a palavra “samba” era originariamente empregada para designar uma “dança popular” ou um “bailado popular”. Com o tempo, seu significado foi estendido a uma “dança de roda semelhante ao batuque” e também a um “gênero de canção popular”.",
+    "url": "https://pt.wikipedia.org/wiki/Samba"
+  },
+  {
+    "query": "Capitalismo",
+    "title": "Capitalismo",
+    "extract": "Capitalismo é um sistema econômico baseado na propriedade privada dos meios de produção e sua exploração com fins lucrativos. As características centrais deste sistema incluem, além da propriedade privada, a acumulação de capital, o trabalho assalariado, a troca voluntária, um sistema de preços e mercados competitivos. Em uma economia de mercado, a tomada de decisão e o investimento são determinados pelos proprietários dos fatores de produção nos mercados financeiros e de capitais, enquanto os preços e a distribuição de bens são principalmente determinados pela concorrência no mercado.",
+    "url": "https://pt.wikipedia.org/wiki/Capitalismo"
+  },
+  {
+    "query": "Direitos humanos",
+    "title": "Direitos humanos",
+    "extract": "Direitos humanos são os direitos básicos e liberdades dos seres humanos que são inalienáveis e independentes de raça, género, nacionalidade, etnia, religião ou qualquer outra condição.",
+    "url": "https://pt.wikipedia.org/wiki/Direitos_humanos"
+  },
+  {
+    "query": "Cidade",
+    "title": "Cidade",
+    "extract": "Cidade é um grande assentamento humano. Pode ser definida como um lugar permanente e densamente povoado com limites administrativamente definidos cujos membros trabalham principalmente em tarefas não agrícolas. As cidades geralmente têm amplos sistemas de habitação, transporte, saneamento, serviços públicos, uso do solo, produção de bens e comunicação. Sua densidade facilita a interação entre pessoas, órgãos governamentais e empresas, às vezes beneficiando diferentes partes do processo, como melhorar a eficiência da distribuição de bens e serviços.",
+    "url": "https://pt.wikipedia.org/wiki/Cidade"
+  },
+  {
+    "query": "Depressão",
+    "title": "Transtorno depressivo maior",
+    "extract": "Transtorno depressivo maior (TDM) (português brasileiro) ou perturbação depressiva major (PDM) (português europeu), conhecido simplesmente como depressão, é um distúrbio mental caracterizado por pelo menos duas semanas de depressão que esteja presente na maior parte das situações. É muitas vezes acompanhado de baixa autoestima, perda de interesse em atividades de outra forma aprazíveis, pouca energia e dor sem uma causa definida. As pessoas podem ocasionalmente manifestar delírios ou alucinações. Algumas pessoas apresentam episódios de depressão separados por um intervalo de vários anos em que o comportamento é normal, enquanto outras manifestam sintomas de forma quase permanente. A depressão pode afetar de forma negativa as relações familiares da pessoa, o trabalho, a vida escolar, o sono, as refeições e a saúde em geral. Entre 2 a 7% dos adultos com depressão morrem de suicídio e cerca de 60% das pessoas que morrem por suicídio apresentavam depressão ou outro distúrbio de humor.",
+    "url": "https://pt.wikipedia.org/wiki/Transtorno_depressivo_maior"
+  },
+  {
+    "query": "Satélite",
+    "title": "Satélite artificial",
+    "extract": "Satélite artificial é qualquer corpo feito pelo ser humano e colocado em órbita ao redor da Terra ou de qualquer outro corpo celeste. Até hoje já foram efetuados milhares de lançamentos desses corpos ao espaço, mas a maioria já está desativada. Quando ocorrem falhas no lançamento ou no próprio satélite, partes dos mesmos podem ficar orbitando o planeta por tempo indefinido, formando o lixo espacial. Tecnicamente, esses objetos também são satélites, embora o termo por si só seja usado para se referir ao aparelho que foi colocado em órbita para exercer uma função específica.",
+    "url": "https://pt.wikipedia.org/wiki/Sat%C3%A9lite_artificial"
+  },
+  {
+    "query": "Trabalho",
+    "title": "Trabalho (economia)",
+    "extract": "O trabalho é o fator de produção mais importante. Usualmente os economistas medem o trabalho em termos de horas dedicadas (tempo), salário ou eficiência.",
+    "url": "https://pt.wikipedia.org/wiki/Trabalho_(economia)"
   }
 ]

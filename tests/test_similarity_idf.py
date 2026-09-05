@@ -44,24 +44,50 @@ def _corpus() -> tuple[list[str], list[str]]:
     return [e["extract"] for e in dados], [e["title"] for e in dados]
 
 
-def test_termo_comum_nao_sequestra_mais_a_escolha():
-    """O caso concreto que motivou o item: "como funciona Vulcão?" escolhia
-    o fato de BLOCKCHAIN, porque aquele texto repete "funciona" e a
-    contagem crua deixava a palavra comum dominar o termo distintivo."""
+def test_o_idf_ainda_ganha_do_cosseno_cru():
+    """O ganho do item, medido em agregado em vez de por um exemplo só.
+
+    O exemplo original era "como funciona Vulcão?" — a contagem crua se
+    perdia no "funciona" e devolvia o fato de BLOCKCHAIN. Esse exemplo
+    DISSOLVEU com a dobra de acentos (item 9), e o guard-assert que estava
+    aqui foi quem avisou: "vulcão" dobra para "vulcao", que termina no
+    sufixo "cao" (o "ção" dobrado) e vira o radical "vul" — raro e muito
+    distintivo, então agora a contagem crua já acerta sozinha.
+
+    O exemplo morreu; o ganho não. E ele CRESCEU quando o corpus cresceu:
+
+        corpus de  50 artigos (200 perguntas): cru 93,5% x IDF 96,0%
+        corpus de 135 artigos (540 perguntas): cru 78,1% x IDF 90,2%
+
+    Com mais documentos há mais competição, e é exatamente aí que pesar o
+    termo raro passa a valer: a vantagem foi de 2,5 pontos para 12. O piso
+    absoluto teve de cair porque a TAREFA ficou mais difícil, não porque a
+    função piorou — o que sustenta o item é a DIFERENÇA, e por isso o
+    primeiro assert é o que importa. Exemplo isolado é frágil a mudanças de
+    tokenização; agregado, não.
+    """
     corpus, titulos = _corpus()
     nlp = NLPProcessor()
-    pergunta = "como funciona Vulcão?"
+    moldes = ("o que é {}?", "como funciona {}?", "me explique {}",
+              "fale sobre {}")
 
-    antes = titulos[max(range(len(corpus)),
-                        key=lambda i: _cosseno_cru(pergunta, corpus[i]))]
-    agora = titulos[max(range(len(corpus)),
-                        key=lambda i: nlp.similarity(pergunta, corpus[i]))]
+    cru = idf_ok = total = 0
+    for molde in moldes:
+        for i, titulo in enumerate(titulos):
+            total += 1
+            pergunta = molde.format(titulo)
+            if max(range(len(corpus)),
+                   key=lambda j: _cosseno_cru(pergunta, corpus[j])) == i:
+                cru += 1
+            if max(range(len(corpus)),
+                   key=lambda j: nlp.similarity(pergunta, corpus[j])) == i:
+                idf_ok += 1
 
-    assert antes != "Vulcão", (
-        "este teste documenta um defeito real; se a implementação anterior "
-        "já acertasse, a justificativa do item teria mudado"
+    assert idf_ok > cru, (
+        f"o IDF deixou de ajudar: cru {cru}/{total}, com IDF "
+        f"{idf_ok}/{total} — a justificativa do item caiu"
     )
-    assert agora == "Vulcão"
+    assert idf_ok / total > 0.88, f"acerto caiu para {idf_ok}/{total}"
 
 
 def test_idf_nunca_e_negativo():

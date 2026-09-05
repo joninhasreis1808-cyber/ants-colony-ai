@@ -31,7 +31,10 @@ def test_recall_traz_o_fato_certo_e_cita_a_fonte():
 
 
 def test_recall_vazio_para_pergunta_sem_relacao():
-    assert WikiKnowledge().recall("receita de bolo de chocolate") == []
+    # "bolo de chocolate" DEIXOU de servir aqui: o corpus ganhou
+    # "Culinária do Brasil" e passou a casar — corretamente. Assunto de
+    # teste precisa continuar fora do corpus para o teste seguir valendo.
+    assert WikiKnowledge().recall("o que é uma sonata para piano?") == []
 
 
 def test_wiki_knowledge_delega_de_verdade_ao_hybridstore(monkeypatch):

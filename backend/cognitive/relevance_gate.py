@@ -77,11 +77,13 @@ feromônios?" e 0,2303 em "o que são feromônios e como coordenam uma
 colônia?" — então recusar por piso puniria pergunta longa que a colônia
 responde certo.
 
-Fica declarado o que NÃO é do portão: "como as formigas se comunicam?"
-ainda erra, e a causa é o stemmer, não isto aqui — "comunicam" e
-"comunicarem" não caem no mesmo radical (nem "decisões"/"decisão", nem
-"enxame"/"enxames"), então o fato certo perde por pouco. Medido, não
-suposto.
+Ficou declarado aqui, quando esta seção foi escrita, que "como as
+formigas se comunicam?" ainda errava por causa do stemmer — "comunicam" e
+"comunicarem" não caíam no mesmo radical. Isso foi CORRIGIDO no item 10 e
+a pergunta passou a ser respondida certo (Feromônios). A declaração ficou
+para trás até esta revisão: limitação documentada que já não existe faz
+alguém caçar defeito que não está lá — o mesmo estrago de limitação
+documentada com a causa errada.
 
 Só o que é SOBRE a pergunta (fato que apenas encosta no assunto)
 ------------------------------------------------------------------

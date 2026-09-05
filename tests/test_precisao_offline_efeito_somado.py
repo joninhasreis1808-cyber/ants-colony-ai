@@ -6,15 +6,21 @@ caminho real (`CognitiveFallback.answer`), sem rede.
 
 Contra o commit anterior à frente (`26451ce`, via git worktree):
 
-    | conjunto           | antes | hoje |
-    |--------------------|-------|------|
-    | colônia (8)        |   6   |   5  |
-    | geral (10)         |   0   |   8  |
-    | honestidade (5)    |  5/5  |  5/5 |
+    | conjunto        | antes | quando este arquivo nasceu | hoje |
+    |-----------------|-------|----------------------------|------|
+    | colônia (8)     |   6   |             5              |   7  |
+    | geral (10)      |   0   |             8              |  10  |
+    | honestidade (5) |  5/5  |            5/5             |  5/5 |
 
-6/18 → 13/18. O salto vem do conjunto "geral": antes a colônia não tinha
-o que dizer sobre o mundo e declarava limitação em 10/10; hoje tem o
-corpus da Wikipédia (item 2).
+6/18 -> 13/18 quando este teste foi escrito, e 17/18 hoje. O primeiro
+salto veio do conjunto "geral": antes a colônia não tinha o que dizer
+sobre o mundo e declarava limitação em 10/10. O resto veio depois — o
+corpus indo a 146 artigos, o stemmer, o portão e os apelidos.
+
+Os pisos abaixo acompanham o valor ATUAL, não o de quando o arquivo
+nasceu. Piso frouxo é rede furada: com 5 e 8 (os originais), uma
+regressão de 17/18 de volta para 13/18 passaria em silêncio — foi o que
+esta revisão encontrou.
 
 CRITÉRIO — recusa NÃO conta como acerto
 ---------------------------------------
@@ -125,13 +131,13 @@ def test_perguntas_sobre_a_propria_colonia(cerebro):
     cabeçalho (dobra de acentos perdida no `RelevanceGate`), declarado ali
     e não corrigido aqui. O piso segura o que existe hoje."""
     ok, falhas = _acertos(cerebro, COLONIA)
-    assert ok >= 5, f"caiu para {ok}/{len(COLONIA)}:\n" + "\n".join(falhas)
+    assert ok >= 7, f"caiu para {ok}/{len(COLONIA)}:\n" + "\n".join(falhas)
 
 
 def test_perguntas_de_conhecimento_geral(cerebro):
     """Era 0/10 antes da frente — a colônia não tinha corpus do mundo."""
     ok, falhas = _acertos(cerebro, GERAL)
-    assert ok >= 8, f"caiu para {ok}/{len(GERAL)}:\n" + "\n".join(falhas)
+    assert ok >= 10, f"caiu para {ok}/{len(GERAL)}:\n" + "\n".join(falhas)
 
 
 def test_honestidade_nao_pode_regredir(cerebro):

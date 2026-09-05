@@ -19,10 +19,22 @@ se somavam, todos medidos antes de mexer:
     defeito que o item 5 corrigiu em `similarity()`);
   • e 1549 radicais disputavam 768 dimensões: **87% colidiam**.
 
-Medido sobre 150 consultas com resposta conhecida, o acerto do recall
-saiu de **46,7% para 96,0%**. E como um texto tem ~50 radicais distintos,
-o vetor é ~99% zeros: guardá-lo ESPARSO (índice → peso) custa **769 bytes
-por memória contra 4.563 do denso anterior** — mais preciso E 6× menor.
+Medido sobre 150 consultas com resposta conhecida (corpus de 50 artigos,
+como era à época), o acerto do recall saiu de **46,7% para 96,0%**.
+
+Sobre o TAMANHO: um texto tem algumas dezenas de radicais distintos, então
+o vetor é ~99% zeros e guardá-lo esparso (índice → peso) sai muito mais
+barato. Medido de novo nesta revisão, com o corpus de 146 artigos:
+
+    vetor esparso : 1.357 bytes por memória
+    vetor denso   : 21.242 bytes (16x maior)
+
+O número que estava aqui antes — "769 bytes contra 4.563" — era do corpus
+antigo, com textos mais curtos, e comparava contra o denso de 768 posições
+que existia então. O custo do esparso ACOMPANHA o tamanho do texto; o do
+denso é fixo. A vantagem continua grande (os vetores preenchem 1,1% das
+4096 posições), mas o número absoluto envelhece a cada mudança de corpus e
+por isso está datado aqui.
 
 Por isso a representação canônica aqui é `dict[int, float]`, não
 `list[float]`. Toda conta de vetor do sistema de memória passa pelas

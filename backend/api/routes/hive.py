@@ -371,6 +371,12 @@ async def create_task(req: TaskRequest) -> TaskResponse:
                         echo=echo, intent=intent, castes=castes)
 
 
+# Estados em que a tarefa não vai mais emitir evento nenhum. São os
+# terminais do `TaskStatus` (backend/core.py) — não uma lista genérica
+# inventada aqui: estado que o projeto não usa viraria regra morta.
+_TERMINAIS = frozenset({TaskStatus.DONE.value, TaskStatus.FAILED.value})
+
+
 @router.get("/status/{task_id}")
 async def get_status(task_id: str) -> dict[str, Any]:
     """Retorna o estado atual da tarefa junto com seus eventos."""
@@ -425,12 +431,43 @@ async def get_recruitment(task_id: str) -> dict[str, Any]:
     return {"task_id": task_id, "recruitment": chain, "count": len(chain)}
 
 
+def _ja_concluida(task_id: str) -> bool:
+    """A tarefa terminou antes de alguém conectar para ouvir?"""
+    try:
+        task = MEMORY.get_task(task_id)
+    except Exception as exc:                      # noqa: BLE001
+        swallow("hive.live.ja_concluida", exc)
+        return False
+    return bool(task) and task.get("status") in _TERMINAIS
+
+
 @router.websocket("/live/{task_id}")
 async def live(websocket: WebSocket, task_id: str) -> None:
-    """Transmite eventos da colmeia em tempo real via WebSocket."""
+    """Transmite eventos da colmeia em tempo real via WebSocket.
+
+    Tarefa JÁ concluída ao conectar recebe o "end" na hora. Sem isso o
+    socket ficava pendurado para sempre, esperando um evento que já tinha
+    passado — e a resposta nunca aparecia na tela.
+
+    A corrida é real e foi medida no navegador: o cliente posta a tarefa,
+    recebe o id e só ENTÃO abre o socket. Resposta nova leva 0,775s e dá
+    tempo de sobra; resposta servida da memória leva **0,008 s** e termina
+    antes do socket existir. O `chat.js` só chama `/hive/status` quando vê
+    o "end", então a bolha ficava eternamente em "A colmeia está
+    trabalhando..." enquanto o painel ao lado exibia a ficha completa de
+    uma resposta pronta que o usuário não podia ler.
+
+    Só ficou visível agora porque o caminho de cache era inalcançável: até
+    o limiar de atenção ser corrigido (#125) a colônia não guardava nada,
+    então nenhuma pergunta era "repetida". Consertar a memória acordou
+    este defeito, que estava aqui desde sempre.
+    """
     await websocket.accept()
     queue = await BUS.subscribe(task_id)
     try:
+        if _ja_concluida(task_id):
+            await websocket.send_json({"type": "end"})
+            return
         while True:
             event = await queue.get()
             if event is None:

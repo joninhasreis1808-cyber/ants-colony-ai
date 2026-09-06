@@ -60,6 +60,17 @@ class Recruiter:
         `{}`, todos empatam em 0.0 e a ordenação estável do Python preserva
         exatamente a formação de hoje.
 
+        COM histórico, hoje, também: as duas últimas chaves desta ordenação
+        são INERTES no elenco atual, e isso foi medido. `rank()` sozinho
+        decide 100% da formação, porque nenhuma casta divide estágio com
+        outra — o desempate nunca é alcançado. E mesmo se fosse, o viés
+        empataria: `record()` carimba o desfecho da MISSÃO em toda a
+        formação, então castas que correm juntas têm sempre a mesma taxa
+        (medido: as cinco em 0.8333). Ver `self_performance.py` e
+        `test_formation_hint_inerte.py`. O motor fica — é o mesmo cenário
+        já declarado para o custo em `test_contract_net_recruiter_b04.py`:
+        pronto para quando o elenco tiver duas castas no mesmo estágio.
+
         Contract Net limitado (fund. 04): quando duas castas do MESMO estágio
         disputam (confiança empatada — inclusive o empate 0/0 de sempre, sem
         histórico), o desempate agora tem um terceiro critério, o custo que

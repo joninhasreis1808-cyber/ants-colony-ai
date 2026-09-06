@@ -134,12 +134,17 @@ class MemoryMixin:
         return [m.content for m in (recalled.memories or [])]
 
     def _remember_outcome(self, task: Task) -> None:
-        """Grava o resultado da tarefa na memória de longo prazo."""
+        """Grava o resultado da tarefa na memória de longo prazo.
+
+        Missão SEM fundamento não é guardada — ver `_fundamentada`.
+        """
         if self.ltm is None or not task.result:
             return
         answer = task.result.get("answer")
         if not answer:
             return
+        if not _fundamentada(task.result):
+            return          # não sabíamos; não há o que lembrar
         # A moldura de apresentação fica de fora: o que se GUARDA é o
         # fato. O prefixo "Tarefa '<objetivo>': " continua — ele registra o
         # que foi perguntado, e agora é a ÚNICA camada, estável entre
@@ -151,3 +156,42 @@ class MemoryMixin:
             related_tasks=[task.id],
             emotional_weight=float(task.result.get("confidence") or 0.0) * 0.5,
         ))
+
+
+def _fundamentada(result: dict[str, Any]) -> bool:
+    """A missão chegou a alguma fonte, ou só declarou que não sabe?
+
+    NÃO GUARDAR A IGNORÂNCIA COMO SE FOSSE CONHECIMENTO.
+
+    Achado sondando a colônia no navegador. A recusa era gravada igual a
+    qualquer resposta, e voltava na pergunta seguinte vestida de memória:
+
+        1a vez  ->  fonte 'none'        confiança 0,15
+        2a vez  ->  fonte 'own_memory'  confiança 0,51
+
+    O TEXTO continuava honesto ("Não tenho evidências..."), e por isso os
+    testes de honestidade — que olham o texto — não viam nada. O que
+    mentia era a volta: a colônia passava a declarar que tinha RECORDADO
+    algo, e triplicava a confiança, apoiada em nada além do registro da
+    própria ignorância.
+
+    O estrago pior é mais fundo, na meta-cognição. `_observe_self_performance`
+    chama de sucesso toda missão com fonte diferente de 'none' — então a
+    recusa recuperada entrava como `sucesso=True rota='own_memory'`. A
+    colônia estava APRENDENDO que a memória própria funciona bem, a partir
+    de registros que são pura ausência de conhecimento. Medido: duas
+    recusas repetidas viraram duas vitórias da rota `own_memory`.
+
+    O critério aqui é de propósito o MESMO que aquela função já usa para
+    decidir se a missão deu certo (`source not in (None, 'none')`), em vez
+    de um casador da frase "Não tenho evidências": a frase muda de lugar e
+    de redação, a proveniência é o dado estrutural. Se as duas definições
+    divergirem um dia, elas divergem juntas — que é o que se quer de uma
+    regra e do julgamento que ela alimenta.
+
+    Corta a raiz e não só o sintoma: a recusa nunca entra, então nunca é
+    recuperada, então nunca vira 'own_memory' na segunda vez. O laço não
+    chega a começar.
+    """
+    origem = (result.get("provenance") or {}).get("source")
+    return origem not in (None, "", "none")

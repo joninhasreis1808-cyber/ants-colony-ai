@@ -116,16 +116,40 @@ def test_recall_pelo_armazem_real_melhora_muito():
     assert ok / casos > 0.85, f"acerto caiu para {ok}/{casos}"
 
 
-def test_estado_salvo_e_menor_que_o_denso_antigo():
-    """O denso anterior custava ~4.563 bytes por memória. O esparso tem de
-    custar bem menos, mesmo num espaço 5x maior (4096 contra 768)."""
+def test_vetor_esparso_e_muito_menor_que_o_denso():
+    """VETOR contra VETOR — não registro contra vetor.
+
+    A versão anterior media o REGISTRO INTEIRO (que inclui o texto do
+    artigo) e comparava com 4.563, um número que era só do vetor —
+    coisas diferentes. Passava porque o texto era curto, e passaria
+    mesmo que o vetor inchasse, desde que o conteúdo encolhesse junto.
+
+    O QUE ESTE TESTE GUARDA, E O QUE NÃO GUARDA
+
+    Guarda pouco, e é honesto dizer. A vantagem é ESTRUTURAL: o vetor é
+    esparso por construção, então o denso de 4096 posições sempre será
+    ordens de grandeza maior. Medido nesta revisão, um embedder
+    propositalmente inchado (sem filtrar stopword nenhuma) ainda dá 12,9x
+    contra os 15,7x do atual — o limiar não separa bom de ruim.
+
+    Ele existe para pegar mudança ESTRUTURAL (alguém voltar a guardar
+    denso, ou o hashing degenerar), não perda de qualidade. Quem vigia
+    qualidade é `test_recall_pelo_armazem_real_melhora_muito`, cujo piso
+    fica a 3 pontos do valor real — esse sim é rede apertada.
+
+    Anunciar um teste fraco como se fosse forte é pior que não tê-lo: dá
+    confiança que ele não sustenta."""
     docs, _ = _corpus()
-    enc = NeuralEncoder(HashingEmbedder())
-    store = DistributedStore()
+    emb = HashingEmbedder()
+    esparso = denso = 0
     for d in docs:
-        store.store(enc.encode(MemoryInput(content=d), 0.6))
-    por_memoria = len(json.dumps(store.to_state())) / len(docs)
-    assert por_memoria < 4563, f"{por_memoria:.0f} bytes/memória"
+        v = emb.embed(d)
+        esparso += len(json.dumps({str(k): x for k, x in v.items()}))
+        denso += len(json.dumps(densify(v, DIM)))
+    assert esparso * 5 < denso, (
+        f"esparso {esparso / len(docs):.0f} B/memória contra denso "
+        f"{denso / len(docs):.0f} B — a vantagem encolheu para "
+        f"{denso / esparso:.1f}x")
 
 
 def test_migra_o_formato_antigo_recalculando_do_conteudo():

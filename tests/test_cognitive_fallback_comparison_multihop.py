@@ -17,20 +17,31 @@ from __future__ import annotations
 from backend.hivemind.cognitive_fallback import CognitiveFallback
 
 
-def test_hoje_a_pergunta_composta_falha_sem_o_multihop_bypassed():
-    """Prova do achado que motiva o item: gather_knowledge acha os dois
-    fatos, mas RelevanceGate descarta os dois juntos (documenta o defeito
-    que o multi-hop contorna, não que ele resolve na raiz)."""
+def test_o_portao_sozinho_nao_da_conta_da_comparacao():
+    """Por que o multi-hop continua necessário — a razão MUDOU, e o guard
+    que estava aqui foi quem avisou.
+
+    Antes: o portão (contagem de termos, min_overlap=2) descartava OS DOIS
+    fatos, porque cada um sozinho só compartilha 1 termo com a pergunta
+    composta — a colônia declarava limitação tendo os dois em mãos.
+
+    Hoje, com o portão ranqueando por similaridade, ele já não declara
+    limitação: mantém UM dos dois. Mas responder "qual a diferença entre X
+    e Y" com o fato de X só é meia resposta. O multi-hop segue sendo o que
+    busca as DUAS entidades — o portão melhorou, e ainda assim não é ele
+    quem resolve comparação."""
     fb = CognitiveFallback()
-    gathered = fb.gather_knowledge("qual a diferença entre bactéria e vírus?")
+    pergunta = "qual a diferença entre bactéria e vírus?"
+    gathered = fb.gather_knowledge(pergunta)
     assert any("bactéria" in g.lower() for g in gathered)
     assert any("vírus" in g.lower() for g in gathered)
-    verdict = fb._gate.verdict(
-        "qual a diferença entre bactéria e vírus?", gathered)
-    assert verdict["declare_limitation"] is True, (
-        "se este teste falhar, o RelevanceGate mudou de comportamento e a "
-        "justificativa do multi-hop (contornar o portão, não corrigi-lo) "
-        "pode não ser mais necessária"
+
+    kept = fb._gate.verdict(pergunta, gathered)["kept"]
+    tem_bacteria = any("bactéria" in k.lower() for k in kept)
+    tem_virus = any("vírus" in k.lower() for k in kept)
+    assert not (tem_bacteria and tem_virus), (
+        "se o portão passar a manter AS DUAS entidades, o multi-hop pode "
+        "ter deixado de ser necessário — reavaliar antes de mantê-lo"
     )
 
 

@@ -41,8 +41,11 @@ def test_sentiment_analysis_negative():
 
 
 def test_keyword_extraction():
+    """Os radicais saem SEM acento desde o item 9 — "feromônios" e
+    "feromonios" são a mesma palavra para a colônia, que era o ponto."""
     kws = NLPProcessor().keywords("a colônia de formigas usa feromônios")
-    assert "formigas" in kws and "feromônios" in kws
+    assert "formigas" in kws and "feromonios" in kws
+    assert NLPProcessor().keywords("a colonia de formigas usa feromonios") == kws
 
 
 def test_text_similarity_cosine():

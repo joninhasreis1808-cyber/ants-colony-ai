@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from backend.knowledge.aliases import expandir
 from backend.nlp.processor import NLPProcessor
 
 
@@ -83,9 +84,24 @@ class ReasoningEngine:
     def _best_evidence(
         self, question: str, context: list[str]
     ) -> tuple[str | None, float]:
+        """A evidência mais parecida com a pergunta — contando apelidos.
+
+        A expansão por apelidos precisa acontecer AQUI também, e não só no
+        `RelevanceGate`. Esta função faz a própria medição de similaridade,
+        independente da do portão: para "o que é o DNA?" ela marcava
+        0,0000 contra o artigo de ácido desoxirribonucleico (a sigla não
+        aparece no texto nem uma vez), devolvia evidência nenhuma e a
+        colônia recusava — mesmo com o portão já tendo aprovado o fato.
+
+        Peça consertada num lugar só não conserta o fluxo: foi preciso
+        seguir a resposta até o ponto onde ela realmente se decide.
+
+        A expansão vale só para MEDIR. O texto devolvido é o fato original,
+        e a pergunta do usuário não é reescrita em lugar nenhum."""
+        medida = expandir(question)
         best, best_score = None, 0.0
         for c in context:
-            s = self._nlp.similarity(question, c)
+            s = self._nlp.similarity(medida, c)
             if s > best_score:
                 best, best_score = c, s
         return best, best_score

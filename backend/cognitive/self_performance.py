@@ -1,8 +1,43 @@
 """Meta-cognição: desempenho próprio da colônia (A5 · roteiro de maestria).
 
 A colônia passa a saber **como ela mesma se sai**: tempo por rota, sucesso por
-casta, e qual rota costuma funcionar para cada tipo de objetivo. A Rainha consulta
-isso ANTES de montar a formação — em vez de recrutar sempre na mesma ordem fixa.
+casta, e qual rota costuma funcionar para cada tipo de objetivo. A Rainha
+consulta isso ANTES de montar a formação, via `Recruiter._formation_hint()`.
+
+O QUE ESTA CONSULTA MUDA HOJE: NADA. Medido, não suposto.
+------------------------------------------------------------------
+Estava escrito aqui que a Rainha passava a recrutar "em vez de sempre na
+mesma ordem fixa". A ordem é exatamente fixa, e por DOIS motivos
+independentes — qualquer um deles sozinho já bastaria:
+
+1. **O crédito é por MISSÃO, não por bot.** `record()` recebe
+   `castes=[b.name for b in bots]` e carimba o MESMO desfecho em toda a
+   formação. `success_rate()` responde "como foram as missões de que este
+   bot participou", nunca "como este bot se saiu". Duas castas que sempre
+   correm juntas empatam por construção. Medido em 6 missões reais:
+
+       formation_hint() -> {'navigator': 0.8333, 'extractor': 0.8333,
+                            'interpreter': 0.8333, 'decider': 0.8333,
+                            'learner': 0.8333}
+       valores distintos: [0.8333]
+
+2. **Nenhuma casta divide estágio com outra.** O viés só desempata DENTRO
+   de um estágio, e no elenco de hoje cada estágio tem um ocupante só
+   (perceptor 0 · navigator 1 · extractor 2 · interpreter 3 · creator 4 ·
+   decider 5 · learner 6). `rank()` sozinho já decide 100% da ordem, e a
+   chave do viés nunca chega a ser comparada.
+
+Isto NÃO é defeito a consertar às pressas — é o mesmo cenário declarado em
+`test_contract_net_recruiter_b04.py` para o critério de custo: motor
+pronto, elenco ainda sem disputa. O que era defeito é a frase que estava
+aqui, afirmando um efeito que não existe. Ligar mais uma fonte de sinal
+(ex.: `hivemind/reputation.py`, reputação por bot × domínio) seria a
+terceira peça no mesmo transporte vazio: enquanto (2) valer, nenhuma
+delas pode mudar a formação, e (1) precisaria ser resolvido antes de
+qualquer uma valer alguma coisa.
+
+`test_formation_hint_inerte.py` prende os dois fatos, para que a alegação
+não volte sem a medição voltar junto.
 
 Princípio de segurança do incremento: **sem histórico, o viés é zero** — a
 formação fica byte a byte igual à de hoje. O aprendizado só desempata; nunca
@@ -84,7 +119,15 @@ class SelfPerformance:
                    key=lambda kv: (sum(kv[1]) / len(kv[1]), len(kv[1]), kv[0]))[0]
 
     def formation_hint(self) -> dict[str, float]:
-        """Viés por casta (taxa de sucesso). Sem histórico → dicionário vazio."""
+        """Viés por casta (taxa de sucesso). Sem histórico → dicionário vazio.
+
+        LEIA O CABEÇALHO DO MÓDULO ANTES DE CONFIAR NESTE NÚMERO. Ele diz
+        "como foram as missões de que esta casta participou", não "como
+        esta casta se saiu": `record()` credita a formação inteira com o
+        desfecho da missão. Castas que sempre correm juntas recebem valores
+        IDÊNTICOS, e o consumidor (`Recruiter._order`) usa isto como
+        desempate — que empata. Separar o crédito por bot é o pré-requisito
+        de qualquer uso real deste método."""
         castes = {c for r in self._log for c in r.castes}
         out = {}
         for c in castes:

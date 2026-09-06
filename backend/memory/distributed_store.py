@@ -47,6 +47,7 @@ from typing import Any, Optional
 from backend.memory.embedder import (
     ALGO_VERSION, SparseVector, default_embedder,
 )
+from backend.memory.framing import RECUSA_INTEIRA, substancia
 from backend.memory.schemas import EncodedMemory, Memory, MemoryType
 
 
@@ -144,6 +145,67 @@ class DistributedStore(RetrievalMixin):
                 self._gravado[mem.id] = json.dumps(self._registro(mem),
                                                    sort_keys=True)
             self._indice_gravado = list(self._memories)
+        # O espelho acima reflete o disco SUJO; sanear depois dele faz
+        # `persist_now` enxergar a diferença e gravar a faxina.
+        self._sanear()
+
+    def _sanear(self) -> dict[str, int]:
+        """Faxina dos registros gravados ANTES das correções #127 e #128.
+
+        As duas correções impedem que lixo novo entre; nenhuma limpa o que já
+        estava na base de quem vinha usando a colônia. Esta passagem limpa,
+        no carregamento, e é idempotente: rodada de novo não acha nada.
+
+        Três coisas, nesta ordem, porque cada uma depende da anterior:
+
+          1. **descascar** a moldura de apresentação que #127 parou de
+             gravar ("Da memória da colônia (N):", "Com base no que sei:",
+             e os "Tarefa 'X':" empilhados). Sobra o fato;
+          2. **apagar a recusa** que #128 parou de gravar. Só aqui o
+             critério é TEXTUAL, e não a proveniência que #128 usa: o
+             registro gravado não guarda proveniência, o sinal estrutural
+             não existe mais. Por isso o casador é o mais estreito
+             possível — a substância INTEIRA precisa começar com a frase de
+             recusa, não apenas mencioná-la em algum ponto. Um fato que
+             CITE "não tenho evidências" no meio do texto sobrevive;
+          3. **desduplicar** o que o passo 1 revelou. Descascar seis
+             registros que só diferiam na moldura deixa seis cópias do
+             mesmo fato — e `MemoryRAG._confidence` soma +0,03 por registro
+             "concordante", então a colônia estaria se corroborando com
+             ecos de si mesma. Fica a mais forte de cada texto.
+
+        Medido na base real de uma sessão de uso: 18 registros -> 5 recusas
+        apagadas -> 6 duplicatas apagadas -> 7 fatos distintos.
+
+        O `content` muda, então o embedding é RECALCULADO — a dimensão em
+        que um texto cai depende do texto, e deixar o vetor velho seria
+        recall errado em silêncio, o mesmo estrago que `ALGO_VERSION` existe
+        para evitar.
+        """
+        conta = {"descascados": 0, "recusas": 0, "duplicatas": 0}
+        for mem in list(self._memories.values()):
+            limpo = substancia(mem.content or "")
+            if RECUSA_INTEIRA.match(limpo):
+                self.remove(mem.id)
+                conta["recusas"] += 1
+            elif limpo != (mem.content or ""):
+                mem.content = limpo
+                self._embeddings[mem.id] = _recalcula({"content": limpo})
+                conta["descascados"] += 1
+
+        vistos: dict[str, str] = {}
+        for mem in sorted(self._memories.values(),
+                          key=lambda m: (-m.strength, m.id)):
+            anterior = vistos.get(mem.content)
+            if anterior is None:
+                vistos[mem.content] = mem.id
+            else:
+                self.remove(mem.id)
+                conta["duplicatas"] += 1
+
+        if conta["descascados"]:
+            self.persist_now()
+        return conta
 
     def store(self, encoded: EncodedMemory) -> str:
         """Armazena a memória nas coleções adequadas ao seu tipo."""

@@ -161,6 +161,74 @@ _PISO_RECUSA = 0.15
 # como coordenam uma colônia?" tem resposta certa que não cita feromônio.
 _MAX_TERMOS_FOCADA = 3
 
+# A MOLDURA DO PEDIDO NÃO É O ASSUNTO.
+#
+# Medido no caminho real (`hive.solve`), 6 assuntos que a colônia tem em
+# mãos x 8 formas de perguntar a mesma coisa:
+#
+#     "o que é vulcão?"          -> responde
+#     "me fale sobre vulcão"     -> RECUSA
+#     "vulcão significa o que?"  -> RECUSA
+#     "você sabe o que é vulcão?"-> RECUSA
+#
+# 26/48. E o `recall` trazia o fato CERTO nas 48 — quem o jogava fora era
+# este portão. A causa é que "fale", "sabe", "significa", "defina" são
+# tratados como assunto, e isso machuca três vezes de uma vez:
+#
+#   • `exigido = min(min_overlap, len(q))` SOBE de 1 para 2, e o fato
+#     certo, que compartilha só o nome do assunto, deixa de passar;
+#   • a pergunta deixa de ser "focada" (>3 termos) e escapa da regra do
+#     núcleo — que é justamente a que protege contra o fato parecido;
+#   • o núcleo é o ÚLTIMO termo significativo, então em "vulcão significa
+#     o que?" o assunto vira "significa" e o portão passa a exigir um
+#     fato sobre a palavra "significa".
+#
+# Estas palavras dizem que uma pergunta ESTÁ SENDO FEITA; nunca dizem
+# sobre o quê. Tirá-las da leitura do assunto (medido, variante C):
+#
+#     paráfrase    26/48 -> 48/48
+#     honestidade  43/45 -> 44/45
+#     benchmark    17/18 -> 17/18   (inalterada)
+#
+# A honestidade subiu de tabela: "como funciona a linguagem Rust" vazava
+# porque "como"/"funciona" contavam como assunto e a sobreposição batia;
+# sem eles a pergunta pede {linguagem, rust}, o fato genérico de
+# linguagem de programação só traz um dos dois, e é recusado.
+#
+# SOBRA UM: "como funciona o teorema de Bayes" ainda devolve Pitágoras.
+# Tem 4 termos significativos, escapa da regra do núcleo, e as duas
+# frases dividem a forma ("teorema", "matemática") — nenhum piso pega.
+# É o mesmo defeito já descrito na seção anterior, e continua aberto.
+#
+# A moldura sai da leitura do ASSUNTO (`_assunto`), mas NÃO da contagem
+# de tamanho da pergunta — ver o comentário longo em
+# `_so_o_que_e_sobre_a_pergunta`. Tirá-la das duas coisas de uma vez
+# fechava também o vazamento de Bayes (44/45 -> 45/45) e QUEBRAVA "como
+# funciona o recrutamento de formigas na colônia", uma pergunta longa
+# legítima. Esse ganho vinha de alargar a regra do núcleo para fora da
+# faixa em que ela foi medida; foi devolvido.
+#
+# Por que a lista vive AQUI e não em `_STOP` da raiz: no corpo de um
+# texto essas palavras são conteúdo legítimo, e `_STOP` alimenta o IDF e
+# o embedder — mexer lá mudaria a dimensão de cada radical (ALGO_VERSION)
+# e o peso de todo o corpus, para resolver um problema que é só da
+# LEITURA DA PERGUNTA. Por isso `_significant` continua intacto: os FATOS
+# seguem lidos com o vocabulário cheio.
+_MOLDURA_DO_PEDIDO = frozenset({
+    "explique", "explica", "explicar", "explicame", "explicacao",
+    "defina", "define", "definir",
+    "fale", "fala", "falar", "diga", "dizer", "conte", "contar",
+    "sabe", "saber", "sabia", "conhece", "conhecer",
+    "quero", "queria", "gostaria", "gostava", "poderia", "pode", "podes",
+    "entender", "entenda", "compreender", "compreende",
+    "significa", "significam", "significar", "significado",
+    "sobre", "acerca", "respeito", "favor",
+    "voce", "voces", "tu",
+    "resuma", "resumir", "descreva", "descrever", "detalhe",
+    "apresente", "mostre", "mostrar", "ensine", "ensinar",
+    "como", "funciona", "funcionam", "funcionava",
+})
+
 
 def _tokens(text: str) -> set[str]:
     return {t for t in re.findall(r"\w+", _norm(text)) if len(t) > 2}
@@ -194,13 +262,27 @@ class RelevanceGate:
         "não" escapar da lista de stopwords e virar termo significativo)."""
         return {_norm(t) for t in self._nlp.keywords(text, top=50)}
 
+    def _assunto(self, goal: str) -> set[str]:
+        """Os termos significativos da PERGUNTA, sem a moldura do pedido.
+
+        É `_significant` menos as palavras que só dizem que se está
+        perguntando (ver `_MOLDURA_DO_PEDIDO`). Só para a pergunta — os
+        fatos continuam lidos por `_significant`, com o vocabulário cheio.
+
+        Se a pergunta for SÓ moldura ("me explique", "defina"), não sobra
+        assunto nenhum e a leitura volta a ser a de antes: sem isso o
+        conjunto ficaria vazio e `relevant_facts` devolveria [] para toda
+        pergunta assim — trocar uma recusa por outra, de graça."""
+        termos = self._significant(goal)
+        return (termos - _MOLDURA_DO_PEDIDO) or termos
+
     def relevant_facts(self, goal: str, facts: list[str]) -> list[str]:
         """Mantém só os fatos com sobreposição real suficiente com a pergunta.
 
         O exigido é `min(min_overlap, termos significativos da pergunta)`
         — nunca mais que o teto configurado, mas cai para o que a própria
         pergunta tem quando ela é curta e focada num só assunto."""
-        q = self._significant(goal)
+        q = self._assunto(goal)
         if not q:
             return []
         exigido = min(self._min, len(q))
@@ -241,7 +323,7 @@ class RelevanceGate:
         Em pergunta portuguesa o assunto cai no fim ("o que é o teorema de
         BAYES?", "como funciona um VULCÃO?"), e isso se sustentou em todos
         os casos medidos."""
-        significativos = self._significant(goal)
+        significativos = self._assunto(goal)
         na_ordem = [t for t in tokenize(goal) if t in significativos]
         return na_ordem[-1] if na_ordem else None
 
@@ -278,6 +360,32 @@ class RelevanceGate:
                   if self._nlp.similarity(com_apelidos, f) >= _PISO_RECUSA]
         if not sobrou:
             return []
+        # O TAMANHO da pergunta é contado com `_significant`, não com
+        # `_assunto` — de propósito, e isto foi medido. Contar sem a
+        # moldura encolhe a pergunta e ARRASTA para a regra do núcleo
+        # perguntas que nunca estiveram sob ela:
+        #
+        #     "como funciona o recrutamento de formigas na colônia"
+        #        _significant -> 5 termos  (longa, escapa da regra)
+        #        _assunto     -> 3 termos  (focada, cai na regra)
+        #
+        # e aí o núcleo vira "colonia" — que ali é COMPLEMENTO, não
+        # assunto ("recrutamento de formigas NA colônia"). O fato certo,
+        # sobre recrutamento, era reprovado por não citar a colônia.
+        #
+        # A premissa do núcleo — "em pergunta portuguesa o assunto cai no
+        # fim" — foi medida em pergunta FOCADA, onde a cauda é o assunto
+        # ("o que é o teorema de BAYES?"). Em pergunta longa a cauda é
+        # complemento, e é exatamente por isso que `_MAX_TERMOS_FOCADA`
+        # existe. Encolher a contagem alargaria a regra para fora da faixa
+        # onde ela foi validada.
+        #
+        # Isso custa dois vazamentos de honestidade que a contagem por
+        # `_assunto` fechava de graça ("como funciona o teorema de Bayes",
+        # "como funciona a linguagem Rust", ambos com 4 termos que viram
+        # 2). Eles são ANTERIORES a esta correção e continuam em pé; o
+        # preço de fechá-los aqui era reprovar pergunta longa legítima,
+        # que é o defeito pior. Fica declarado, não comprado.
         termos = self._significant(goal)
         # O núcleo sai da pergunta ORIGINAL, nunca da expandida: os
         # apelidos são acrescentados no fim, e tirá-lo do texto expandido
